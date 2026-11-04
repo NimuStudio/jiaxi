@@ -15,7 +15,8 @@ interface Message {
 }
 
 export interface ChatPanelProps {
-  onExtracted: (persons: ExtractedPerson[]) => void;
+  /** source 是产生这批结果的用户原话，用于家系图上的「依据」回溯。 */
+  onExtracted: (persons: ExtractedPerson[], source: string) => void;
   /** 上游是否已有内容，用于「继续补充」的提示。 */
   hasData: boolean;
 }
@@ -94,7 +95,7 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
       }
 
       const persons = data.persons ?? [];
-      if (persons.length > 0) onExtracted(persons);
+      if (persons.length > 0) onExtracted(persons, content);
       setMessages((m) => [
         ...m,
         { role: "system", text: describe(persons) },
@@ -168,7 +169,7 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
           className="chat-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="例如：我爸 55 岁心梗，我妈身体还行"
+          placeholder="例如：我爸前年放了支架，那时候五十五"
           disabled={loading}
         />
         <button

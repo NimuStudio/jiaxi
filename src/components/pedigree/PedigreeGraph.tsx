@@ -16,6 +16,9 @@ export interface PedigreeGraphProps {
   persons: ExtractedPerson[];
   /** 刚刚新增的节点，用于播放「长出来」的动画。 */
   highlight?: string | null;
+  /** 当前选中的节点（点开看依据 / 修改）。 */
+  selected?: string | null;
+  onSelect?: (relation: string) => void;
 }
 
 const NODE_SIZE = 38;
@@ -61,7 +64,12 @@ function diseaseText(person: ExtractedPerson): string {
   return names.join("、");
 }
 
-export function PedigreeGraph({ persons, highlight }: PedigreeGraphProps) {
+export function PedigreeGraph({
+  persons,
+  highlight,
+  selected,
+  onSelect,
+}: PedigreeGraphProps) {
   const byRelation = new Map<string, ExtractedPerson>();
   for (const p of persons) byRelation.set(p.relation, p);
 
@@ -179,7 +187,16 @@ export function PedigreeGraph({ persons, highlight }: PedigreeGraphProps) {
         return (
           <g
             key={person.relation}
-            className={`pedigree-node${isNew ? " is-new" : ""}`}
+            className={`pedigree-node${isNew ? " is-new" : ""}${
+              selected === person.relation ? " is-selected" : ""
+            }`}
+            onClick={() => onSelect?.(person.relation)}
+            style={{ cursor: onSelect ? "pointer" : "default" }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") onSelect?.(person.relation);
+            }}
           >
             {male ? (
               <rect

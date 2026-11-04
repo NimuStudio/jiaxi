@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ChatPanel } from "@/components/chat/ChatPanel";
 import { PedigreeGraph } from "@/components/pedigree/PedigreeGraph";
 import type { ExtractedPerson } from "@/lib/extract/client";
+import { DISEASE_LABEL, RELATION_LABEL } from "@/lib/pedigree/viz";
+import type { RelationType } from "@/lib/pedigree/types";
 
 /**
  * 演示用家系数据。访问 /chat?demo=1 直接加载，
@@ -108,14 +110,33 @@ const HISTORY_TEXT: Record<"none" | "second" | "first", string> = {
 export default function ChatPage() {
   const [persons, setPersons] = useState<ExtractedPerson[]>([]);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
+  /** 选中的节点（点开看依据、可删除）。 */
+  const [selected, setSelected] = useState<string | null>(null);
+  /** 每个亲属节点的来源原话，用于「依据」回溯。 */
+  const [sources, setSources] = useState<Record<string, string[]>>({});
 
   // 演示模式：/chat?demo=1 直接填好一整套家系，方便录制与调试图的渲染。
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("demo") === "1") {
       setPersons(DEMO);
-      setLastAdded("maternal-uncle");
+      setLastAdded(null);
+      // 演示时默认选中一位，便于直接展示「依据」面板
+      setSelected("paternal-grandfather");
     }
   }, []);
+
+  const selectedPerson =
+    persons.find((p) => p.relation === selected) ?? null;
+
+  function removePerson(relation: string) {
+    setPersons((prev) => prev.filter((p) => p.relation !== relation));
+    setSources((prev) => {
+      const next = { ...prev };
+      delete next[relation];
+      return next;
+    });
+    setSelected(null);
+  }
 
   return (
     <main className="page page-wide">
@@ -134,18 +155,81 @@ export default function ChatPage() {
         <aside className="chat-side">
           <ChatPanel
             hasData={persons.length > 0}
-            onExtracted={(incoming) => {
+            onExtracted={(incoming, source) => {
               setPersons((prev) => mergePersons(prev, incoming));
               setLastAdded(incoming[0]?.relation ?? null);
+              setSources((prev) => {
+                const next = { ...prev };
+                for (const p of incoming) {
+                  next[p.relation] = [...(next[p.relation] ?? []), source];
+                }
+                return next;
+              });
             }}
           />
         </aside>
 
         <section className="graph-side">
-          <PedigreeGraph persons={persons} highlight={lastAdded} />
+          <PedigreeGraph
+            persons={persons}
+            highlight={lastAdded}
+            selected={selected}
+            onSelect={(relation) =>
+              setSelected((cur) => (cur === relation ? null : relation))
+            }
+          />
           <p className="graph-hint">
-            方形为男性，圆形为女性，实心表示有该病记录。信息分批说也可以，图上会持续补充。
+            方形为男性，圆形为女性，实心表示有该病记录。点任意节点可查看依据、也可删改。
           </p>
+
+          {selectedPerson && (
+            <div className="evidence-panel">
+              <div className="evidence-head">
+                <span className="evidence-title">
+                  {RELATION_LABEL[selectedPerson.relation as RelationType] ??
+                    selectedPerson.relation}
+                  {" · "}
+                  {selectedPerson.conditions.length === 0
+                    ? "未记录病名"
+                    : selectedPerson.conditions
+                        .map((c) => DISEASE_LABEL[c.code] ?? c.code)
+                        .join("、")}
+                </span>
+                <button
+                  type="button"
+                  className="evidence-close"
+                  onClick={() => setSelected(null)}
+                >
+                  收起
+                </button>
+              </div>
+
+              <div className="evidence-sources">
+                {(sources[selectedPerson.relation] ?? []).length > 0 ? (
+                  <>
+                    <span className="evidence-label">依据</span>
+                    {(sources[selectedPerson.relation] ?? []).map((src, i) => (
+                      <p key={i} className="evidence-quote">
+                        「{src}」
+                      </p>
+                    ))}
+                  </>
+                ) : (
+                  <p className="evidence-quote is-muted">
+                    这是演示数据，没有对应的原话记录。你自己说过的句子会出现在这里。
+                  </p>
+                )}
+              </div>
+
+              <button
+                type="button"
+                className="evidence-remove"
+                onClick={() => removePerson(selectedPerson.relation)}
+              >
+                这条不对，删掉
+              </button>
+            </div>
+          )}
 
           {persons.length > 0 && (
             <div className="next-step">
