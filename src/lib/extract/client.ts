@@ -12,6 +12,7 @@
  */
 
 import { PEDIGREE_GBNF } from "./grammar.ts";
+import { DISEASES } from "./lexicon.ts";
 import { SYSTEM_PROMPT } from "./prompt.ts";
 
 const LLM_URL = process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080";
@@ -52,6 +53,15 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
     role: "assistant",
     content:
       '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"myocardial-infarction","onsetAge":50}]}]}',
+  },
+  {
+    role: "user",
+    content: "我爹有高血压，还有糖尿病。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"hypertension","onsetAge":null},{"code":"type2-diabetes","onsetAge":null}]}]}',
   },
   {
     role: "user",
@@ -134,6 +144,14 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
     content:
       '{"persons":[{"relation":"sister","sex":"female","conditions":[{"code":"hypertension","onsetAge":null}]}]}',
   },
+  {
+    role: "user",
+    content: "我妈身体还行。",
+  },
+  {
+    role: "assistant",
+    content: '{"persons":[]}',
+  },
 ];
 
 /** 检查本地推理服务是否可用。 */
@@ -198,4 +216,91 @@ export async function extractPedigree(
   } catch {
     throw new Error(`约束解码仍返回了非 JSON（不应发生）：${content.slice(0, 200)}`);
   }
+}
+
+/**
+ * 把一段话切成多个片段。
+ *
+ * 关键：逗号只在「非并列」时切分 ——
+ * 「外婆和姨妈都有乳腺癌」是一个整体（并列），不能切；
+ * 「我爸心梗，我妈身体还行」是两件事，应该切开逐句处理。
+ */
+function splitSegments(text: string): string[] {
+  return text
+    .split(/[。；;]|(?<![和及与、])，/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+}
+
+/**
+ * 片段里是否出现了疾病词。
+ *
+ * 作用：切句后会产生「我妈那边」「我爸身体还行」这类没有疾病信息的片段。
+ * 这类片段如果送去抽取，小模型会凭空编一个病出来（实测出现过
+ * 「我妈那边」→ maternal-uncle[乳腺癌]）。直接跳过比让模型输出空更可靠，
+ * 也更快。
+ */
+function hasDiseaseWord(segment: string): boolean {
+  return DISEASES.some((d) =>
+    [...d.nounAliases, ...(d.verbAliases ?? [])].some((alias) =>
+      segment.includes(alias),
+    ),
+  );
+}
+
+/** 合并多次抽取结果：按 relation 聚合 conditions 并去重。 */
+function mergeResults(results: ExtractResult[]): ExtractResult {
+  const byRelation = new Map<string, ExtractedPerson>();
+  for (const r of results) {
+    for (const p of r.persons) {
+      const cur = byRelation.get(p.relation);
+      if (!cur) {
+        byRelation.set(p.relation, {
+          relation: p.relation,
+          sex: p.sex,
+          conditions: [...p.conditions],
+        });
+        continue;
+      }
+      for (const c of p.conditions) {
+        const dup = cur.conditions.some(
+          (d) => d.code === c.code && d.onsetAge === c.onsetAge,
+        );
+        if (!dup) cur.conditions.push(c);
+      }
+    }
+  }
+  return { persons: [...byRelation.values()] };
+}
+
+/**
+ * 分句抽取：逐句调用模型再合并。
+ *
+ * 为什么需要：实测 1.7B 在「逗号分隔的多实体长句」里会漏掉第二个亲属
+ * （如「奶奶高血压，姥姥糖尿病」只抽出奶奶，而「外婆和姨妈都有乳腺癌」
+ * 这种并列句反而能抽全）。把句子切开后每次只处理一个亲属，准确率明显提高。
+ *
+ * 代价是 N 次串行调用（llama-server 单线程，并发只会排队），
+ * 但单次 1–2 秒、通常 2–3 句，仍在可接受的交互延迟内。
+ */
+export async function extractPedigreeSplit(
+  text: string,
+  options: ExtractOptions = {},
+): Promise<ExtractResult> {
+  const segments = splitSegments(text);
+
+  // 只有含疾病词的片段才值得抽取；否则模型会对着「我妈那边」凭空造病。
+  const meaningful = segments.filter((s) => hasDiseaseWord(s));
+  if (meaningful.length === 0) {
+    return { persons: [] };
+  }
+  if (meaningful.length === 1) {
+    return extractPedigree(meaningful[0] as string, options);
+  }
+
+  const results: ExtractResult[] = [];
+  for (const seg of meaningful) {
+    results.push(await extractPedigree(seg, options));
+  }
+  return mergeResults(results);
 }

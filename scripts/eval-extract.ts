@@ -7,7 +7,7 @@
  * 运行：node scripts/eval-extract.ts   （需先启动 llama-server）
  */
 import { readFileSync } from "node:fs";
-import { extractPedigree, isLlmReady } from "../src/lib/extract/client.ts";
+import { extractPedigreeSplit, isLlmReady } from "../src/lib/extract/client.ts";
 import type { ExtractedPerson } from "../src/lib/extract/client.ts";
 
 interface EvalCase {
@@ -66,7 +66,7 @@ async function main() {
   for (const c of cases) {
     let actual: ExtractedPerson[] = [];
     try {
-      const r = await extractPedigree(c.input, { fewShot: useFewShot });
+      const r = await extractPedigreeSplit(c.input, { fewShot: useFewShot });
       actual = r.persons;
     } catch (e) {
       failures.push(`${c.id} 调用失败：${(e as Error).message}`);
