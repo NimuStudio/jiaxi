@@ -1,23 +1,37 @@
 /**
  * FINDRISC — 芬兰糖尿病风险评分（Finnish Diabetes Risk Score）
  *
- * 出处：
- *  - Lindström J, Tuomilehto J. The Diabetes Risk Score: A practical tool to
+ * 【文献核实状态】2026-11-04 逐条核对，见 docs/references.md
+ *
+ * 1. 量表原始出处（已核实，PMID 12610029 / DOI 10.2337/diacare.26.3.725）：
+ *    Lindström J, Tuomilehto J. The diabetes risk score: a practical tool to
  *    predict type 2 diabetes risk. Diabetes Care. 2003;26(3):725-731.
- *  - 10 年风险分层数值来源：Lindström 2010（IDF 在线工具同款）。
+ *    ⚠️ 该原文为 7 个变量、总分 0–20 分。
  *
- * 为什么用 FINDRISC 作为第一个落地模型：
- *  1. 系数完全公开、逐项确定，可做严格的回归测试（可复现性最高）。
- *  2. 条目天然分成「可改变 / 不可改变」两组，直接对应产品的「可回收风险」概念。
- *  3. 家族史条目（一级 5 分 / 二级 3 分）与家系图数据模型天然对齐。
+ * 2. 本实现采用 8 条目、总分 0–26 分的现行版本（腰围单独计分），
+ *    该版本广泛用于 IDF 及各国临床指南，例如加拿大预防保健工作组（CTFPHC）
+ *    的 FINDRISC 临床工具。**因此不能把 0–26 的分值直接归到 2003 原文名下。**
  *
- * 重要：FINDRISC 输出的是「10 年发病风险」的官方口径，不是本产品自定义的
- * 「患病概率」。本模块只做评分与反事实对比，不产出任何绝对诊断结论。
+ * 3. 风险分层与 10 年风险值（1% / 4% / 17% / 33% / 50%），
+ *    经三份独立来源交叉核对一致：
+ *    - SciELO 期刊 FINDRISC 验证研究（八条目、0–26 分、五档、1/25、1/6）
+ *    - Springer《Cardiovascular Diabetology》2024（明确给出 1%、4%、17%、33%、50%）
+ *    - 加拿大预防保健工作组（CTFPHC）官方工具页
+ *    分档：0–6 低 / 7–11 轻度升高 / 12–14 中等 / 15–20 高 / 21–26 极高。
+ *
+ * 【本文件不做的事】
+ * 不输出「你是同龄人平均的 X 倍」。FINDRISC 是分档评分工具，没有人群基线
+ * 比值这个量；倍数只在接入 China-PAR 这类有明确基线风险的方程时才成立。
  */
 
 export type Sex = "male" | "female";
 export type FamilyHistory = "none" | "second" | "first";
-export type RiskBand = "very-low" | "low" | "moderate" | "high" | "very-high";
+export type RiskBand =
+  | "low"
+  | "slightly-elevated"
+  | "moderate"
+  | "high"
+  | "very-high";
 
 export interface FindriscInput {
   /** 年龄（岁） */
@@ -26,6 +40,7 @@ export interface FindriscInput {
   bmi: number;
   /** 腰围（cm，肚脐水平） */
   waistCm: number;
+  /** 性别。现行 8 条目版本的风险分层不区分性别，保留字段以备扩展。 */
   sex: Sex;
   /** 是否每天 ≥30 分钟体力活动（工作或闲暇） */
   physicallyActive: boolean;
@@ -90,15 +105,15 @@ export const FIXED_KEYS: readonly ScoreKey[] = [
 export const ANTIHYPERTENSIVE_KEY: ScoreKey = "antihypertensive";
 
 /**
- * 10 年发病风险（%）分层的性别映射，来源 Lindström 2010。
- * very-high 一档官方口径约为 50%，取 50 用于展示。
+ * 10 年发病风险（%）按分档取值。来源见文件头第 3 条。
+ * 取整数值（1/4/17/33/50），不细分性别——现行版本的分层不区分性别。
  */
-const RISK_PERCENT: Record<RiskBand, { male: number; female: number }> = {
-  "very-low": { male: 0.3, female: 0.1 },
-  low: { male: 0.8, female: 0.4 },
-  moderate: { male: 2.6, female: 2.2 },
-  high: { male: 23.1, female: 14.1 },
-  "very-high": { male: 50, female: 50 },
+const RISK_PERCENT: Record<RiskBand, number> = {
+  low: 1,
+  "slightly-elevated": 4,
+  moderate: 17,
+  high: 33,
+  "very-high": 50,
 };
 
 function ageScore(age: number): number {
@@ -136,18 +151,18 @@ function familyHistoryScore(familyHistory: FamilyHistory): number {
   }
 }
 
-function bandOf(score: number): RiskBand {
-  if (score <= 3) return "very-low";
-  if (score <= 8) return "low";
-  if (score <= 12) return "moderate";
+/** 分档边界严格对齐文献：0–6 / 7–11 / 12–14 / 15–20 / 21–26。 */
+export function bandOf(score: number): RiskBand {
+  if (score <= 6) return "low";
+  if (score <= 11) return "slightly-elevated";
+  if (score <= 14) return "moderate";
   if (score <= 20) return "high";
   return "very-high";
 }
 
-function riskInfo(score: number, sex: Sex): RiskBandInfo {
+function riskInfo(score: number): RiskBandInfo {
   const band = bandOf(score);
-  const tenYearRiskPercent = RISK_PERCENT[band][sex];
-  return { band, tenYearRiskPercent };
+  return { band, tenYearRiskPercent: RISK_PERCENT[band] };
 }
 
 /** 逐条计算评分，返回完整明细。 */
@@ -186,10 +201,10 @@ export function evaluateFindrisc(input: FindriscInput): FindriscResult {
   return {
     score,
     breakdown,
-    current: riskInfo(score, input.sex),
+    current: riskInfo(score),
     modifiableScore,
     bestAchievableScore,
-    best: riskInfo(bestAchievableScore, input.sex),
+    best: riskInfo(bestAchievableScore),
     reclaimablePoints: modifiableScore,
   };
 }

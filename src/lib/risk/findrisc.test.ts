@@ -8,6 +8,7 @@ import { describe, it, expect } from "vitest";
 import {
   scoreFindrisc,
   evaluateFindrisc,
+  bandOf,
   type FindriscInput,
 } from "./findrisc";
 
@@ -89,35 +90,37 @@ describe("总分与分层边界", () => {
   it("全 0 分 = 极低风险", () => {
     const r = evaluateFindrisc(base());
     expect(r.score).toBe(0);
-    expect(r.current.band).toBe("very-low");
+    expect(r.current.band).toBe("low");
   });
 
-  it("分层边界：3/4、8/9、12/13、20/21", () => {
-    // 3 分 → very-low
-    expect(evaluateFindrisc(base({ familyHistory: "second" })).current.band).toBe("very-low");
-    // 4 分 → low
-    expect(evaluateFindrisc(base({ age: 65 })).current.band).toBe("low");
-    // 8 分 → low
-    expect(evaluateFindrisc(base({ age: 65, historyOfHighGlucose: true })).score).toBe(9); // 4+5
-    // 12 分 → moderate（4 age + 3 family + 5 glucose = 12）
-    expect(
-      evaluateFindrisc(base({ age: 65, familyHistory: "second", historyOfHighGlucose: true })).current.band,
-    ).toBe("moderate");
-    // 14 分 → high（age 65=4, first=5, glucose=5）
-    expect(
-      evaluateFindrisc(base({ age: 65, familyHistory: "first", historyOfHighGlucose: true })).current.band,
-    ).toBe("high");
-    // 21 分 → very-high（age 65=4, first=5, glucose=5, bmi=3, waist=4）
-    expect(
-      evaluateFindrisc(
-        base({ age: 65, familyHistory: "first", historyOfHighGlucose: true, bmi: 30, waistCm: 103 }),
-      ).current.band,
-    ).toBe("very-high");
+  it("分层边界：严格对齐 0–6 / 7–11 / 12–14 / 15–20 / 21–26", () => {
+    expect(bandOf(0)).toBe("low");
+    expect(bandOf(6)).toBe("low");
+    expect(bandOf(7)).toBe("slightly-elevated");
+    expect(bandOf(11)).toBe("slightly-elevated");
+    expect(bandOf(12)).toBe("moderate");
+    expect(bandOf(14)).toBe("moderate");
+    expect(bandOf(15)).toBe("high");
+    expect(bandOf(20)).toBe("high");
+    expect(bandOf(21)).toBe("very-high");
+    expect(bandOf(26)).toBe("very-high");
   });
 
-  it("10 年风险% 的性别映射", () => {
-    expect(evaluateFindrisc(base()).current.tenYearRiskPercent).toBe(0.3); // male very-low
-    expect(evaluateFindrisc(base({ sex: "female" })).current.tenYearRiskPercent).toBe(0.1);
+  it("10 年风险值：1% / 4% / 17% / 33% / 50%，不区分性别", () => {
+    expect(evaluateFindrisc(base()).current.tenYearRiskPercent).toBe(1);
+    expect(evaluateFindrisc(base({ sex: "female" })).current.tenYearRiskPercent).toBe(1);
+    // 16 分 → 高（15–20）→ 33%
+    const r16 = evaluateFindrisc(
+      base({
+        age: 65,
+        familyHistory: "first",
+        historyOfHighGlucose: true,
+        onAntihypertensive: true,
+      }),
+    );
+    expect(r16.score).toBe(16);
+    expect(r16.current.band).toBe("high");
+    expect(r16.current.tenYearRiskPercent).toBe(33);
   });
 });
 
@@ -144,10 +147,10 @@ describe("可回收风险（反事实）", () => {
     // 可改变项：bmi 3 + waist 4 + physicalActivity 2 + diet 1 = 10
     expect(r.modifiableScore).toBe(10);
     expect(r.reclaimablePoints).toBe(10);
-    // 达标后：25 - 10 = 15 → high
+    // 达标后：25 - 10 = 15 → high（15–20）→ 33%
     expect(r.bestAchievableScore).toBe(15);
     expect(r.best.band).toBe("high");
-    expect(r.best.tenYearRiskPercent).toBe(23.1); // male high
+    expect(r.best.tenYearRiskPercent).toBe(33);
   });
 
   it("无家族史但生活方式差的人，可回收项不应包含家族史", () => {
@@ -157,7 +160,7 @@ describe("可回收风险（反事实）", () => {
     // bmi 3 + waist 4 + activity 2 = 9，家族史 0 分不参与
     expect(r.modifiableScore).toBe(9);
     expect(r.bestAchievableScore).toBe(0);
-    expect(r.best.band).toBe("very-low");
+    expect(r.best.band).toBe("low");
   });
 
   it("降压药条目不纳入可回收（是既有治疗状态，不是生活方式目标）", () => {

@@ -6,8 +6,8 @@ import { RiskScale } from "./RiskScale";
 import { FactorControls, type Factors } from "./FactorControls";
 
 const BAND_LABEL: Record<RiskBand, string> = {
-  "very-low": "极低",
   low: "低",
+  "slightly-elevated": "轻度升高",
   moderate: "中等",
   high: "高",
   "very-high": "极高",
@@ -47,7 +47,8 @@ export function ReclaimSimulator() {
   const now = result.current.tenYearRiskPercent;
   const goal = result.best.tenYearRiskPercent;
   const reclaimable = result.reclaimablePoints;
-  const isLow = result.current.band === "very-low" || result.current.band === "low";
+  const isLow =
+    result.current.band === "low" || result.current.band === "slightly-elevated";
 
   return (
     <>
@@ -69,7 +70,7 @@ export function ReclaimSimulator() {
             倍数只有等接上 China-PAR（有明确人群基线）时才成立。
           */}
           <span className="risk-caption">
-            FINDRISC 总分 {result.score} 分 · 高风险区间为 13–20 分
+            FINDRISC 总分 {result.score} 分 · 高风险区间为 15–20 分
           </span>
         </div>
 

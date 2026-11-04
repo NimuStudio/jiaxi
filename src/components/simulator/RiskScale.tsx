@@ -3,11 +3,11 @@
 /**
  * 风险刻度尺
  *
- * 用对数刻度把 0.1%–50% 的 10 年风险摊开，否则低风险区间会被压成一条线。
+ * 用对数刻度把 1%–50% 的 10 年风险摊开，否则低风险区间会被压成一条线。
  * 两个标记点分别是「现在」和「全部达标后」，中间的橙色虚线就是可回收区间。
  */
 
-const MIN_RISK = 0.1;
+const MIN_RISK = 1;
 const MAX_RISK = 50;
 
 function position(risk: number): number {
@@ -16,9 +16,9 @@ function position(risk: number): number {
 }
 
 const TICKS = [
-  { value: 0.3, label: "0.3%" },
-  { value: 2.6, label: "2.6%" },
-  { value: 23.1, label: "23.1%" },
+  { value: 1, label: "1%" },
+  { value: 17, label: "17%" },
+  { value: 33, label: "33%" },
 ];
 
 export interface RiskScaleProps {

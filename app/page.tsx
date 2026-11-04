@@ -14,8 +14,9 @@ export default function Home() {
       <ReclaimSimulator />
 
       <p className="foot-note">
-        评分模型 FINDRISC（Lindström &amp; Tuomilehto, Diabetes Care 2003），
-        风险分层参照 Lindström 2010。本页面为演示，不构成医疗建议。
+        评分模型 FINDRISC（Lindström &amp; Tuomilehto, Diabetes Care 2003）；
+        本实现采用 8 条目、0–26 分的现行版本，风险分层与风险值依据见
+        <code>docs/references.md</code>。本页面为演示，不构成医疗建议。
       </p>
     </main>
   );
