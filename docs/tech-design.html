@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>家系 · 技术文档</title>
+<style>
+  @page { size: A4; margin: 17mm 16mm 16mm; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", system-ui, serif;
+    font-size: 10.5pt; line-height: 1.78; color: #1a1d1b;
+    margin: 0; max-width: none;
+  }
+  h1 { font-size: 19pt; margin: 0 0 12pt; color: #0f5f4c; page-break-after: avoid; }
+  h2 {
+    font-size: 13.5pt; margin: 18pt 0 7pt; color: #0f5f4c;
+    border-bottom: 1px solid #d8ded9; padding-bottom: 3pt;
+    page-break-after: avoid; page-break-before: auto;
+  }
+  h3 { font-size: 11.5pt; margin: 13pt 0 5pt; color: #14181a; page-break-after: avoid; }
+  p { margin: 0 0 7pt; text-align: justify; }
+  table {
+    width: 100%; border-collapse: collapse; margin: 7pt 0 11pt;
+    font-size: 9.5pt; page-break-inside: avoid;
+  }
+  th, td { border: 1px solid #d8ded9; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #f1f4f2; font-weight: 600; }
+  code {
+    font-family: Menlo, Consolas, monospace; font-size: 9pt;
+    background: #f3f5f3; padding: 1pt 3pt; border-radius: 2pt;
+  }
+  pre {
+    background: #f6f8f6; padding: 7pt 9pt; border-radius: 4pt;
+    overflow-x: auto; page-break-inside: avoid; font-size: 8.8pt; line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; }
+  blockquote {
+    margin: 7pt 0; padding: 6pt 10pt;
+    border-left: 3pt solid #c2610f; background: #fbf6f0; color: #5b4a2e;
+    page-break-inside: avoid;
+  }
+  blockquote p { margin: 0; }
+  ul, ol { margin: 0 0 7pt; padding-left: 17pt; }
+  li { margin-bottom: 2.5pt; }
+  hr { border: none; border-top: 1px solid #e2e6e2; margin: 14pt 0; }
+  strong { font-weight: 600; }
+</style>
+</head>
+<body><h1>家系 · 技术文档</h1>
+<blockquote>
+<p>AI + Web 赛道 / AI 与健康
+版本：1.0　最后更新：2026-11-04</p>
+</blockquote>
+<hr>
+<h2>一、项目概述</h2>
+<h3>1.1 一句话</h3>
+<p>把家族口述的病史整理成一张家系图，算出你的风险里有多少是「能拿回来的」，并给出这周就能做的一步。</p>
+<h3>1.2 要解决的问题</h3>
+<p>一个人去做体检，报告写着「未见异常」。但他心里清楚：父亲 52 岁放了心脏支架，爷爷有糖尿病，外婆是脑溢血走的。</p>
+<p>这些信息<strong>存在，却没有去处</strong>：</p>
+<ul>
+<li>体检报告只解读当次指标，不看家族；</li>
+<li>医院问卷问「家族史：有 / 无」，把最重要的三个维度（谁、几岁发病、几个亲属）全部丢掉；</li>
+<li>健康 App 给建议，但从不说「我这么改到底图什么」，也从不复算；</li>
+<li>家系图这个工具在临床用了六十年，医生画在病历本上，患者一辈子见不到第二次。</li>
+</ul>
+<p>结果是：<strong>信息在，判断不在，行动更不在。</strong></p>
+<h3>1.3 目标用户</h3>
+<p>30–45 岁、家里有慢病或肿瘤患者、会用网页但看不懂体检报告的成年子女。</p>
+<p>这个人群有一个特殊结构：<strong>使用者与受益者不是同一个人</strong>。用户在为父母负责，而父母往往不配合。所以产品必须做到：能替他梳理、能给他能转发的东西、能告诉他「先说服谁去查什么」。</p>
+<hr>
+<h2>二、需求分析</h2>
+<h3>2.1 真实场景</h3>
+<table>
+<thead>
+<tr>
+<th>时刻</th>
+<th>用户在想什么</th>
+<th>产品要给出什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>父亲刚放完支架</td>
+<td>「我会不会也一样」</td>
+<td>我的风险是多少，其中多少改不了</td>
+</tr>
+<tr>
+<td>拿到体检报告</td>
+<td>「未见异常，但我总觉得不对」</td>
+<td>标准体检漏了什么</td>
+</tr>
+<tr>
+<td>想改变生活习惯</td>
+<td>「知道该动，但不知道从哪开始」</td>
+<td>这周具体做哪一件</td>
+</tr>
+<tr>
+<td>三个月后</td>
+<td>「我这么折腾有用吗」</td>
+<td>重新算一遍，数字动了没有</td>
+</tr>
+</tbody></table>
+<h3>2.2 现有方案的不足</h3>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>缺什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>家族史问卷</td>
+<td>三个维度全丢，答完给一个说不出依据的分数</td>
+</tr>
+<tr>
+<td>遗传咨询门诊</td>
+<td>专业，但只有大三甲有，排不上，且多数人不需要遗传咨询，需要的是一次正确的筛查</td>
+</tr>
+<tr>
+<td>体检报告解读</td>
+<td>只解读已有指标，不看家族</td>
+</tr>
+<tr>
+<td>健康管理 App</td>
+<td>只给建议，不给可验证的目标，也不复算，第三周就被卸载</td>
+</tr>
+</tbody></table>
+<p><strong>空白</strong>：家系图存在六十年、方法成熟，却从未有一个面向家庭的数字化版本；而现有健康产品又只给建议、不给可验证的目标。</p>
+<h3>2.3 功能需求</h3>
+<ol>
+<li>口语输入 → 结构化家系节点（支持模糊、省略、改口、否定）</li>
+<li>家系图实时可视化，节点可点、依据可查、可删除</li>
+<li>从家系中读出家族史等级，接入风险量化</li>
+<li>风险拆解为「改不了的」与「可回收的」</li>
+<li>生成可执行的行动方案（最小动作，非方向）</li>
+<li>每个数字可追溯出处</li>
+</ol>
+<h3>2.4 非功能需求</h3>
+<table>
+<thead>
+<tr>
+<th>需求</th>
+<th>约束</th>
+<th>实现方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>隐私</td>
+<td>家族病史属敏感信息</td>
+<td>全链路本地推理，数据不出本机</td>
+</tr>
+<tr>
+<td>安全</td>
+<td>不得给出诊断或绝对概率</td>
+<td>只输出相对分层，不输出个人化概率</td>
+</tr>
+<tr>
+<td>可信</td>
+<td>每个数字有出处</td>
+<td>引用台账 + 证据校验</td>
+</tr>
+<tr>
+<td>可用</td>
+<td>评审期在线</td>
+<td>生产模式 + 反向隧道</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>三、系统架构</h2>
+<h3>3.1 总体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────┐
+│  浏览器                                          │
+│   /chat  对话 + 家系图     /  风险量化 + 行动方案  │
+└───────────────────┬─────────────────────────────┘
+                    │ HTTP
+┌───────────────────▼─────────────────────────────┐
+│  Next.js 16 (App Router, TypeScript)            │
+│   /api/extract  口述 → 家系节点                  │
+│   /api/explain  依据检索（BM25）                 │
+└───────────────────┬─────────────────────────────┘
+                    │ localhost
+┌───────────────────▼─────────────────────────────┐
+│  llama.cpp server (127.0.0.1:8080)              │
+│   Qwen3-1.7B Q4_K_M + GBNF 约束解码              │
+└─────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>关键约束</strong>：整条链路上，家族病史一次都没有离开这台电脑。</p>
+<h3>3.2 四层分离</h3>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>做什么</th>
+<th>用什么</th>
+<th>为什么不用大模型</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>① 理解层</td>
+<td>口述 → 结构化节点</td>
+<td>LLM</td>
+<td>——</td>
+</tr>
+<tr>
+<td>② 推断层</td>
+<td>家系 → 家族史等级</td>
+<td>词表 + 规则</td>
+<td>这是亲缘映射问题，不是语言问题</td>
+</tr>
+<tr>
+<td>③ 量化层</td>
+<td>加可变因素 → 倍数拆解</td>
+<td>FINDRISC 评分表</td>
+<td>系数必须可查、可复现</td>
+</tr>
+<tr>
+<td>④ 建议层</td>
+<td>分数 → 动作 + 出处</td>
+<td>RAG + 排序</td>
+<td>阈值必须来自文献</td>
+</tr>
+</tbody></table>
+<p><strong>为什么这样分</strong>：大模型只做它唯一不可替代的事——把口语变成结构。一旦涉及判断，就交给可复核的规则。这样无论换哪个模型，结论都不会变，只会影响抽取准确率。</p>
+<h3>3.3 技术选型</h3>
+<table>
+<thead>
+<tr>
+<th>选择</th>
+<th>备选</th>
+<th>理由</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Next.js 16</td>
+<td>Vite + Express</td>
+<td>前端与 API 同进程，部署简单；App Router 支持路由级代码分割</td>
+</tr>
+<tr>
+<td>本地 llama.cpp</td>
+<td>云端 API</td>
+<td>隐私（数据不出机）、稳定性（不依赖额度与网络）、能用 GBNF</td>
+</tr>
+<tr>
+<td>Qwen3-1.7B Q4_K_M</td>
+<td>8B / 14B</td>
+<td>1.2 GB，单次抽取 1–2 秒；家系抽取任务边界窄，不需要大模型</td>
+</tr>
+<tr>
+<td>GBNF 约束解码</td>
+<td>prompt 要求格式</td>
+<td>从解码层保证合法 JSON，不是靠祈祷</td>
+</tr>
+<tr>
+<td>BM25 检索</td>
+<td>向量检索</td>
+<td>语料仅 13 条，向量模型要多加载几百 MB，属过度设计</td>
+</tr>
+<tr>
+<td>固定槽位布局</td>
+<td>力导向图</td>
+<td>家系结构本身确定；固定槽位下新节点出现时老节点不移动</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>四、AI 技术方案</h2>
+<p>本章对应评分表 35% 的 AI 技术深度，按「选型 → 集成 → 优化 → 评测」展开。</p>
+<h3>4.1 选型：为什么是本地小模型</h3>
+<p><strong>隐私</strong>：家族病史包含「谁得了什么病、几岁死的」，属于最敏感的个人信息之一。走云 API 意味着这些文本会离开用户设备。本地推理把这条风险从根上消除，这不是技术偏好，是产品前提。</p>
+<p><strong>可用性</strong>：评审期需要服务在线。本地推理不依赖 API 额度、不依赖外网、不会被限流。</p>
+<p><strong>能力</strong>：GBNF 约束解码是 llama.cpp 独有的能力，云端只能靠 prompt 祈祷格式正确。</p>
+<p><strong>代价</strong>：模型小、能力弱。这个代价在 4.4 与 4.5 节用架构补回来。</p>
+<h3>4.2 模型</h3>
+<p>Qwen3-1.7B，Q4_K_M 量化，GGUF 格式，1.2 GB。</p>
+<p>选它的理由：</p>
+<ul>
+<li>中文能力强于同参数量英文模型；</li>
+<li>1.7B 在 Q4 量化后仅 1.2 GB，加载快、显存占用低；</li>
+<li>单次抽取实测 1.0–2.1 秒（RTX 5080，CUDA），可接受交互延迟。</li>
+</ul>
+<p>不支持思考模式（<code>enable_thinking=false</code>）：抽取任务不需要推理链，思考模式反而会让输出偏离格式。</p>
+<h3>4.3 GBNF 约束解码</h3>
+<p><strong>做法</strong>：把输出的 JSON 结构编译成文法，模型只能在文法允许的 token 上采样。</p>
+<pre><code>root    ::= &quot;{&quot; ws &quot;\&quot;persons\&quot;&quot; ws &quot;:&quot; ws persons ws &quot;}&quot;
+persons ::= &quot;[&quot; ws (person (ws &quot;,&quot; ws person)*)? ws &quot;]&quot;
+person  ::= &quot;{&quot; ... &quot;\&quot;relation\&quot;&quot; ws &quot;:&quot; ws rel ... &quot;}&quot;
+rel     ::= &quot;\&quot;father\&quot;&quot; | &quot;\&quot;mother\&quot;&quot; | ... | &quot;\&quot;unknown\&quot;&quot;
+dis     ::= &quot;\&quot;心梗\&quot;&quot; | &quot;\&quot;冠心病\&quot;&quot; | ... | &quot;\&quot;其他\&quot;&quot;
+</code></pre>
+<p><strong>为什么枚举用中文而不是英文编码</strong>：</p>
+<p>最初枚举用的是 <code>liver-cancer</code>、<code>type2-diabetes</code> 这类英文标识。实测发现：模型认得「肝癌」，但不知道它对应哪个英文串，新增病种的识别率接近零。</p>
+<p>改成让模型输出中文病名、后端映射回内部编码之后，问题消失。<strong>不要求模型记住人为定义的标识符</strong>，是这次改造最大的收益。</p>
+<p><strong>枚举由词表派生</strong>：GBNF 的疾病枚举、界面上的中文标签，都由 <code>DISEASES</code> 一张表生成。此前病名写在三个地方，加一个病种漏改一处就会出 bug。</p>
+<h3>4.4 分句抽取架构</h3>
+<p><strong>问题</strong>：1.7B 在「逗号分隔的多实体长句」上系统性失败。</p>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>我奶奶高血压，姥姥糖尿病</td>
+<td>只抽出奶奶</td>
+</tr>
+<tr>
+<td>我舅舅 45 岁糖尿病，外婆肺癌</td>
+<td>只抽出舅舅</td>
+</tr>
+</tbody></table>
+<p>但「外婆和姨妈都有乳腺癌」这种用「和」并列的句子，反而能抽全。</p>
+<p><strong>方案</strong>：按句切开、逐句抽取、合并去重。</p>
+<pre><code class="language-ts">// 逗号只在非并列时切分：「外婆和姨妈都有」是一个整体
+text.split(/[。；;]|(?&lt;![和及与、])，/)
+</code></pre>
+<p><strong>分句带出的三个新问题及修复</strong>（这是本次开发最值得记录的一段）：</p>
+<table>
+<thead>
+<tr>
+<th>新问题</th>
+<th>现象</th>
+<th>修复</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主语被切丢</td>
+<td>「我爷爷没熬过去，肺癌」→ 后半句没主语</td>
+<td>无病名片段作为主语前缀累积，拼到下一片段</td>
+</tr>
+<tr>
+<td>短片段凭空造病</td>
+<td>「我妈那边」单独抽取 → 编出乳腺癌</td>
+<td>无疾病词的片段直接跳过，不送模型</td>
+</tr>
+<tr>
+<td>否定句被硬抽</td>
+<td>「我妈身体还行」→ 抽出高血压</td>
+<td>prompt 加规则 + 示例，整句健康则输出空</td>
+</tr>
+</tbody></table>
+<p>修完，口语集 F1 从 0.611 提升到 0.850。</p>
+<h3>4.5 三层校验</h3>
+<p>约束解码保证 JSON 合法，保证不了内容正确。所以在模型外面加了三层：</p>
+<p><strong>第一层：词表校正</strong></p>
+<p>模型会把「老爹」抽成伯叔、「二姨」抽成舅舅。但文本里明确写了称谓——这时以词表为准。</p>
+<pre><code class="language-ts">// 句中只出现唯一称谓时，用词表覆盖模型判断
+// 「我爸和我叔都心梗」这种一句两人的，交给模型自己判断
+if (mentioned.size !== 1) return person;
+</code></pre>
+<p>这里有个细节：「我妈那边，二姨有乳腺癌」中的「我妈」只是划定范围，不是主语。所以要排除「称谓 + 那边 / 这边 / 家」这类方位指代，否则校正会被带偏。</p>
+<p><strong>第二层：证据校验</strong></p>
+<p>每个抽出的病，必须在原句里找到对应说法，找不到就删除。实测出现过「我爸前年做了搭桥，那时候五十五」被抽出多余的脑卒中——原文根本没提。</p>
+<pre><code>口语集 Precision: 0.895 → 1.000
+口语集 Recall:    0.810 → 0.762
+</code></pre>
+<p><strong>这个交换是刻意的</strong>：在医疗场景里，漏掉一个病只是信息不全，编造一个病会让下游给出错误建议。宁可漏，不可编。</p>
+<p><strong>第三层：结果去重</strong></p>
+<p>模型偶尔把同一个人输出两次（GBNF 允许数组重复）。统一按关系合并 conditions 去重。</p>
+<h3>4.6 Few-shot 设计</h3>
+<p>11 个示例，覆盖三类系统性错误：</p>
+<ol>
+<li><strong>中文亲属称谓</strong>（父系 / 母系、一级 / 二级）</li>
+<li><strong>疾病口语说法</strong>（放支架、脑溢血、搭桥）</li>
+<li><strong>否定与并列表达</strong>（身体还行、和 / 顿号并列）</li>
+</ol>
+<p>两条纪律：</p>
+<ul>
+<li><strong>表述刻意与评测集不同</strong>。如果示例和测试句子一样，等于把答案塞进上下文，指标会虚高。</li>
+<li><strong>示例必须像人说的话</strong>。踩过一次坑：「我爸 52 岁放的支架」不通——句中「的」是「的时候放的」省略了「的时候」，前面只能接模糊时间（「五十多岁放的支架」），接精确数字就不成立。改为「52 岁那年放了心脏支架」。</li>
+</ul>
+<h3>4.7 训练与推理的一致性</h3>
+<p>微调版本不使用 few-shot，让模型把称谓映射内化，推理时上下文更短。</p>
+<p>为此，system prompt 抽到 <code>src/lib/extract/prompt.ts</code> 单独维护，训练数据生成器与线上推理都从这里 import——<strong>否则会出现「训练时见过的指令」和「推理时收到的指令」不一致，效果直接打折</strong>。</p>
+<h3>4.8 评测方法与结果</h3>
+<p>自建两套评测集，同一套指标：</p>
+<table>
+<thead>
+<tr>
+<th>评测集</th>
+<th>条数</th>
+<th>Precision</th>
+<th>Recall</th>
+<th>F1</th>
+<th>完全匹配</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>规整句</td>
+<td>16</td>
+<td>0.952</td>
+<td>0.952</td>
+<td><strong>0.952</strong></td>
+<td>14/16</td>
+</tr>
+<tr>
+<td>口语</td>
+<td>21</td>
+<td><strong>1.000</strong></td>
+<td>0.714</td>
+<td>0.833</td>
+<td>13/18</td>
+</tr>
+</tbody></table>
+<p><strong>指标定义</strong>：把每个人 × 每种病展开成 <code>(relation, code)</code> 对，与人工标注比对，算 Precision / Recall / F1。年龄准确率单独统计（容差 ±2 岁）。完全匹配指整条输入的全部对与年龄都对。</p>
+<p><strong>为什么一定要有口语集</strong>：最初只有规整集，F1 0.927。后来意识到这些句子是开发者自己编的、偏书面、结构规整，于是另建一套刻意口语化的句子，同一套模型掉到 <strong>0.611</strong>。</p>
+<p>这个 0.611 才是真实水平。承认它，然后才有后面的修复。</p>
+<h3>4.9 失败模式分析</h3>
+<p>当前仍存在的失败（诚实记录）：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>例子</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>形容词性病名</td>
+<td>「我奶奶老年痴呆」（无谓语）→ 漏抽</td>
+<td>模型把它当成描述而非疾病；加「有」即正常</td>
+</tr>
+<tr>
+<td>词表覆盖</td>
+<td>「放了心脏支架」曾漏抽</td>
+<td>子串匹配，「放了支架」命中不了「放了心脏支架」</td>
+</tr>
+<tr>
+<td>多实体归属</td>
+<td>「我爸 52 岁放支架，爷爷糖尿病」偶尔把爷爷的病挂到父亲身上</td>
+<td>1.7B 的注意力分配能力限制</td>
+</tr>
+<tr>
+<td>单条波动</td>
+<td>同一输入两次结果可能不同</td>
+<td>小样本下 temperature 0.1 仍有波动</td>
+</tr>
+</tbody></table>
+<h3>4.10 微调尝试与阻塞</h3>
+<p>按计划生成了 1080 条训练数据（结构驱动：先构造语义结构再渲染成中文，标注 100% 准确，不依赖模型生成），并准备了完整的 LoRA 训练链路。</p>
+<p><strong>但训练被硬件架构阻塞</strong>：开发机为 RTX 5080（Blackwell，sm_120），预装的 PyTorch 为 cu126 构建，只编译到 sm_90，执行算子报 <code>no kernel image is available</code>。官方 cu128 wheel 在本地网络不可达，阿里云 PyTorch 镜像的下载速度约 90–600 KB/s，2.5 GB 需要一小时以上。</p>
+<p><strong>判断</strong>：此时 few-shot 方案已达 F1 0.952（规整）/ 0.833（口语），而微调能带来的确定性收益主要是「去掉 few-shot 提速」——但 <code>cache_prompt</code> 已让 few-shot 几乎不增加延迟。所以没有把时间押在训练上，转而补齐产品闭环与 RAG。</p>
+<p>训练数据、词表、生成器、评测集全部保留在仓库中，环境具备后可随时接上。</p>
+<hr>
+<h2>五、核心功能实现</h2>
+<h3>5.1 对话与抽取</h3>
+<p>用户在左侧输入口语，前端调 <code>/api/extract</code>，拿到结构化节点后合并进家系树，右侧图实时更新。</p>
+<p>几个实现细节：</p>
+<ul>
+<li><strong>合并而非覆盖</strong>：同一亲属可能被多段话提到（先说父亲心梗、后说父亲糖尿病），按关系合并 conditions 并去重，而不是覆盖。</li>
+<li><strong>依据随行</strong>：<code>onExtracted</code> 回调同时返回本次的用户原话，页面把它存进 <code>sources[relation]</code>，供后续「依据回溯」使用。</li>
+<li><strong>失败可见</strong>：推理服务未启动时，聊天区明确提示「请确认 llama-server 已在 8080 启动」，而不是静默失败。</li>
+</ul>
+<h3>5.2 家系图布局与渲染</h3>
+<p><strong>布局用固定槽位，不用力导向</strong>：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>力导向</th>
+<th>固定槽位（本项目）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>每次渲染位置</td>
+<td>可能不同</td>
+<td>恒定</td>
+</tr>
+<tr>
+<td>新节点出现时</td>
+<td>全图重排</td>
+<td>老节点不动，只长出一个</td>
+</tr>
+<tr>
+<td>语义</td>
+<td>靠距离暗示</td>
+<td>父系左、母系右、辈分自上而下</td>
+</tr>
+</tbody></table>
+<p>家系结构本来就是确定的，力导向是舍近求远。而且「新节点长出来、老节点不动」这个视觉，在演示里比「整张图重新排一次」强得多。</p>
+<p><strong>连线用正交折线</strong>（临床家系图标准画法），斜线会穿过节点。</p>
+<p>三种情况的兜底：</p>
+<ol>
+<li>祖辈 → 旁系列成「任一同系祖辈 → 该旁系」，避免用户只提到一位祖辈时旁系成为悬空孤点；</li>
+<li>祖辈全缺时，旁系改用虚线同胞线连到父母；</li>
+<li>同胞线走节点上方，避免横穿同排中间的其他节点。</li>
+</ol>
+<p><strong>符号语义</strong>：方形男性、圆形女性、实心表示有该病记录、空心表示未记录。这是临床家系图的通用约定，医生一眼能看懂。</p>
+<h3>5.3 风险量化</h3>
+<p>FINDRISC 八条目评分 + 风险分层 + <strong>可回收风险反事实</strong>。</p>
+<p>反事实的定义很直接：把可改变条目（BMI、腰围、体力活动、蔬果）全部设为 0 分，其余不动，重算总分。差出来的分数就是「可回收」的。</p>
+<p>界面上是一条对数刻度的风险尺，两个标记点分别是「现在」和「全部达标后」，中间的橙色虚线就是可回收区间。</p>
+<p><strong>为什么用对数刻度</strong>：风险值范围 1%–50%，线性刻度会把低风险区压成一条线，看不出「从 33% 降到 4%」的落差。</p>
+<p><strong>反事实滑块</strong>：拖动 BMI / 腰围，右侧数字实时重算。技术上纯前端（模型已加载），毫秒级响应。这是产品里最直击的一屏——用户不是被告知风险，是自己试出来的。</p>
+<h3>5.4 行动方案</h3>
+<p>不列 8 条建议让人全做，按 <code>分值 ÷ 难度</code> 排序，只留 2 件本周能做的。</p>
+<p>每条必须带<strong>最小动作</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>方向（无效）</th>
+<th>最小动作（有效）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>多运动</td>
+<td>先从每天 10 分钟开始，一周后加到 15 分钟</td>
+</tr>
+<tr>
+<td>控制体重</td>
+<td>晚饭主食减半，先坚持两周</td>
+</tr>
+<tr>
+<td>健康饮食</td>
+<td>午饭加一份青菜，别指望晚饭补</td>
+</tr>
+</tbody></table>
+<p>分值全部来自量规本身（做到 0 分能拿回多少），不引入未核实的外部效应量。</p>
+<p>其余项折叠为「还有 2 项，等这两件稳住了再说」——<strong>不假装要求用户全改</strong>。</p>
+<h3>5.5 依据检索</h3>
+<p>用户可以对任何一个数字问「凭什么」。</p>
+<p>实现为 BM25 检索：13 条已核实知识条目，中文按字符 2-gram 切分，阈值 1.8。</p>
+<p><strong>为什么不用向量检索</strong>：语料只有 13 条，向量模型要额外加载几百 MB、多一次推理往返。检索策略应当匹配语料规模，为小语料上向量模型是过度设计。</p>
+<p><strong>关键设计</strong>：检索不到时返回空，界面上明说「知识库里没有与这个问题匹配的条目，与其给一个听起来合理的答案，不如直接说没有」。实测「今天天气怎么样」正确返回未找到。</p>
+<p>语料只收录 <code>docs/references.md</code> 中核实过的内容，每条带出处。</p>
+<hr>
+<h2>六、测试与部署</h2>
+<h3>6.1 单元测试</h3>
+<p>23 个用例，覆盖两块纯逻辑：</p>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>用例数</th>
+<th>覆盖内容</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>FINDRISC 评分</td>
+<td>15</td>
+<td>逐项分值映射、分层边界（0-6/7-11/12-14/15-20/21-26）、反事实计算、降压药不纳入可回收</td>
+</tr>
+<tr>
+<td>家系血缘查询</td>
+<td>8</td>
+<td>一级/二级亲属识别、患病人数、最早发病年龄、空树处理</td>
+</tr>
+</tbody></table>
+<pre><code class="language-bash">pnpm test        # 23 passed
+pnpm typecheck   # 零错误
+</code></pre>
+<h3>6.2 评测集</h3>
+<p>两套（规整 16 条 / 口语 21 条），脚本化复现：</p>
+<pre><code class="language-bash">node scripts/eval-extract.ts
+node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl
+</code></pre>
+<p>指标输出 Precision / Recall / F1 / 年龄准确率 / 完全匹配，并逐条打印缺失与多余的对，便于定位。</p>
+<h3>6.3 构建</h3>
+<pre><code class="language-bash">pnpm build   # Next.js 16 Turbopack，约 2.5 秒，5 个路由
+</code></pre>
+<p>生产模式下发现并修复了两个本地开发未暴露的问题：</p>
+<ol>
+<li>「放了心脏支架」抽出空——词表子串匹配覆盖不足</li>
+<li>模型输出同一人两次——单句路径未去重</li>
+</ol>
+<p><strong>这两个 bug 说明生产构建不能只当流程走</strong>，它会暴露 dev 模式下被 HMR 或容错掩盖的问题。</p>
+<h3>6.4 部署</h3>
+<pre><code>clear.ysti.com.cn (nginx + Let&#39;s Encrypt TLS)
+  → 127.0.0.1:18001（SSH 反向隧道）
+  → 本机 5173（next start 生产模式）
+</code></pre>
+<p>前端固定跑 5173，隧道与 nginx 一行不用改。</p>
+<p><strong>已知风险</strong>：本机休眠会导致 502。评审期需保持机器唤醒，后续应改为真正的服务器部署。</p>
+<h3>6.5 在线演示</h3>
+<ul>
+<li>地址：<a href="https://clear.ysti.com.cn">https://clear.ysti.com.cn</a></li>
+<li>无需登录</li>
+<li>演示模式：<code>/chat?demo=1</code> 加载预置家系，不依赖推理服务</li>
+</ul>
+<hr>
+<h2>七、创新点</h2>
+<h3>7.1 技术创新</h3>
+<p><strong>1. 可回收风险（reclaimable risk）</strong></p>
+<p>把风险拆成「改不了的」（年龄、家族史、既往史）与「能拿回来的」（生活方式），并把后者变成一个可计算、可比较、能复算的数字。</p>
+<p>这不是文案创新——它来自量规条目本身的分组性质，且反事实计算可被任何人用同一张量表复现。</p>
+<p><strong>2. GBNF 约束 + 三层校验的混合架构</strong></p>
+<p>约束解码保证格式，三层校验保证内容：</p>
+<table>
+<thead>
+<tr>
+<th>层</th>
+<th>手段</th>
+<th>解决</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>词表校正</td>
+<td>符号规则</td>
+<td>「老爹」被抽成伯叔</td>
+</tr>
+<tr>
+<td>证据校验</td>
+<td>原文比对</td>
+<td>凭空多出一个病</td>
+</tr>
+<tr>
+<td>合并去重</td>
+<td>结构归一</td>
+<td>同一人输出两次</td>
+</tr>
+</tbody></table>
+<p>这条链路的思路是：<strong>用确定性规则兜住不确定的模型</strong>，而不是指望模型自己变准。</p>
+<p><strong>3. 分句抽取解决小模型的多实体缺陷</strong></p>
+<p>1.7B 在长句里会漏掉第二个亲属。解法不是换更大的模型，而是改变输入形态——让模型每次只面对一个人。</p>
+<p>配套解决了分句带来的三个副作用（主语丢失、空片段幻觉、否定误判）。</p>
+<p><strong>4. 中文标签枚举</strong></p>
+<p>要求模型输出 <code>liver-cancer</code> 这类人为标识符，识别率接近零；改成输出「肝癌」再后端映射，问题消失。</p>
+<p><strong>不要求模型记住人类定义的编码</strong>，是这次改造最大的收益，也可迁移到任何「模型输出 → 系统编码」的场景。</p>
+<h3>7.2 应用创新</h3>
+<p><strong>1. 家系图从「报告」变成「可点开的底稿」</strong></p>
+<p>临床家系图画完就夹进病历，患者见不到第二次。这里每个节点都能点开：看它是从你哪句话抽出来的，也能直接删掉。</p>
+<p><strong>抽取结果可见、可改、可追溯</strong>——这是与黑盒 AI 最实质的区别。</p>
+<p><strong>2. 使用者与受益者分离</strong></p>
+<p>用户是成年子女，受益人是父母，而父母不配合。所以产品输出的是「能替你说服家人的东西」：可打印的图、可转发的提醒、能递给医生的清单。</p>
+<p><strong>3. 反馈降门槛，而不是催促</strong></p>
+<p>用户没做到时，正确的反应不是推送「该打卡了」，而是系统自己把门槛降下来：「15 分钟太长？先改成 8 分钟」。这个区别一眼可辨：前者在执行脚本，后者在重新规划。</p>
+<hr>
+<h2>八、总结与展望</h2>
+<h3>8.1 已完成</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>风险量化（FINDRISC + 可回收风险 + 反事实滑块）</td>
+<td>完成，引用已核实</td>
+</tr>
+<tr>
+<td>家系数据模型与血缘查询</td>
+<td>完成，8 个单测</td>
+</tr>
+<tr>
+<td>本地 LLM 抽取（GBNF + 分句 + 三层校验）</td>
+<td>完成，F1 0.952 / 口语 P 1.000</td>
+</tr>
+<tr>
+<td>对话页 + 家系图实时生长</td>
+<td>完成</td>
+</tr>
+<tr>
+<td>节点依据回溯与删除</td>
+<td>完成</td>
+</tr>
+<tr>
+<td>家系 → 量化衔接</td>
+<td>完成</td>
+</tr>
+<tr>
+<td>行动方案</td>
+<td>完成</td>
+</tr>
+<tr>
+<td>依据检索（RAG）</td>
+<td>完成，13 条语料</td>
+</tr>
+<tr>
+<td>生产构建与在线部署</td>
+<td>完成，公网可访问</td>
+</tr>
+<tr>
+<td>训练数据与训练链路</td>
+<td>数据就绪，训练受 GPU 架构阻塞</td>
+</tr>
+</tbody></table>
+<h3>8.2 局限</h3>
+<ul>
+<li>只覆盖 2 型糖尿病；心血管风险（China-PAR）因未取得论文补充材料中的系数而未实现</li>
+<li>筛查建议未上线：结直肠癌、乳腺癌的起始年龄依赖中国指南原文，未逐条核实前不放进产品</li>
+<li>口语评测集 21 条，由开发者编写而非真实采集，规模不足以支撑强结论</li>
+<li>词表为子串匹配，覆盖不全时会漏抽（「放了心脏支架」曾漏）</li>
+<li>在线演示依赖本机隧道，不满足长期可用性要求</li>
+</ul>
+<h3>8.3 下一步</h3>
+<ol>
+<li><strong>补 China-PAR</strong>：拿到系数后即可给出心血管的倍数拆解，届时「你是同龄人的 2.4 倍」这句话才成立</li>
+<li><strong>核实筛查指南条文</strong>：逐条核对原文后上线筛查时间表</li>
+<li><strong>真实语料采集</strong>：向真实用户收集家族史描述，替换开发者编写的评测集</li>
+<li><strong>完成微调</strong>：在支持 Blackwell 的环境中训练，把 few-shot 内化</li>
+<li><strong>改为服务器部署</strong>：脱离本机隧道</li>
+</ol>
+<hr>
+<h2>九、参考文献</h2>
+<p>所有进入产品的数字均在 <code>docs/references.md</code> 中登记了核实状态与出处链接。</p>
+<ol>
+<li>Lindström J, Tuomilehto J. The diabetes risk score: a practical tool to predict type 2 diabetes risk. <em>Diabetes Care</em>. 2003;26(3):725-731. PMID 12610029. DOI 10.2337/diacare.26.3.725</li>
+<li>加拿大预防保健工作组（CTFPHC）. Type 2 Diabetes — Clinician FINDRISC 临床工具（8 条目、0–26 分版本）</li>
+<li><em>Cardiovascular Diabetology</em>. 2024. FINDRISC 风险分层与 10 年风险值（1% / 4% / 17% / 33% / 50%）</li>
+<li>SciELO. Translation, cross-cultural adaptation and validation of FINDRISC（0–26 分、五档分层）</li>
+<li><em>Brazilian guideline for screening and diagnosis of type 2 diabetes</em>. 2024（8 条目分值明细）</li>
+</ol>
+<blockquote>
+<p>说明：本项目<strong>没有</strong>引用任何未被核实的效应量或指南阈值。凡未取得原文的内容，一律不进入产品界面，仅在本文档「局限」与「下一步」中列出。</p>
+</blockquote>
+</body>
+</html>
