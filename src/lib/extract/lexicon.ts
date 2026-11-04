@@ -33,8 +33,8 @@ export interface RelationSpec {
  */
 export const RELATIONS: RelationSpec[] = [
   // —— 一级亲属 ——
-  { relation: "father", sex: "male", degree: 1, aliases: ["我爸", "父亲", "老爸", "老爹", "我爸他"] },
-  { relation: "mother", sex: "female", degree: 1, aliases: ["我妈", "母亲", "老妈", "老娘", "我妈她"] },
+  { relation: "father", sex: "male", degree: 1, aliases: ["我爸", "父亲", "老爸", "老爹", "俺爸", "我爸他"] },
+  { relation: "mother", sex: "female", degree: 1, aliases: ["我妈", "母亲", "老妈", "老娘", "俺妈", "我妈她"] },
   { relation: "brother", sex: "male", degree: 1, aliases: ["我哥", "我弟弟", "哥哥", "弟弟", "我兄弟"] },
   { relation: "sister", sex: "female", degree: 1, aliases: ["我姐", "我妹妹", "姐姐", "妹妹", "我姐妹"] },
   { relation: "son", sex: "male", degree: 1, aliases: ["我儿子", "儿子"] },
@@ -49,12 +49,12 @@ export const RELATIONS: RelationSpec[] = [
   { relation: "maternal-grandmother", sex: "female", degree: 2, aliases: ["我外婆", "外婆", "我姥姥", "姥姥", "我外祖母"] },
 
   // —— 二级亲属：父系旁系 ——
-  { relation: "paternal-uncle", sex: "male", degree: 2, aliases: ["我伯伯", "我叔叔", "大伯", "叔叔", "我叔"] },
-  { relation: "paternal-aunt", sex: "female", degree: 2, aliases: ["我姑姑", "姑姑", "我姑妈", "姑妈", "我姑"] },
+  { relation: "paternal-uncle", sex: "male", degree: 2, aliases: ["我伯伯", "我叔叔", "大伯", "叔叔", "我叔", "二伯", "三伯", "小叔", "三叔"] },
+  { relation: "paternal-aunt", sex: "female", degree: 2, aliases: ["我姑姑", "姑姑", "我姑妈", "姑妈", "我姑", "大姑", "小姑", "二姑"] },
 
   // —— 二级亲属：母系旁系（与上面成对） ——
   { relation: "maternal-uncle", sex: "male", degree: 2, aliases: ["我舅舅", "舅舅", "我舅"] },
-  { relation: "maternal-aunt", sex: "female", degree: 2, aliases: ["我姨妈", "姨妈", "我姨", "姨母", "我小姨"] },
+  { relation: "maternal-aunt", sex: "female", degree: 2, aliases: ["我姨妈", "姨妈", "我姨", "姨母", "我小姨", "大姨", "二姨", "三姨"] },
 ];
 
 export interface DiseaseSpec {
@@ -80,7 +80,7 @@ export const DISEASES: DiseaseSpec[] = [
     nounAliases: ["冠心病"],
     verbAliases: ["放了支架", "做了搭桥", "心脏血管堵了"],
   },
-  { code: "stroke", nounAliases: ["脑梗", "脑溢血", "脑出血", "中风", "脑卒中"] },
+  { code: "stroke", nounAliases: ["脑梗", "脑溢血", "脑出血", "中风", "脑卒中", "脑血栓", "脑梗塞", "脑栓塞"] },
   { code: "hypertension", nounAliases: ["高血压"], verbAliases: ["血压高"] },
   { code: "type2-diabetes", nounAliases: ["糖尿病"], verbAliases: ["血糖高"] },
   { code: "colorectal-cancer", nounAliases: ["肠癌", "结直肠癌", "大肠癌"] },

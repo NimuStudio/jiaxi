@@ -45,7 +45,10 @@ async function main() {
     process.exit(1);
   }
 
-  const raw = readFileSync("data/eval/pedigree-eval.jsonl", "utf8");
+  const fileArg = process.argv.find((a) => a.startsWith("--file="));
+  const evalFile = fileArg ? fileArg.slice(7) : "data/eval/pedigree-eval.jsonl";
+  console.log(`评测集：${evalFile}\n`);
+  const raw = readFileSync(evalFile, "utf8");
   const cases: EvalCase[] = raw
     .split("\n")
     .filter((l) => l.trim().length > 0)
