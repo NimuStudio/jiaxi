@@ -221,6 +221,24 @@ function reconcileRelation(segment: string, person: ExtractedPerson): ExtractedP
 }
 
 /**
+ * 证据校验：只保留原文中真的出现过的疾病。
+ *
+ * 模型的幻觉在医疗场景里代价很高（多出一个「脑卒中」，下游筛查建议就变了）。
+ * 约束解码能保证 JSON 合法，但保证不了内容有依据。所以这里加一道硬校验：
+ * 每个抽出来的病，必须能在原句里找到对应的说法，找不到就删除。
+ * 没有对应词条的编码（如 other）不参与校验，原样保留。
+ */
+function dropUnmentioned(segment: string, person: ExtractedPerson): ExtractedPerson {
+  const kept = person.conditions.filter((c) => {
+    const spec = DISEASES.find((d) => d.code === c.code);
+    if (!spec) return true;
+    const aliases = [...spec.nounAliases, ...(spec.verbAliases ?? [])];
+    return aliases.some((a) => segment.includes(a));
+  });
+  return { ...person, conditions: kept };
+}
+
+/**
  * 从一段口语描述里抽取家系节点。
  * 抛错时带上原始输出，方便定位是语法问题还是模型问题。
  */
@@ -259,7 +277,9 @@ export async function extractPedigree(
     const parsed = JSON.parse(content) as ExtractResult;
     // 抽取完立刻用词表校正关系——文本里写明的称谓比模型猜的更可靠。
     return {
-      persons: (parsed.persons ?? []).map((p) => reconcileRelation(text, p)),
+      persons: (parsed.persons ?? [])
+        .map((p) => reconcileRelation(text, p))
+        .map((p) => dropUnmentioned(text, p)),
     };
   } catch {
     throw new Error(`约束解码仍返回了非 JSON（不应发生）：${content.slice(0, 200)}`);
