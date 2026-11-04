@@ -1,0 +1,14 @@
+{
+  "name": "pedigree-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "家系 · 演示视频动画段（Remotion）",
+  "scripts": {
+    "studio": "remotion studio",
+    "render:opening": "remotion render src/index.ts Opening out/1-opening.mp4 --codec=h264 --crf=18",
+    "render:pipeline": "remotion render src/index.ts Pipeline out/2-pipeline.mp4 --codec=h264 --crf=18",
+    "render:riskdrop": "remotion render src/index.ts RiskDrop out/3-riskdrop.mp4 --codec=h264 --crf=18",
+    "render:outro": "remotion render src/index.ts Outro out/4-outro.mp4 --codec=h264 --crf=18",
+    "render:all": "pnpm render:opening && pnpm render:pipeline && pnpm render:riskdrop && pnpm render:outro"
+  }
+}
