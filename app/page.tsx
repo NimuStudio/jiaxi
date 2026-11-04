@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ReclaimSimulator } from "@/components/simulator/ReclaimSimulator";
 
 export default function Home() {
@@ -9,6 +10,9 @@ export default function Home() {
           家系
         </span>
         <span className="tagline">你的风险里，有多少能拿回来</span>
+        <Link className="head-link" href="/chat">
+          先梳理家系 →
+        </Link>
       </header>
 
       <ReclaimSimulator />
