@@ -33,7 +33,7 @@ console.log(`  一级亲属糖尿病 -> ${breakdown.familyHistory} 分`);
 console.log("");
 console.log(`当前总分：${result.score}，10 年糖尿病风险 ${current.tenYearRiskPercent}%（${current.band}）`);
 console.log(`可回收分数：${reclaimablePoints} 分（BMI、腰围、运动、饮食）`);
-console.log(`如果全部达标：总分降到 ${best.tenYearRiskPercent === current.tenYearRiskPercent ? best.score : result.bestAchievableScore}，风险降到 ${best.tenYearRiskPercent}%（${best.band}）`);
+console.log(`如果全部达标：总分降到 ${result.bestAchievableScore}，风险降到 ${best.tenYearRiskPercent}%（${best.band}）`);
 console.log("");
 console.log("一句话：");
 console.log(`  10 年风险从 ${current.tenYearRiskPercent}% 降到 ${best.tenYearRiskPercent}%，`);

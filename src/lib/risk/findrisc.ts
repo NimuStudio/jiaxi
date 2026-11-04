@@ -61,7 +61,7 @@ export interface FindriscResult {
   reclaimablePoints: number;
 }
 
-type ScoreKey =
+export type ScoreKey =
   | "age"
   | "bmi"
   | "waist"

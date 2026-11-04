@@ -1,0 +1,477 @@
+/* ============================================
+   家系 · 设计系统
+   浅色底 / 医疗沉稳绿 / 可回收橙
+   ============================================ */
+
+:root {
+  --bg: #f5f7f5;
+  --surface: #ffffff;
+  --text: #14181a;
+  --text-muted: #66706e;
+  --text-faint: #98a09d;
+  --line: #e2e6e2;
+  --line-strong: #cfd5d0;
+  --primary: #0f5f4c;
+  --primary-soft: #e9f2ee;
+  --reclaim: #c2610f;
+  --reclaim-soft: #fbeedf;
+  --reclaim-line: #e9a765;
+  --danger: #a3271f;
+  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-lg: 20px;
+  --shadow: 0 1px 2px rgba(20, 24, 26, 0.04), 0 8px 24px rgba(20, 24, 26, 0.05);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui,
+    -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 1020px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+/* ---------- 页头 ---------- */
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.brand {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+}
+
+.brand-mark {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--reclaim);
+  margin-right: 8px;
+  vertical-align: 2px;
+}
+
+.tagline {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* ---------- 卡片 ---------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+}
+
+.card + .card {
+  margin-top: 18px;
+}
+
+.section-label {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--text-faint);
+  margin: 0 0 16px;
+  text-transform: uppercase;
+}
+
+/* ---------- 风险主数字 ---------- */
+
+.risk-headline {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.risk-big {
+  font-size: 54px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--danger);
+  transition: color 0.25s ease;
+}
+
+.risk-big.is-low {
+  color: var(--primary);
+}
+
+.risk-unit {
+  font-size: 20px;
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.risk-caption {
+  font-size: 14px;
+  color: var(--text-muted);
+  padding-bottom: 8px;
+}
+
+.band-chip {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--reclaim-soft);
+  color: var(--reclaim);
+  vertical-align: 12px;
+  margin-left: 4px;
+}
+
+.band-chip.is-low {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+/* ---------- 对比区 ---------- */
+
+.compare {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 20px;
+  align-items: center;
+  margin: 26px 0 8px;
+}
+
+.compare-item {
+  text-align: center;
+}
+
+.compare-item .value {
+  font-size: 30px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.compare-item .label {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.compare-arrow {
+  font-size: 13px;
+  color: var(--reclaim);
+  text-align: center;
+  line-height: 1.4;
+  min-width: 92px;
+}
+
+.compare-arrow strong {
+  display: block;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.compare-item.now .value {
+  color: var(--danger);
+}
+
+.compare-item.goal .value {
+  color: var(--primary);
+}
+
+/* ---------- 风险刻度尺 ---------- */
+
+.scale {
+  position: relative;
+  height: 58px;
+  margin: 14px 4px 0;
+}
+
+.scale-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 26px;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #d8ebe3 0%, #f5e3cd 62%, #f0cfc9 100%);
+}
+
+.scale-tick {
+  position: absolute;
+  top: 38px;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.scale-tick::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -12px;
+  width: 1px;
+  height: 8px;
+  background: var(--line-strong);
+}
+
+.scale-marker {
+  position: absolute;
+  top: 20px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scale-marker.now {
+  background: var(--danger);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px var(--danger);
+  z-index: 2;
+}
+
+.scale-marker.goal {
+  background: var(--primary);
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.scale-reclaim {
+  position: absolute;
+  top: 27px;
+  height: 4px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--reclaim-line) 0 6px,
+    transparent 6px 11px
+  );
+  transition: left 0.35s ease, width 0.35s ease;
+}
+
+/* ---------- 因素控制 ---------- */
+
+.factors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px;
+  margin-top: 26px;
+}
+
+@media (max-width: 720px) {
+  .factors {
+    grid-template-columns: 1fr;
+  }
+  .risk-big {
+    font-size: 42px;
+  }
+  .page {
+    padding: 20px 16px 48px;
+  }
+  .card {
+    padding: 20px;
+  }
+}
+
+.factor-group-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px;
+  color: var(--text);
+}
+
+.factor-group-hint {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin: 0 0 14px;
+}
+
+.factor {
+  margin-bottom: 16px;
+}
+
+.factor-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13.5px;
+  margin-bottom: 6px;
+}
+
+.factor-row .name {
+  color: var(--text);
+}
+
+.factor-row .val {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.factor-row .val.hot {
+  color: var(--reclaim);
+  font-weight: 600;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  background: var(--line);
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+  cursor: grab;
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 2px solid #fff;
+  cursor: grab;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.toggle-row:last-child {
+  border-bottom: none;
+}
+
+.toggle-btn {
+  font-size: 12.5px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  font-family: inherit;
+}
+
+.toggle-btn[data-on="true"] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  font-weight: 500;
+}
+
+/* 固定因素列表 */
+
+.fixed-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--line);
+  color: var(--text-muted);
+}
+
+.fixed-item:last-child {
+  border-bottom: none;
+}
+
+.fixed-item .fixed-val {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.fixed-note {
+  font-size: 12px;
+  color: var(--text-faint);
+  margin-top: 10px;
+  line-height: 1.55;
+}
+
+/* ---------- 结论条 ---------- */
+
+.verdict {
+  margin-top: 22px;
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  background: var(--reclaim-soft);
+  border: 1px solid #f3dcc2;
+  font-size: 14px;
+  line-height: 1.65;
+  color: #6b3a0c;
+}
+
+.verdict strong {
+  font-weight: 600;
+  color: var(--reclaim);
+}
+
+.verdict.is-done {
+  background: var(--primary-soft);
+  border-color: #cfe5db;
+  color: #0b4536;
+}
+
+.verdict.is-done strong {
+  color: var(--primary);
+}
+
+/* ---------- 页脚说明 ---------- */
+
+.foot-note {
+  margin-top: 26px;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--text-faint);
+  text-align: center;
+}
+
+.foot-note code {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11.5px;
+  background: #eceee9;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
