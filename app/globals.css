@@ -871,3 +871,135 @@ input[type="range"]::-moz-range-thumb {
 .evidence-remove:hover {
   background: #fcebeb;
 }
+
+/* ---------- 行动方案 ---------- */
+
+.plan-lead {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  margin: 0 0 16px;
+}
+
+.plan-lead strong {
+  color: var(--reclaim);
+  font-weight: 600;
+}
+
+.plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.plan-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--reclaim-soft);
+  border: 1px solid #f3dcc2;
+}
+
+.plan-index {
+  flex: 0 0 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--reclaim);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.plan-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b3a0c;
+  margin-bottom: 5px;
+}
+
+.plan-step {
+  font-size: 12.5px;
+  color: #8a5a2b;
+  line-height: 1.6;
+}
+
+.plan-step-label {
+  display: inline-block;
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(194, 97, 15, 0.12);
+  color: var(--reclaim);
+  margin-right: 6px;
+}
+
+.plan-points {
+  flex: 0 0 auto;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--reclaim);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.plan-points span {
+  font-size: 12px;
+  font-weight: 400;
+  margin-left: 2px;
+}
+
+.plan-later {
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+
+.plan-later summary {
+  cursor: pointer;
+  padding: 8px 0;
+  list-style: none;
+}
+
+.plan-later summary::-webkit-details-marker {
+  display: none;
+}
+
+.plan-later summary::before {
+  content: "＋ ";
+  color: var(--text-faint);
+}
+
+.plan-later[open] summary::before {
+  content: "－ ";
+}
+
+.plan-later ul {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  line-height: 1.9;
+}
+
+.plan-note {
+  margin: 14px 0 0;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--text-faint);
+}
+
+.plan-done {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #0b4536;
+  margin: 0;
+}

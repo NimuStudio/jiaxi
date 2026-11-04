@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { evaluateFindrisc, type RiskBand } from "@/lib/risk/findrisc";
+import { ActionPlan } from "@/components/plan/ActionPlan";
 import { RiskScale } from "./RiskScale";
 import { FactorControls, type Factors } from "./FactorControls";
 
@@ -117,6 +118,12 @@ export function ReclaimSimulator() {
           }
         />
       </section>
+
+      <ActionPlan
+        result={result}
+        currentBmi={factors.bmi}
+        currentWaist={factors.waistCm}
+      />
     </>
   );
 }
