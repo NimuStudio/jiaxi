@@ -47,7 +47,7 @@ const SYSTEM_PROMPT_TEXT = SYSTEM_PROMPT;
 const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "user",
-    content: "我爸 50 岁心梗。",
+    content: "我爸 50 岁那年心梗。",
   },
   {
     role: "assistant",
@@ -119,7 +119,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   },
   {
     role: "user",
-    content: "我叔叔 50 岁心梗，我妈身体还行。",
+    content: "我叔叔 50 岁那年心梗，我妈身体还行。",
   },
   {
     role: "assistant",
