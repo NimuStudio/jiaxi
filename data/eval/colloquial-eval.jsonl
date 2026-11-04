@@ -16,3 +16,6 @@
 {"id":"c16","input":"我奶奶那人，血压高，后来中风了。","expected":[{"relation":"paternal-grandmother","sex":"female","conditions":[{"code":"hypertension","onsetAge":null},{"code":"stroke","onsetAge":null}]}]}
 {"id":"c17","input":"我妈身体一直不好，糖尿病十几年了。","expected":[{"relation":"mother","sex":"female","conditions":[{"code":"type2-diabetes","onsetAge":null}]}]}
 {"id":"c18","input":"我大伯胃癌，做完手术了。","expected":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"gastric-cancer","onsetAge":null}]}]}
+{"id":"c19","input":"我爸 52 岁那年放了心脏支架。","expected":[{"relation":"father","sex":"male","conditions":[{"code":"coronary-heart-disease","onsetAge":52}]}]}
+{"id":"c20","input":"我爷爷肝癌走的。","expected":[{"relation":"paternal-grandfather","sex":"male","conditions":[{"code":"liver-cancer","onsetAge":null}]}]}
+{"id":"c21","input":"我叔叔尿毒症，透析好几年了。","expected":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"chronic-kidney-disease","onsetAge":null}]}]}

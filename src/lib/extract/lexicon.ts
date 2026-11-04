@@ -89,8 +89,18 @@ export const DISEASES: DiseaseSpec[] = [
   {
     code: "coronary-heart-disease",
     label: "冠心病",
-    nounAliases: ["冠心病"],
-    verbAliases: ["放了支架", "做了搭桥", "心脏血管堵了"],
+    // 注意：匹配是子串判断，所以「放了支架」无法命中「放了心脏支架」。
+    // 核心名词与常见动词说法都要列全，否则整句会被当成「没有疾病词」而被过滤掉。
+    nounAliases: ["冠心病", "心脏支架", "冠脉支架", "心脏血管堵"],
+    verbAliases: [
+      "放了支架",
+      "放了心脏支架",
+      "做了支架",
+      "下了支架",
+      "做了搭桥",
+      "搭了桥",
+      "心脏血管堵了",
+    ],
   },
   {
     code: "stroke",

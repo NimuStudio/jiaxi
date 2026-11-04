@@ -284,18 +284,20 @@ export async function extractPedigree(
   try {
     const parsed = JSON.parse(content) as ExtractResult;
     // 抽取完立刻用词表校正关系——文本里写明的称谓比模型猜的更可靠。
-    return {
-      persons: (parsed.persons ?? [])
-        .map((p) => ({
-          ...p,
-          conditions: (p.conditions ?? []).map((c) => ({
-            ...c,
-            code: LABEL_TO_CODE.get(c.code) ?? c.code,
-          })),
-        }))
-        .map((p) => reconcileRelation(text, p))
-        .map((p) => dropUnmentioned(text, p)),
-    };
+    const cleaned = (parsed.persons ?? [])
+      .map((p) => ({
+        ...p,
+        conditions: (p.conditions ?? []).map((c) => ({
+          ...c,
+          code: LABEL_TO_CODE.get(c.code) ?? c.code,
+        })),
+      }))
+      .map((p) => reconcileRelation(text, p))
+      .map((p) => dropUnmentioned(text, p));
+
+    // 模型偶尔会把同一个人输出两次（GBNF 允许数组重复），
+    // 这里统一合并去重，避免上游拿到脏数据。
+    return mergeResults([{ persons: cleaned }]);
   } catch {
     throw new Error(`约束解码仍返回了非 JSON（不应发生）：${content.slice(0, 200)}`);
   }
