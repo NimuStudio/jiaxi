@@ -70,6 +70,41 @@ function mergePersons(
   return [...map.values()];
 }
 
+/** 一级亲属：父母、子女、兄弟姐妹。 */
+const FIRST_DEGREE = new Set([
+  "father",
+  "mother",
+  "brother",
+  "sister",
+  "son",
+  "daughter",
+]);
+
+/**
+ * 从已梳理的家系里读出「糖尿病家族史」等级。
+ *
+ * FINDRISC 的家族史条目只关心糖尿病：一级亲属 5 分、二级亲属 3 分。
+ * 这里把这件事从图里直接算出来，用户不必再回答一遍
+ * 「你家里有没有人得糖尿病」——这是家系图对下游量化的直接贡献。
+ */
+function diabetesFamilyHistory(
+  persons: ExtractedPerson[],
+): "none" | "second" | "first" {
+  const affected = persons.filter((p) =>
+    p.conditions.some((c) => c.code === "type2-diabetes"),
+  );
+  if (affected.some((p) => FIRST_DEGREE.has(p.relation))) return "first";
+  if (affected.length > 0) return "second";
+  return "none";
+}
+
+const HISTORY_TEXT: Record<"none" | "second" | "first", string> = {
+  none: "目前还没有记录到糖尿病家族史。",
+  second: "有二级亲属患糖尿病（祖辈或叔姑舅姨），FINDRISC 记 3 分。",
+  first:
+    "有一级亲属患糖尿病（父母、兄弟姐妹或子女），FINDRISC 记 5 分——这是该量表里权重最高的一项。",
+};
+
 export default function ChatPage() {
   const [persons, setPersons] = useState<ExtractedPerson[]>([]);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
@@ -111,6 +146,18 @@ export default function ChatPage() {
           <p className="graph-hint">
             方形为男性，圆形为女性，实心表示有该病记录。信息分批说也可以，图上会持续补充。
           </p>
+
+          {persons.length > 0 && (
+            <div className="next-step">
+              <div className="next-step-label">这些信息换来了什么</div>
+              <p className="next-step-body">
+                {HISTORY_TEXT[diabetesFamilyHistory(persons)]}
+              </p>
+              <Link className="next-step-cta" href="/">
+                补几个体检数字，看“可回收风险” →
+              </Link>
+            </div>
+          )}
         </section>
       </div>
     </main>
