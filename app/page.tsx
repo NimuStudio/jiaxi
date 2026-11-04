@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EvidencePanel } from "@/components/rag/EvidencePanel";
 import { ReclaimSimulator } from "@/components/simulator/ReclaimSimulator";
 
 export default function Home() {
@@ -16,6 +17,7 @@ export default function Home() {
       </header>
 
       <ReclaimSimulator />
+      <EvidencePanel />
 
       <p className="foot-note">
         评分模型 FINDRISC（Lindström &amp; Tuomilehto, Diabetes Care 2003）；

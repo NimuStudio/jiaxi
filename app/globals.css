@@ -1003,3 +1003,130 @@ input[type="range"]::-moz-range-thumb {
   color: #0b4536;
   margin: 0;
 }
+
+/* ---------- 依据检索 ---------- */
+
+.kb-lead {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+
+.kb-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kb-input {
+  flex: 1;
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text);
+  outline: none;
+}
+
+.kb-input:focus {
+  border-color: var(--primary);
+}
+
+.kb-ask {
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+}
+
+.kb-ask:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.kb-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kb-chip {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px dashed var(--line-strong);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.kb-chip:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.kb-results {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kb-item {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: #fbfcfa;
+  border: 1px solid var(--line);
+}
+
+.kb-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.kb-text {
+  font-size: 13px;
+  line-height: 1.75;
+  color: #3a423f;
+  margin: 0 0 8px;
+}
+
+.kb-source {
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-faint);
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line);
+}
+
+.kb-empty {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.kb-reset {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  color: var(--text-muted);
+  cursor: pointer;
+}
