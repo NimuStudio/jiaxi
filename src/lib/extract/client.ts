@@ -34,27 +34,105 @@ export interface ExtractResult {
 const SYSTEM_PROMPT_TEXT = SYSTEM_PROMPT;
 
 /**
- * Few-shot 示例。选的都是最容易错的地方：
- * 口语指代（老娘=母亲）、疾病俗称（放支架=冠心病）、父系母系区分（奶奶/外婆）。
+ * Few-shot 示例。
+ *
+ * 选例原则：
+ *  1. 覆盖三类系统性错误——中文亲属称谓、疾病口语说法、否定/并列表达；
+ *  2. **表述刻意与评测集不同**，否则等于把答案塞进上下文，指标会虚高；
+ *  3. 只放最容易错的，不放简单的，控制上下文长度。
+ *
+ * 注意：微调后的模型不需要这些示例（这是与基线对比的关键差异）。
  */
 const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "user",
-    content: "我爸 50 岁心梗，我奶奶有糖尿病。",
+    content: "我爸 50 岁心梗。",
   },
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"myocardial-infarction","onsetAge":50}]},{"relation":"paternal-grandmother","sex":"female","conditions":[{"code":"type2-diabetes","onsetAge":null}]}]}',
+      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"myocardial-infarction","onsetAge":50}]}]}',
   },
   {
     role: "user",
-    content: "我老娘是脑溢血走的，走的时候六十来岁。",
+    content: "我老娘是脑溢血走的，六十来岁。",
   },
   {
     role: "assistant",
     content:
       '{"persons":[{"relation":"mother","sex":"female","conditions":[{"code":"stroke","onsetAge":60}]}]}',
+  },
+  {
+    role: "user",
+    content: "我爷爷有糖尿病。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"paternal-grandfather","sex":"male","conditions":[{"code":"type2-diabetes","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
+    content: "我外婆是肺癌走的。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"lung-cancer","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
+    content: "舅舅前年查出糖尿病，四十多岁。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"maternal-uncle","sex":"male","conditions":[{"code":"type2-diabetes","onsetAge":45}]}]}',
+  },
+  {
+    role: "user",
+    content: "我姑姑 62 岁查出肠癌。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"paternal-aunt","sex":"female","conditions":[{"code":"colorectal-cancer","onsetAge":62}]}]}',
+  },
+  {
+    role: "user",
+    content: "外婆和姨妈都有乳腺癌，姨妈 48 岁确诊的。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"breast-cancer","onsetAge":null}]},{"relation":"maternal-aunt","sex":"female","conditions":[{"code":"breast-cancer","onsetAge":48}]}]}',
+  },
+  {
+    role: "user",
+    content: "我叔叔 50 岁心梗，我妈身体还行。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"myocardial-infarction","onsetAge":50}]}]}',
+  },
+  {
+    role: "user",
+    content: "我奶奶高血压，我姥姥糖尿病。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"paternal-grandmother","sex":"female","conditions":[{"code":"hypertension","onsetAge":null}]},{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"type2-diabetes","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
+    content: "我妹妹有高血压。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"sister","sex":"female","conditions":[{"code":"hypertension","onsetAge":null}]}]}',
   },
 ];
 

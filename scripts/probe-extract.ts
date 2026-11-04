@@ -20,12 +20,17 @@ async function main() {
     process.exit(1);
   }
 
+  // 默认与基线一致（带 few-shot）；加 --no-few-shot 测微调模型。
+  // 这两个模式差别极大，务必显式打印，避免把「零示例」的结果当成模型真实水平。
+  const fewShot = !process.argv.includes("--no-few-shot");
+  console.log(`模式：${fewShot ? "few-shot（基线）" : "无 few-shot（微调模型）"}\n`);
+
   for (const text of CASES) {
     const t0 = Date.now();
     console.log("─".repeat(72));
     console.log("输入：", text);
     try {
-      const result = await extractPedigree(text);
+      const result = await extractPedigree(text, { fewShot });
       const ms = Date.now() - t0;
       console.log(`输出（${ms}ms）：`);
       for (const p of result.persons) {

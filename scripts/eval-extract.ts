@@ -51,6 +51,10 @@ async function main() {
     .filter((l) => l.trim().length > 0)
     .map((l) => JSON.parse(l) as EvalCase);
 
+  // 基线模型需要 few-shot 才可用；微调后的模型用 --no-few-shot 跑，两者对比才公平。
+  const useFewShot = !process.argv.includes("--no-few-shot");
+  console.log(`模式：${useFewShot ? "few-shot 基线" : "无 few-shot（微调模型）"}\n`);
+
   let tp = 0;
   let fp = 0;
   let fn = 0;
@@ -62,7 +66,7 @@ async function main() {
   for (const c of cases) {
     let actual: ExtractedPerson[] = [];
     try {
-      const r = await extractPedigree(c.input);
+      const r = await extractPedigree(c.input, { fewShot: useFewShot });
       actual = r.persons;
     } catch (e) {
       failures.push(`${c.id} 调用失败：${(e as Error).message}`);
