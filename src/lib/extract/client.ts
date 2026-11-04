@@ -17,6 +17,12 @@ import { SYSTEM_PROMPT } from "./prompt.ts";
 
 const LLM_URL = process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080";
 
+/**
+ * 模型输出的是中文病名（见 grammar.ts 的说明），这里映射回内部编码。
+ * 词表是唯一数据源，所以映射不可能漏。
+ */
+const LABEL_TO_CODE = new Map(DISEASES.map((d) => [d.label, d.code]));
+
 export interface ExtractedCondition {
   code: string;
   onsetAge: number | null;
@@ -52,7 +58,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"myocardial-infarction","onsetAge":50}]}]}',
+      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"心梗","onsetAge":50}]}]}',
   },
   {
     role: "user",
@@ -61,7 +67,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"hypertension","onsetAge":null},{"code":"type2-diabetes","onsetAge":null}]}]}',
+      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"高血压","onsetAge":null},{"code":"糖尿病","onsetAge":null}]}]}',
   },
   {
     role: "user",
@@ -70,7 +76,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"mother","sex":"female","conditions":[{"code":"stroke","onsetAge":60}]}]}',
+      '{"persons":[{"relation":"mother","sex":"female","conditions":[{"code":"脑卒中","onsetAge":60}]}]}',
   },
   {
     role: "user",
@@ -79,7 +85,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"paternal-grandfather","sex":"male","conditions":[{"code":"type2-diabetes","onsetAge":null}]}]}',
+      '{"persons":[{"relation":"paternal-grandfather","sex":"male","conditions":[{"code":"糖尿病","onsetAge":null}]}]}',
   },
   {
     role: "user",
@@ -88,7 +94,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"lung-cancer","onsetAge":null}]}]}',
+      '{"persons":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"肺癌","onsetAge":null}]}]}',
   },
   {
     role: "user",
@@ -97,7 +103,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"maternal-uncle","sex":"male","conditions":[{"code":"type2-diabetes","onsetAge":45}]}]}',
+      '{"persons":[{"relation":"maternal-uncle","sex":"male","conditions":[{"code":"糖尿病","onsetAge":45}]}]}',
   },
   {
     role: "user",
@@ -106,7 +112,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"paternal-aunt","sex":"female","conditions":[{"code":"colorectal-cancer","onsetAge":62}]}]}',
+      '{"persons":[{"relation":"paternal-aunt","sex":"female","conditions":[{"code":"肠癌","onsetAge":62}]}]}',
   },
   {
     role: "user",
@@ -115,7 +121,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"breast-cancer","onsetAge":null}]},{"relation":"maternal-aunt","sex":"female","conditions":[{"code":"breast-cancer","onsetAge":48}]}]}',
+      '{"persons":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"乳腺癌","onsetAge":null}]},{"relation":"maternal-aunt","sex":"female","conditions":[{"code":"乳腺癌","onsetAge":48}]}]}',
   },
   {
     role: "user",
@@ -124,7 +130,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"myocardial-infarction","onsetAge":50}]}]}',
+      '{"persons":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"心梗","onsetAge":50}]}]}',
   },
   {
     role: "user",
@@ -133,7 +139,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"paternal-grandmother","sex":"female","conditions":[{"code":"hypertension","onsetAge":null}]},{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"type2-diabetes","onsetAge":null}]}]}',
+      '{"persons":[{"relation":"paternal-grandmother","sex":"female","conditions":[{"code":"高血压","onsetAge":null}]},{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"糖尿病","onsetAge":null}]}]}',
   },
   {
     role: "user",
@@ -142,7 +148,7 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   {
     role: "assistant",
     content:
-      '{"persons":[{"relation":"sister","sex":"female","conditions":[{"code":"hypertension","onsetAge":null}]}]}',
+      '{"persons":[{"relation":"sister","sex":"female","conditions":[{"code":"高血压","onsetAge":null}]}]}',
   },
   {
     role: "user",
@@ -233,6 +239,8 @@ function dropUnmentioned(segment: string, person: ExtractedPerson): ExtractedPer
     const spec = DISEASES.find((d) => d.code === c.code);
     if (!spec) return true;
     const aliases = [...spec.nounAliases, ...(spec.verbAliases ?? [])];
+    // 没有词条的编码（如 other）无从校验，保留原判
+    if (aliases.length === 0) return true;
     return aliases.some((a) => segment.includes(a));
   });
   return { ...person, conditions: kept };
@@ -278,6 +286,13 @@ export async function extractPedigree(
     // 抽取完立刻用词表校正关系——文本里写明的称谓比模型猜的更可靠。
     return {
       persons: (parsed.persons ?? [])
+        .map((p) => ({
+          ...p,
+          conditions: (p.conditions ?? []).map((c) => ({
+            ...c,
+            code: LABEL_TO_CODE.get(c.code) ?? c.code,
+          })),
+        }))
         .map((p) => reconcileRelation(text, p))
         .map((p) => dropUnmentioned(text, p)),
     };

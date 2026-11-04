@@ -207,13 +207,16 @@ function makeSample(rnd: Rnd): { text: string; persons: PersonSpec[] } {
   return { text, persons: chosen };
 }
 
+/** 训练时的输出也用中文病名，与推理端 GBNF 保持一致。 */
+const CODE_TO_LABEL = new Map(DISEASES.map((d) => [d.code, d.label]));
+
 function toAssistantJson(persons: PersonSpec[]): string {
   const obj = {
     persons: persons.map((p) => ({
       relation: p.relation,
       sex: p.sex,
       conditions: p.conditions.map((c) => ({
-        code: c.code,
+        code: CODE_TO_LABEL.get(c.code) ?? c.code,
         onsetAge: c.onsetAge,
       })),
     })),

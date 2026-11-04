@@ -8,6 +8,18 @@
  *
  * 字段设计与 src/lib/pedigree/types.ts 对齐。
  */
+import { DISEASES } from "./lexicon.ts";
+
+/**
+ * 疾病枚举由词表派生，且刻意使用**中文标签**而不是英文编码。
+ *
+ * 原因：模型本来就能认出「肝癌」「老年痴呆」这些中文病名，
+ * 但要求它直接吐出 "liver-cancer" 这种英文编码等于额外增加一层记忆负担，
+ * 实测新增病种的识别率会掉到接近零。让它说中文，后端再映射成编码，
+ * 既准确又不依赖示例覆盖每一个病种。
+ */
+const DISEASE_UNION = DISEASES.map((d) => `"\\"${d.label}\\""`).join(" | ");
+
 export const PEDIGREE_GBNF = String.raw`
 root ::= "{" ws "\"persons\"" ws ":" ws persons ws "}"
 persons ::= "[" ws (person (ws "," ws person)*)? ws "]"
@@ -16,7 +28,7 @@ conds ::= "[" ws (cond (ws "," ws cond)*)? ws "]"
 cond ::= "{" ws "\"code\"" ws ":" ws dis ws "," ws "\"onsetAge\"" ws ":" ws age ws "}"
 rel ::= "\"self\"" | "\"father\"" | "\"mother\"" | "\"brother\"" | "\"sister\"" | "\"son\"" | "\"daughter\"" | "\"paternal-grandfather\"" | "\"paternal-grandmother\"" | "\"maternal-grandfather\"" | "\"maternal-grandmother\"" | "\"paternal-uncle\"" | "\"paternal-aunt\"" | "\"maternal-uncle\"" | "\"maternal-aunt\"" | "\"unknown\""
 sex ::= "\"male\"" | "\"female\"" | "\"unknown\""
-dis ::= "\"myocardial-infarction\"" | "\"coronary-heart-disease\"" | "\"stroke\"" | "\"hypertension\"" | "\"type2-diabetes\"" | "\"colorectal-cancer\"" | "\"breast-cancer\"" | "\"gastric-cancer\"" | "\"lung-cancer\"" | "\"other\""
+dis ::= ${DISEASE_UNION}
 age ::= "null" | [0-9] [0-9]?
 ws ::= [ \t\n]*
 `;

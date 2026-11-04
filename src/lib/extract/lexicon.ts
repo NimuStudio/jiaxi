@@ -59,6 +59,8 @@ export const RELATIONS: RelationSpec[] = [
 
 export interface DiseaseSpec {
   code: string;
+  /** 界面展示用的中文名。GBNF 枚举与界面标签都从这里派生。 */
+  label: string;
   /** 名词性说法，可接「有 / 得了 / 是」 */
   nounAliases: string[];
   /**
@@ -70,23 +72,77 @@ export interface DiseaseSpec {
 
 /**
  * 疾病词表。code 为本项目内部归一化标识（非 ICD-10）。
- * 收录原则：只放普通人日常真的会说的说法，并按语法性质分成两类，
+ *
+ * 这是**唯一数据源**：GBNF 的枚举值、界面上的中文标签全部由它派生，
+ * 避免「新增一个病种，却漏改语法或标签」这类不一致。
+ *
+ * 收录原则：只放普通人日常真的会说的说法；按语法性质分名词/谓语两类，
  * 避免生成病句污染训练数据。
  */
 export const DISEASES: DiseaseSpec[] = [
-  { code: "myocardial-infarction", nounAliases: ["心梗", "心肌梗死"] },
+  // —— 心脑血管 ——
+  {
+    code: "myocardial-infarction",
+    label: "心梗",
+    nounAliases: ["心梗", "心肌梗死", "心肌梗塞"],
+  },
   {
     code: "coronary-heart-disease",
+    label: "冠心病",
     nounAliases: ["冠心病"],
     verbAliases: ["放了支架", "做了搭桥", "心脏血管堵了"],
   },
-  { code: "stroke", nounAliases: ["脑梗", "脑溢血", "脑出血", "中风", "脑卒中", "脑血栓", "脑梗塞", "脑栓塞"] },
-  { code: "hypertension", nounAliases: ["高血压"], verbAliases: ["血压高"] },
-  { code: "type2-diabetes", nounAliases: ["糖尿病"], verbAliases: ["血糖高"] },
-  { code: "colorectal-cancer", nounAliases: ["肠癌", "结直肠癌", "大肠癌"] },
-  { code: "breast-cancer", nounAliases: ["乳腺癌"] },
-  { code: "gastric-cancer", nounAliases: ["胃癌"] },
-  { code: "lung-cancer", nounAliases: ["肺癌"] },
+  {
+    code: "stroke",
+    label: "脑卒中",
+    nounAliases: [
+      "脑梗",
+      "脑溢血",
+      "脑出血",
+      "中风",
+      "脑卒中",
+      "脑血栓",
+      "脑梗塞",
+      "脑栓塞",
+    ],
+  },
+  { code: "hypertension", label: "高血压", nounAliases: ["高血压"], verbAliases: ["血压高"] },
+  { code: "heart-failure", label: "心衰", nounAliases: ["心衰", "心力衰竭"] },
+  { code: "atrial-fibrillation", label: "房颤", nounAliases: ["房颤", "心房颤动"] },
+
+  // —— 代谢与肾脏 ——
+  { code: "type2-diabetes", label: "糖尿病", nounAliases: ["糖尿病"], verbAliases: ["血糖高"] },
+  { code: "gout", label: "痛风", nounAliases: ["痛风"] },
+  {
+    code: "chronic-kidney-disease",
+    label: "慢性肾病",
+    nounAliases: ["尿毒症", "肾病", "肾衰竭", "肾功能不全"],
+  },
+
+  // —— 呼吸 ——
+  { code: "copd", label: "慢阻肺", nounAliases: ["慢阻肺", "肺气肿", "慢性支气管炎"] },
+  { code: "asthma", label: "哮喘", nounAliases: ["哮喘"] },
+
+  // —— 肿瘤 ——
+  { code: "colorectal-cancer", label: "肠癌", nounAliases: ["肠癌", "结直肠癌", "大肠癌"] },
+  { code: "breast-cancer", label: "乳腺癌", nounAliases: ["乳腺癌"] },
+  { code: "gastric-cancer", label: "胃癌", nounAliases: ["胃癌"] },
+  { code: "lung-cancer", label: "肺癌", nounAliases: ["肺癌"] },
+  { code: "liver-cancer", label: "肝癌", nounAliases: ["肝癌"] },
+  { code: "esophageal-cancer", label: "食管癌", nounAliases: ["食管癌", "食道癌"] },
+  { code: "pancreatic-cancer", label: "胰腺癌", nounAliases: ["胰腺癌"] },
+  { code: "prostate-cancer", label: "前列腺癌", nounAliases: ["前列腺癌"] },
+  { code: "cervical-cancer", label: "宫颈癌", nounAliases: ["宫颈癌", "子宫颈癌"] },
+  { code: "kidney-cancer", label: "肾癌", nounAliases: ["肾癌"] },
+  { code: "leukemia", label: "白血病", nounAliases: ["白血病", "血癌"] },
+
+  // —— 神经与精神 ——
+  { code: "dementia", label: "痴呆", nounAliases: ["老年痴呆", "阿尔茨海默", "痴呆"] },
+  { code: "parkinson", label: "帕金森", nounAliases: ["帕金森"] },
+
+  // —— 兜底 ——
+  // other 不设词条：既不参与「原文有依据」校验，也不会被口语过滤误删。
+  { code: "other", label: "其他", nounAliases: [] },
 ];
 
 /** 由关系枚举反查规范称谓（用于生成句子时挑选说法）。 */

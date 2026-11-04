@@ -9,6 +9,7 @@
  */
 
 import type { RelationType } from "./types";
+import { DISEASES } from "@/lib/extract/lexicon";
 
 export interface Slot {
   x: number;
@@ -105,18 +106,13 @@ export const RELATION_LABEL: Partial<Record<RelationType, string>> = {
  * 注意：这些是**本项目内部的归一化名称**，用于界面展示，
  * 不对应 ICD-10 等标准编码体系（见 docs/references.md）。
  */
-export const DISEASE_LABEL: Record<string, string> = {
-  "myocardial-infarction": "心梗",
-  "coronary-heart-disease": "冠心病",
-  stroke: "脑卒中",
-  hypertension: "高血压",
-  "type2-diabetes": "糖尿病",
-  "colorectal-cancer": "肠癌",
-  "breast-cancer": "乳腺癌",
-  "gastric-cancer": "胃癌",
-  "lung-cancer": "肺癌",
-  other: "其他",
-};
+/**
+ * 疾病编码的中文标签，由词表派生（单一数据源）。
+ * 注意：这些是项目内部的归一化名称，不对应 ICD-10 等标准编码。
+ */
+export const DISEASE_LABEL: Record<string, string> = Object.fromEntries(
+  DISEASES.map((d) => [d.code, d.label]),
+);
 
 /** 男性画方形、女性画圆形；未知按方形处理并标注。 */
 export function isMale(sex: string): boolean {
