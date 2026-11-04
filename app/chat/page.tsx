@@ -114,6 +114,30 @@ export default function ChatPage() {
   const [selected, setSelected] = useState<string | null>(null);
   /** 每个亲属节点的来源原话，用于「依据」回溯。 */
   const [sources, setSources] = useState<Record<string, string[]>>({});
+  /**
+   * 推理服务是否在线。null 表示还在探测。
+   *
+   * 部署到公网后，站点本身常驻服务器，但大模型跑在演示机上（本地推理，
+   * 数据不出机器）。演示机关机时这条链路是断的，必须让访客知道
+   * 「现在能用什么、不能用什么」，而不是让他在输入框里试出报错。
+   */
+  const [llmReady, setLlmReady] = useState<boolean | null>(null);
+
+  // 探测推理服务是否在线
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/extract")
+      .then((r) => r.json())
+      .then((d: { ready?: boolean }) => {
+        if (alive) setLlmReady(Boolean(d.ready));
+      })
+      .catch(() => {
+        if (alive) setLlmReady(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // 演示模式：/chat?demo=1 直接填好一整套家系，方便录制与调试图的渲染。
   useEffect(() => {
@@ -127,6 +151,12 @@ export default function ChatPage() {
 
   const selectedPerson =
     persons.find((p) => p.relation === selected) ?? null;
+
+  function loadDemo() {
+    setPersons(DEMO);
+    setLastAdded(null);
+    setSelected("paternal-grandfather");
+  }
 
   function removePerson(relation: string) {
     setPersons((prev) => prev.filter((p) => p.relation !== relation));
@@ -150,6 +180,30 @@ export default function ChatPage() {
           看风险量化 →
         </Link>
       </header>
+
+      {llmReady === false && (
+        <div className="llm-banner">
+          <span className="llm-dot is-off" />
+          <span className="llm-text">
+            AI 抽取当前未连接。模型跑在演示机上（本地推理，家族信息不出机器），
+            仅在评审时段开机在线；<strong>其余功能不受影响</strong>。
+          </span>
+          {persons.length === 0 && (
+            <button type="button" className="llm-action" onClick={loadDemo}>
+              加载示例家系 →
+            </button>
+          )}
+        </div>
+      )}
+
+      {llmReady === true && (
+        <div className="llm-banner is-ok">
+          <span className="llm-dot" />
+          <span className="llm-text">
+            AI 抽取已连接 · 本地推理，家族信息不出这台机器
+          </span>
+        </div>
+      )}
 
       <div className="workspace">
         <aside className="chat-side">

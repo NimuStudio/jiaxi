@@ -352,6 +352,10 @@ if (mentioned.size !== 1) return person;
 <pre><code>口语集 Precision: 0.895 → 1.000
 口语集 Recall:    0.810 → 0.762
 </code></pre>
+<blockquote>
+<p>注：上表是加入证据校验<strong>当时的即时影响</strong>。此后疾病词表从 9 种扩到 25 种，
+口语集 Recall 回升到 0.750、F1 0.857，<strong>Precision 仍保持 1.000</strong>。</p>
+</blockquote>
 <p><strong>这个交换是刻意的</strong>：在医疗场景里，漏掉一个病只是信息不全，编造一个病会让下游给出错误建议。宁可漏，不可编。</p>
 <p><strong>第三层：结果去重</strong></p>
 <p>模型偶尔把同一个人输出两次（GBNF 允许数组重复）。统一按关系合并 conditions 去重。</p>
@@ -395,9 +399,9 @@ if (mentioned.size !== 1) return person;
 <td>口语</td>
 <td>21</td>
 <td><strong>1.000</strong></td>
-<td>0.714</td>
-<td>0.833</td>
-<td>13/18</td>
+<td>0.750</td>
+<td>0.857</td>
+<td>16/21</td>
 </tr>
 </tbody></table>
 <p><strong>指标定义</strong>：把每个人 × 每种病展开成 <code>(relation, code)</code> 对，与人工标注比对，算 Precision / Recall / F1。年龄准确率单独统计（容差 ±2 岁）。完全匹配指整条输入的全部对与年龄都对。</p>
@@ -437,7 +441,7 @@ if (mentioned.size !== 1) return person;
 <h3>4.10 微调尝试与阻塞</h3>
 <p>按计划生成了 1080 条训练数据（结构驱动：先构造语义结构再渲染成中文，标注 100% 准确，不依赖模型生成），并准备了完整的 LoRA 训练链路。</p>
 <p><strong>但训练被硬件架构阻塞</strong>：开发机为 RTX 5080（Blackwell，sm_120），预装的 PyTorch 为 cu126 构建，只编译到 sm_90，执行算子报 <code>no kernel image is available</code>。官方 cu128 wheel 在本地网络不可达，阿里云 PyTorch 镜像的下载速度约 90–600 KB/s，2.5 GB 需要一小时以上。</p>
-<p><strong>判断</strong>：此时 few-shot 方案已达 F1 0.952（规整）/ 0.833（口语），而微调能带来的确定性收益主要是「去掉 few-shot 提速」——但 <code>cache_prompt</code> 已让 few-shot 几乎不增加延迟。所以没有把时间押在训练上，转而补齐产品闭环与 RAG。</p>
+<p><strong>判断</strong>：此时 few-shot 方案已达 F1 0.952（规整）/ 0.857（口语），而微调能带来的确定性收益主要是「去掉 few-shot 提速」——但 <code>cache_prompt</code> 已让 few-shot 几乎不增加延迟。所以没有把时间押在训练上，转而补齐产品闭环与 RAG。</p>
 <p>训练数据、词表、生成器、评测集全部保留在仓库中，环境具备后可随时接上。</p>
 <hr>
 <h2>五、核心功能实现</h2>

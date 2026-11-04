@@ -31,8 +31,10 @@ export async function POST(request: Request) {
   if (!ready) {
     return NextResponse.json(
       {
+        // 这句话会显示在聊天区，读者可能是评委而不是开发者，
+        // 所以要说清「发生了什么、还能用什么」，而不是给出启动命令。
         error:
-          "本地推理服务未启动。请在 llama.cpp 目录运行 llama-server 并加载模型（默认 127.0.0.1:8080）。",
+          "AI 抽取服务当前未连接（模型运行在演示机上，仅在评审时段在线）。家系图、风险量化与依据检索不受影响；也可以先看示例家系。",
       },
       { status: 503 },
     );

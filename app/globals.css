@@ -1130,3 +1130,65 @@ input[type="range"]::-moz-range-thumb {
   color: var(--text-muted);
   cursor: pointer;
 }
+
+/* ---------- 推理服务状态横幅 ---------- */
+
+.llm-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 12px 18px;
+  border-radius: var(--radius);
+  background: #fdf6ee;
+  border: 1px solid #f0dcc4;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #7a5220;
+}
+
+.llm-banner.is-ok {
+  background: var(--primary-soft);
+  border-color: #cfe3da;
+  color: var(--primary);
+}
+
+.llm-dot {
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.llm-dot.is-off {
+  background: var(--reclaim);
+}
+
+.llm-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.llm-text strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.llm-action {
+  flex: 0 0 auto;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid #e0c3a0;
+  background: #fff;
+  color: var(--reclaim);
+  cursor: pointer;
+  transition: background 0.16s ease;
+}
+
+.llm-action:hover {
+  background: #fff7ee;
+}
