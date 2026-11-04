@@ -12,6 +12,7 @@
  */
 
 import { PEDIGREE_GBNF } from "./grammar.ts";
+import { SYSTEM_PROMPT } from "./prompt.ts";
 
 const LLM_URL = process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080";
 
@@ -30,11 +31,7 @@ export interface ExtractResult {
   persons: ExtractedPerson[];
 }
 
-const SYSTEM_PROMPT = `你是家系信息抽取器。把用户说的家族病史转成 JSON。
-规则：
-1. 只抽取明确提到的亲属，不要推测没提到的。
-2. 年龄记不清就填 null，不要编。
-3. 直接输出 JSON。`;
+const SYSTEM_PROMPT_TEXT = SYSTEM_PROMPT;
 
 /**
  * Few-shot 示例。选的都是最容易错的地方：
@@ -75,19 +72,30 @@ export async function isLlmReady(): Promise<boolean> {
   }
 }
 
+export interface ExtractOptions {
+  /**
+   * 是否附加 few-shot 示例。
+   * 基线模型需要（否则几乎不可用）；微调后的模型不需要，上下文更短更快。
+   */
+  fewShot?: boolean;
+}
+
 /**
  * 从一段口语描述里抽取家系节点。
  * 抛错时带上原始输出，方便定位是语法问题还是模型问题。
  */
-export async function extractPedigree(text: string): Promise<ExtractResult> {
+export async function extractPedigree(
+  text: string,
+  options: ExtractOptions = {},
+): Promise<ExtractResult> {
   const res = await fetch(`${LLM_URL}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     signal: AbortSignal.timeout(30_000),
     body: JSON.stringify({
       messages: [
-        { role: "system", content: SYSTEM_PROMPT },
-        ...FEW_SHOT,
+        { role: "system", content: SYSTEM_PROMPT_TEXT },
+        ...(options.fewShot ? FEW_SHOT : []),
         { role: "user", content: text },
       ],
       temperature: 0.1,
