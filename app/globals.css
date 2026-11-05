@@ -4405,3 +4405,15 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .login-seam-dashflow { animation: none; }
 }
+
+/* ---------- 层级重排：幕布 < 缝 < DNA < 内容 < 顶栏 ---------- */
+.login-tear { z-index: 5; }
+.login-diagonal-line { z-index: 6; }
+.login-stage { z-index: 7; }
+.login-hero { z-index: 8; }
+.login-card-wrap { z-index: 8; }
+.login-stats-strip { z-index: 8; }
+.login-topbar,
+.login-intro,
+.login-watermark,
+.login-page::after { z-index: 9; }
