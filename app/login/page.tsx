@@ -91,13 +91,20 @@ export default function LoginPage() {
      * 正常往右下划反而可能永远到不了阈值 —— 手感上就像方向反了。
      * 投影法对抖动免疫：只要整体确实往右下走够了，就触发。
      */
-    const AXIS = Math.SQRT1_2; // 单位方向 (1,1)/√2，即左上 → 右下
+    const AXIS = Math.SQRT1_2; // 单位长度，配合 (dy - dx) * AXIS 得到 (1,-1)/√2 方向上的投影
     let startX = 0;
     let startY = 0;
     let tracking = false;
 
+    /** 是否在屏幕中间的判定区内：起点必须在中央区域，边缘划动不算 */
+    const inCenter = (x: number, y: number) =>
+      Math.abs(x - window.innerWidth / 2) < window.innerWidth * 0.26 &&
+      Math.abs(y - window.innerHeight / 2) < window.innerHeight * 0.3;
+
     const onMove = (e: PointerEvent) => {
+      // 起点在中心区外：不开始记录，直到指针进入中心区
       if (!tracking) {
+        if (!inCenter(e.clientX, e.clientY)) return;
         startX = e.clientX;
         startY = e.clientY;
         tracking = true;
@@ -105,15 +112,14 @@ export default function LoginPage() {
       }
       const dx = e.clientX - startX;
       const dy = e.clientY - startY;
-      // 投影长度：只有整体往右下才有正值
-      const progress = (dx + dy) * AXIS;
-      // 起点太远说明是随机乱晃，重置起点（避免从别处慢慢挪过来也算）
-      if (Math.abs(dx) + Math.abs(dy) > 900) {
+      // 右上 → 左下：x 减小、y 增大。投影只在这条方向上是正的。
+      const progress = (dy - dx) * AXIS;
+      if (Math.abs(dx) + Math.abs(dy) > 700) {
         startX = e.clientX;
         startY = e.clientY;
         return;
       }
-      if (progress > 120) setExpanded(true);
+      if (progress > 110) setExpanded(true);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
@@ -250,7 +256,7 @@ export default function LoginPage() {
         </button>
         <p className="login-seam-hint">
           <span className="login-seam-dot" aria-hidden="true" />
-          顺着缝划一下，或点击任意处
+          从右上往左下划，或点击任意处
         </p>
       </div>
 
