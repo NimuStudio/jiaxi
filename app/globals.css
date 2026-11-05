@@ -4616,3 +4616,188 @@ input[type="range"]::-moz-range-thumb {
   box-shadow: 0 0 0 3px rgba(26, 111, 181, 0.35), 0 4px 16px -8px rgba(16, 42, 68, 0.28);
   color: var(--primary);
 }
+
+/* ================= 折叠态版面重构（海报式层级） ================= */
+
+/* 画框：1px 细边，给整屏一个版面边界，避免大字与画布边缘直接相撞 */
+.login-frame {
+  position: absolute;
+  inset: 26px;
+  z-index: 8;
+  border: 1px solid rgba(26, 111, 181, 0.13);
+  border-radius: 18px;
+  pointer-events: none;
+  transition: opacity 0.55s ease;
+}
+
+.login-page.is-expanded .login-frame { opacity: 0; }
+
+/* 左下的排版层级：kicker → 主张 → 说明 → 步骤 */
+.login-intro {
+  left: 62px;
+  bottom: 58px;
+  max-width: min(52ch, 46vw);
+}
+
+.login-intro-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--primary);
+}
+
+.login-intro-kicker::before {
+  content: "";
+  width: 22px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.login-intro-line {
+  margin: 0 0 16px;
+  font-size: clamp(24px, 2.5vw, 36px);
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #0d2b45;
+  opacity: 1;
+}
+
+.login-intro-sub {
+  margin: 0 0 30px;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-muted);
+  max-width: 34ch;
+}
+
+/* 步骤：项之间用细竖线分隔，形成一条流程带 */
+.login-intro-steps {
+  gap: 0;
+  align-items: center;
+}
+
+.login-intro-steps li {
+  gap: 8px;
+  padding-right: clamp(16px, 2vw, 26px);
+}
+
+.login-intro-steps li + li {
+  padding-left: clamp(16px, 2vw, 26px);
+  border-left: 1px solid rgba(26, 111, 181, 0.16);
+}
+
+.login-intro-steps b {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+}
+
+.login-intro-steps span {
+  font-size: 12.5px;
+  color: #3f5a72;
+}
+
+/* 提示胶囊移到右下，与左下标题块形成对角配重 */
+.login-page.is-collapsed .login-seam-hint {
+  left: auto;
+  right: 62px;
+  bottom: 58px;
+  transform: none;
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(26, 111, 181, 0.16);
+  color: #2b4763;
+  box-shadow: 0 10px 26px -18px rgba(16, 42, 68, 0.45);
+}
+
+/* 水印避开标题块：右移并略收小 */
+.login-page.is-collapsed .login-watermark {
+  left: 60%;
+  top: 46%;
+  transform: translate(-50%, -50%) scale(0.92);
+  opacity: 0.5;
+}
+
+/* 画面中心一圈极淡的光：营造光从缝里透过来 */
+.login-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  pointer-events: none;
+  background: radial-gradient(46% 40% at 50% 50%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%);
+  opacity: 0.9;
+  transition: opacity 0.6s ease;
+}
+
+.login-page.is-expanded::after { opacity: 0.35; }
+
+@media (max-width: 900px) {
+  .login-frame { inset: 14px; }
+  .login-intro { left: 24px; bottom: 30px; max-width: 78vw; }
+  .login-intro-line { font-size: 22px; }
+  .login-page.is-collapsed .login-seam-hint { right: 24px; bottom: 92px; }
+}
+
+/* 画框落地后的对齐修正：顶栏与水印都要退到框内 */
+.login-topbar {
+  top: 44px;
+  left: 62px;
+  right: 62px;
+}
+
+/* 水印收小、下移，避免顶出画框、也不要压住标题块 */
+.login-page.is-collapsed .login-watermark {
+  left: 58%;
+  top: 54%;
+  transform: translate(-50%, -50%) scale(0.66);
+  opacity: 0.32;
+}
+
+/* 竖排刊头：贴住左框内侧 */
+.login-masthead {
+  left: 34px;
+}
+
+@media (max-width: 900px) {
+  .login-topbar { top: 26px; left: 24px; right: 24px; }
+  .login-masthead { display: none; }
+}
+
+/* 水印回到可见但克制的程度：作为版面的第二层肌理 */
+.login-page.is-collapsed .login-watermark {
+  left: 57%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  opacity: 0.42;
+}
+
+/* 右上角补一个安静的署名，填平这个角；同时把说明行放宽到一行半 */
+.login-page.is-collapsed .login-topmeta {
+  opacity: 1;
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: rgba(43, 71, 99, 0.55);
+}
+
+.login-intro-sub { max-width: 42ch; }
+
+/* 顶栏必须是 absolute：relative + left 会把整条栏右移，导致右上角文字顶出画框 */
+.login-topbar {
+  position: absolute;
+  top: 44px;
+  left: 62px;
+  right: 62px;
+}
+
+.login-intro-sub {
+  max-width: 30em;
+}
+
+@media (max-width: 900px) {
+  .login-topbar { position: absolute; top: 26px; left: 24px; right: 24px; }
+}

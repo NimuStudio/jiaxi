@@ -214,13 +214,24 @@ export default function LoginPage() {
 
       {/* 折叠态的文字层级：一句主张 + 三个步骤编号，避免整屏只有一条线 */}
       <div className="login-intro" aria-hidden="true">
-        <p className="login-intro-line">把家里人的病史，画成一张看得懂的家系图</p>
+        <p className="login-intro-kicker">遗传健康的家族史梳理</p>
+        <p className="login-intro-line">
+          把家里人的病史
+          <br />
+          画成一张看得懂的家系图
+        </p>
+        <p className="login-intro-sub">
+          口述即可，不必先整理；每个结论都能追到原话与出处。
+        </p>
         <ol className="login-intro-steps">
           <li><b>01</b><span>说病史</span></li>
           <li><b>02</b><span>看家系</span></li>
           <li><b>03</b><span>算风险</span></li>
         </ol>
       </div>
+
+      {/* 海报式细边框：给整屏一个"版面边界"，避免大字与画布边缘直接相撞 */}
+      <div className="login-frame" aria-hidden="true" />
 
       <div className="login-stage">
         <DnaScene3D />
