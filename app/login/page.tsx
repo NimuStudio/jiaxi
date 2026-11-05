@@ -30,6 +30,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const usernameRef = useRef<HTMLInputElement>(null);
+  const seamBtnRef = useRef<HTMLButtonElement>(null);
   const [busy, setBusy] = useState(false);
 
   /**
@@ -43,6 +45,18 @@ export default function LoginPage() {
    */
   const [expanded, setExpanded] = useState(false);
   const pageRef = useRef<HTMLElement | null>(null);
+
+  // 键盘用户 Tab 到光缝按钮 → 展开 → 按钮随即被隐藏，焦点会掉回页面顶部。
+  // 这里把焦点接着送进用户名输入框，Tab 一次就能开始输入。
+  useEffect(() => {
+    if (!expanded) return;
+    const active = document.activeElement;
+    const fromSeam =
+      active === seamBtnRef.current || active === document.body || active === null;
+    if (!fromSeam) return;
+    const t = window.setTimeout(() => usernameRef.current?.focus(), 320);
+    return () => window.clearTimeout(t);
+  }, [expanded]);
 
   /**
    * 视差：把指针的相对位置写进 CSS 变量，各层用不同系数取用。
@@ -294,11 +308,12 @@ export default function LoginPage() {
         {/* 只保留一个可聚焦的语义按钮（视觉上不可见）：键盘用户 Tab 一次即可展开。
             真正的视觉入口是那条贯穿全屏的光缝本身。 */}
         <button
+          ref={seamBtnRef}
           type="button"
           className="login-seam-btn"
           onClick={() => setExpanded(true)}
           onFocus={() => setExpanded(true)}
-          aria-label="展开登录界面"
+          aria-label="展开登录界面（回车也可展开）"
         />
       </div>
 
@@ -373,9 +388,12 @@ export default function LoginPage() {
             <label className="login-field">
               <span>用户名</span>
               <input
+                ref={usernameRef}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
+                maxLength={32}
+                aria-label="用户名"
                 placeholder="2-32 位，中英文/数字/下划线"
               />
             </label>
@@ -385,6 +403,8 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                maxLength={72}
+                aria-label="密码"
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
                 placeholder="至少 6 位"
               />

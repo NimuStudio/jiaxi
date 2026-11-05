@@ -130,8 +130,25 @@ function GlassSelect({
     first?.focus();
   }, [open]);
 
+  /**
+   * Esc 只收起下拉。
+   *
+   * React 的事件在根容器上被代理，这里 stopPropagation 之后，
+   * 原生事件不会再冒到 document，GlassModal 的 Esc 监听因此收不到。
+   */
+  function handleEsc(e: React.KeyboardEvent) {
+    if (e.key !== "Escape" || !open) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setOpen(false);
+  }
+
   /** 选项间移动：↑/↓/Home/End */
   function moveFocus(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Escape") {
+      handleEsc(e);
+      return;
+    }
     const key = e.key;
     if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(key)) return;
     e.preventDefault();
@@ -156,18 +173,22 @@ function GlassSelect({
     function onDocClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    function onKey(e: KeyboardEvent) {
+    // Escape 不在这里处理：两个监听都挂在 document 上，
+    // stopPropagation 拦不住同一节点上的其他监听，弹层仍会被一起关掉。
+    // 改为在 React 的 onKeyDown 里拦（见下面的 handleEsc）。
+    // Esc 用「捕获阶段」拦：GlassModal 的监听挂在 document 的冒泡阶段，
+    // 捕获阶段先执行并 stopPropagation，弹层就收不到这次 Esc。
+    function onEscCapture(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
-      // 只关下拉：不 stopPropagation 的话，GlassModal 的 document 监听会一起响应，
-      // 用户想收起下拉却把整个「体检数字」弹层关掉了。
       e.stopPropagation();
+      e.preventDefault();
       setOpen(false);
     }
+    document.addEventListener("keydown", onEscCapture, true);
     document.addEventListener("mousedown", onDocClick);
-    document.addEventListener("keydown", onKey);
     return () => {
+      document.removeEventListener("keydown", onEscCapture, true);
       document.removeEventListener("mousedown", onDocClick);
-      document.removeEventListener("keydown", onKey);
     };
   }, [open]);
 
@@ -179,6 +200,7 @@ function GlassSelect({
         type="button"
         className={`gselect-btn${current ? "" : " is-placeholder"}`}
         onClick={() => setOpen((v) => !v)}
+        onKeyDown={handleEsc}
         aria-haspopup="listbox"
         aria-expanded={open}
       >

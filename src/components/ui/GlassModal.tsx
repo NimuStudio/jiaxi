@@ -99,6 +99,10 @@ export function GlassModal({
 
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") {
+        // 打开中的下拉自己会用 Esc 收起；这里再关一次弹层，
+        // 用户就会「想收起下拉却把整个弹层关掉」（实测过）。
+        const el = e.target as HTMLElement | null;
+        if (el?.closest?.(".gselect.is-open")) return;
         onCloseRef.current();
         return;
       }
