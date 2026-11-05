@@ -72,6 +72,8 @@ function parseFactors(v: unknown): RiskFactors | null {
     eatsVegetablesDaily: Boolean(f.eatsVegetablesDaily),
     onAntihypertensive: Boolean(f.onAntihypertensive),
     historyOfHighGlucose: Boolean(f.historyOfHighGlucose),
+    smoker: Boolean(f.smoker),
+    drinker: Boolean(f.drinker),
   };
 }
 

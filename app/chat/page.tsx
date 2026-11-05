@@ -9,6 +9,7 @@ import type { RiskFactors } from "@/lib/agent/tools";
 import { PedigreeGraph } from "@/components/pedigree/PedigreeGraph";
 import type { ExtractedPerson } from "@/lib/extract/client";
 import { DISEASE_LABEL, RELATION_LABEL } from "@/lib/pedigree/viz";
+import { exposureHints } from "@/lib/risk/exposure";
 import type { RelationType } from "@/lib/pedigree/types";
 import {
   AUTH_EVENT,
@@ -571,6 +572,27 @@ export default function ChatPage() {
                   </Link>
                 </>
               )}
+            </div>
+          )}
+
+          {exposureHints(persons, {
+            smoker: factors?.smoker ?? false,
+            drinker: factors?.drinker ?? false,
+          }).length > 0 && (
+            <div className="exposure-hints">
+              <div className="next-step-label">家系 × 生活方式</div>
+              {exposureHints(persons, {
+                smoker: factors?.smoker ?? false,
+                drinker: factors?.drinker ?? false,
+              }).map((h) => (
+                <div
+                  key={h.id}
+                  className={`exposure-hint${h.level === "attention" ? " is-attention" : ""}`}
+                >
+                  <p className="exposure-hint-title">{h.title}</p>
+                  <p className="exposure-hint-body">{h.body}</p>
+                </div>
+              ))}
             </div>
           )}
         </section>

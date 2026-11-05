@@ -41,6 +41,8 @@ const FACTORS: RiskFactors = {
   physicallyActive: false,
   eatsVegetablesDaily: false,
   onAntihypertensive: true,
+  smoker: false,
+  drinker: false,
   historyOfHighGlucose: false,
 };
 

@@ -27,6 +27,8 @@ type Draft = {
   eatsVegetablesDaily: boolean;
   onAntihypertensive: boolean;
   historyOfHighGlucose: boolean;
+  smoker: boolean;
+  drinker: boolean;
 };
 
 const EMPTY: Draft = {
@@ -38,6 +40,8 @@ const EMPTY: Draft = {
   eatsVegetablesDaily: false,
   onAntihypertensive: false,
   historyOfHighGlucose: false,
+  smoker: false,
+  drinker: false,
 };
 
 function loadDraft(): Draft {
@@ -68,6 +72,8 @@ function toFactors(d: Draft): RiskFactors | null {
     eatsVegetablesDaily: d.eatsVegetablesDaily,
     onAntihypertensive: d.onAntihypertensive,
     historyOfHighGlucose: d.historyOfHighGlucose,
+    smoker: d.smoker,
+    drinker: d.drinker,
   };
 }
 
@@ -77,6 +83,12 @@ export interface RiskFactorsFormProps {
   /** 外部要求打开弹层（问答面板里点了「补几个数」）。 */
   openSignal: number;
 }
+
+/** 生活方式暴露：与 FINDRISC 计分项分开列，避免让人以为它们会改分数 */
+const EXPOSURE_CHECKS: Array<{ key: keyof Draft; label: string; hint: string }> = [
+  { key: "smoker", label: "现在吸烟", hint: "已计入 China-PAR 方程" },
+  { key: "drinker", label: "经常饮酒", hint: "两个方程都不含此项，仅作记录" },
+];
 
 const CHECKS: Array<{ key: keyof Draft; label: string; hint: string }> = [
   { key: "physicallyActive", label: "每天有体力活动", hint: "每天至少 30 分钟" },
@@ -294,6 +306,23 @@ export function RiskFactorsForm({ value, onChange, openSignal }: RiskFactorsForm
 
           <div className="factors-checks">
             {CHECKS.map((c) => (
+              <label key={c.key} className="factors-check">
+                <input
+                  type="checkbox"
+                  checked={Boolean(draft[c.key])}
+                  onChange={(e) => update({ [c.key]: e.target.checked } as Partial<Draft>)}
+                />
+                <span className="factors-check-text">
+                  <span className="factors-check-label">{c.label}</span>
+                  <span className="factors-check-hint">{c.hint}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <p className="factors-group-title">生活方式暴露</p>
+          <div className="factors-checks">
+            {EXPOSURE_CHECKS.map((c) => (
               <label key={c.key} className="factors-check">
                 <input
                   type="checkbox"

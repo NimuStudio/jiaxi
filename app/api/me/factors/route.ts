@@ -23,6 +23,8 @@ interface FactorsShape {
   eatsVegetablesDaily: boolean;
   onAntihypertensive: boolean;
   historyOfHighGlucose: boolean;
+  smoker: boolean;
+  drinker: boolean;
 }
 
 function posNum(v: unknown): boolean {
@@ -42,6 +44,8 @@ function sanitizeFactors(input: unknown): FactorsShape | null {
   ] as const) {
     if (typeof f[k] !== "boolean") return null;
   }
+  // 生活方式暴露是后来加的：老数据没有这两项，缺省按 false 处理，不当作非法输入
+  const exposure = (v: unknown) => (typeof v === "boolean" ? v : false);
   return {
     age: f.age as number,
     sex: f.sex,
@@ -51,6 +55,8 @@ function sanitizeFactors(input: unknown): FactorsShape | null {
     eatsVegetablesDaily: f.eatsVegetablesDaily as boolean,
     onAntihypertensive: f.onAntihypertensive as boolean,
     historyOfHighGlucose: f.historyOfHighGlucose as boolean,
+    smoker: exposure(f.smoker),
+    drinker: exposure(f.drinker),
   };
 }
 

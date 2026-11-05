@@ -3310,3 +3310,39 @@ input[type="range"]::-moz-range-thumb {
     height: 190px;
   }
 }
+
+/* ---------- 家系 × 生活方式 提示 ---------- */
+.exposure-hints {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--glass-bg);
+}
+
+.exposure-hint {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  border-left: 3px solid var(--primary);
+}
+
+.exposure-hint.is-attention {
+  background: #fdf3e2;
+  border-left-color: #a86413;
+}
+
+.exposure-hint-title {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.exposure-hint-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.72;
+  color: var(--text-muted);
+}

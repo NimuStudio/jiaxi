@@ -44,6 +44,9 @@ export interface RiskFactors {
   eatsVegetablesDaily: boolean;
   onAntihypertensive: boolean;
   historyOfHighGlucose: boolean;
+  /** 生活方式暴露：吸烟已计入 China-PAR 方程；饮酒不在任何方程里，仅作记录 */
+  smoker: boolean;
+  drinker: boolean;
 }
 
 export interface ToolContext {
