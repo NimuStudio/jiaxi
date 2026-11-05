@@ -10,6 +10,7 @@ import { PedigreeGraph } from "@/components/pedigree/PedigreeGraph";
 import type { ExtractedPerson } from "@/lib/extract/client";
 import { DISEASE_LABEL, RELATION_LABEL } from "@/lib/pedigree/viz";
 import { exposureHints } from "@/lib/risk/exposure";
+import { familySignals } from "@/lib/risk/familySignals";
 import type { RelationType } from "@/lib/pedigree/types";
 import {
   AUTH_EVENT,
@@ -572,6 +573,21 @@ export default function ChatPage() {
                   </Link>
                 </>
               )}
+            </div>
+          )}
+
+          {familySignals(persons).length > 0 && (
+            <div className="exposure-hints">
+              <div className="next-step-label">家系里的信号</div>
+              {familySignals(persons).map((sig) => (
+                <div
+                  key={sig.id}
+                  className={`exposure-hint${sig.level === "attention" ? " is-attention" : ""}`}
+                >
+                  <p className="exposure-hint-title">{sig.title}</p>
+                  <p className="exposure-hint-body">{sig.body}</p>
+                </div>
+              ))}
             </div>
           )}
 
