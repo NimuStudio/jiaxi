@@ -3327,10 +3327,10 @@ input[type="range"]::-moz-range-thumb {
 .dna-scene-canvas {
   position: absolute;
   left: 0;
-  top: 0;
+  top: 7%;
   width: 100%;
-  /* 只占上方 68%：下方留给标题文字，避免螺旋压在字上 */
-  height: 68%;
+  /* 只占上方 60% 并留出上边距：螺旋不顶到屏幕边缘，下方留给标题文字 */
+  height: 60%;
   display: block;
   -webkit-mask-image: linear-gradient(180deg, #000 72%, rgba(0, 0, 0, 0) 100%);
   mask-image: linear-gradient(180deg, #000 72%, rgba(0, 0, 0, 0) 100%);
@@ -3480,4 +3480,82 @@ input[type="range"]::-moz-range-thumb {
     border-bottom: 1px solid var(--line);
   }
   .login-panel { padding: 28px 20px 48px; }
+}
+
+/* 登录页 v2：点阵纹理 + 强调标题 + 数据点 + 品牌标记 */
+.login-visual::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(26, 111, 181, 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(120% 90% at 30% 20%, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 82%);
+  mask-image: radial-gradient(120% 90% at 30% 20%, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 82%);
+  pointer-events: none;
+}
+
+.login-title-accent {
+  position: relative;
+  color: var(--primary);
+}
+
+.login-title-accent::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 8%;
+  bottom: 4px;
+  height: 7px;
+  border-radius: 4px;
+  background: rgba(26, 111, 181, 0.14);
+  z-index: -1;
+}
+
+.login-stats {
+  display: flex;
+  gap: 26px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.login-stats li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.login-stats b {
+  font-size: 24px;
+  line-height: 1.1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.login-stats span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 14px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+
+.login-brand-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 4px rgba(26, 111, 181, 0.12);
+}
+
+@media (max-width: 860px) {
+  .login-stats { gap: 18px; }
+  .login-stats b { font-size: 20px; }
 }

@@ -52,15 +52,38 @@ export default function LoginPage() {
         <DnaScene />
         <div className="login-visual-copy">
           <p className="login-kicker">家系 · 遗传健康的家族史梳理</p>
-          <h1 className="login-title">你的风险里，有多少能拿回来</h1>
+          <h1 className="login-title">
+            你的风险里，
+            <br />
+            <span className="login-title-accent">有多少能拿回来</span>
+          </h1>
           <p className="login-sub">
             把家里人的病史说一遍，我们整理成家系图，算清哪部分风险能靠生活方式拿回来。
           </p>
+
+          <ul className="login-stats">
+            <li>
+              <b>25</b>
+              <span>种疾病可识别</span>
+            </li>
+            <li>
+              <b>2</b>
+              <span>套指南方程</span>
+            </li>
+            <li>
+              <b>100%</b>
+              <span>本机推理</span>
+            </li>
+          </ul>
         </div>
       </section>
 
       <section className="login-panel">
         <div className="login-card">
+          <div className="login-brand">
+            <span className="login-brand-dot" aria-hidden="true" />
+            <span>家系 ClearMind Pedigree</span>
+          </div>
           <h2 className="login-card-title">{mode === "login" ? "登录" : "创建账户"}</h2>
           <p className="login-card-sub">
             账户只解决一件事：换电脑、清缓存以后，你的家系还在。
