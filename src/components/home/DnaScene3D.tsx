@@ -28,7 +28,7 @@ export function DnaScene3D() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
-    camera.position.set(0, 0.1, 15.4);
+    camera.position.set(0, 0.1, 14.2);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -40,7 +40,8 @@ export function DnaScene3D() {
 
     const group = new THREE.Group();
     group.rotation.z = -0.28;
-    group.position.y = 0.62;
+    group.position.y = 0.35;
+    group.position.x = -2.15;
     scene.add(group);
 
     // ---- 粒子参数 ----

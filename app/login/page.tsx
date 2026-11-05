@@ -3,19 +3,22 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useAccount } from "@/lib/auth/account-client";
 
 // three.js 只在浏览器跑：动态加载，避免进服务端渲染，也不拖慢首屏 HTML。
 const DnaScene3D = dynamic(() => import("@/components/home/DnaScene3D").then((m) => m.DnaScene3D), {
   ssr: false,
 });
-import { useAccount } from "@/lib/auth/account-client";
 
 /**
  * 登录页（站点入口）。
  *
- * 左侧是 DNA 双螺旋：这是遗传健康产品的第一眼，比任何口号都直接。
- * 右侧是登录/注册二选一。注册的理由写清楚：账户只解决「数据跟着人走」，
- * 数据仍然存在本机，不出这台机器。
+ * 版式不是"左图右卡"那种常规分栏，而是杂志式非对称：
+ *  - DNA 作为整屏背景，从左后方穿过；
+ *  - 超大标题压在左上，留出大块空白；
+ *  - 登录卡悬浮在右下，白底实心，压在 DNA 之上形成层次；
+ *  - 底部一条贯穿全宽的指标带，把价值量化成三个数字。
+ * 窄屏自动退化为单列（标题 → 卡片 → 指标）。
  */
 export default function LoginPage() {
   const router = useRouter();
@@ -27,7 +30,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  // 已登录直接进站
   useEffect(() => {
     if (ready && user) router.replace("/chat");
   }, [user, ready, router]);
@@ -53,46 +55,39 @@ export default function LoginPage() {
 
   return (
     <main className="login-page">
-      <section className="login-visual">
+      <div className="login-stage">
         <DnaScene3D />
-        <div className="login-visual-copy">
-          <p className="login-kicker">家系 · 遗传健康的家族史梳理</p>
-          <h1 className="login-title">
-            你的风险里，
-            <br />
-            <span className="login-title-accent">有多少能拿回来</span>
-          </h1>
-          <p className="login-sub">
-            把家里人的病史说一遍，我们整理成家系图，算清哪部分风险能靠生活方式拿回来。
-          </p>
+      </div>
 
-          <ul className="login-stats">
-            <li>
-              <b>25</b>
-              <span>种疾病可识别</span>
-            </li>
-            <li>
-              <b>2</b>
-              <span>套指南方程</span>
-            </li>
-            <li>
-              <b>100%</b>
-              <span>本机推理</span>
-            </li>
-          </ul>
-        </div>
+      <header className="login-topbar">
+        <span className="login-brand">
+          <span className="login-brand-dot" aria-hidden="true" />
+          家系 ClearMind
+        </span>
+        <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
+      </header>
+
+      <section className="login-hero">
+        <p className="login-kicker">遗传健康的家族史梳理</p>
+        <h1 className="login-title">
+          你的风险里，
+          <br />
+          <em>有多少能拿回来</em>
+        </h1>
+        <p className="login-sub">
+          把家里人的病史说一遍，我们整理成家系图，
+          算清哪部分风险能靠生活方式拿回来。
+        </p>
       </section>
 
-      <section className="login-panel">
+      <section className="login-card-wrap">
         <div className="login-card">
-          <div className="login-brand">
-            <span className="login-brand-dot" aria-hidden="true" />
-            <span>家系 ClearMind Pedigree</span>
+          <div className="login-card-head">
+            <h2 className="login-card-title">{mode === "login" ? "登录" : "创建账户"}</h2>
+            <span className="login-card-tag">本地数据库</span>
           </div>
-          <h2 className="login-card-title">{mode === "login" ? "登录" : "创建账户"}</h2>
           <p className="login-card-sub">
-            账户只解决一件事：换电脑、清缓存以后，你的家系还在。
-            数据存在本机数据库，不出这台机器。
+            账户只解决一件事：换电脑、清缓存以后，你的家系还在。数据不出这台机器。
           </p>
 
           <form onSubmit={submit} className="login-form">
@@ -152,10 +147,26 @@ export default function LoginPage() {
           </div>
 
           <p className="login-demo">
-            只想看效果？<a href="/chat?demo=1">用预置家系直接浏览</a>（不登录、不读写你的数据）
+            只想看效果？<a href="/chat?demo=1">用预置家系直接浏览</a>
           </p>
         </div>
       </section>
+
+      <footer className="login-stats-strip">
+        <div className="login-stat">
+          <b>25</b>
+          <span>种疾病可识别</span>
+        </div>
+        <div className="login-stat">
+          <b>2</b>
+          <span>套指南方程</span>
+        </div>
+        <div className="login-stat">
+          <b>100%</b>
+          <span>本机推理</span>
+        </div>
+        <p className="login-stats-note">FINDRISC · China-PAR ｜ 数据保存在本机 MySQL，不上传</p>
+      </footer>
     </main>
   );
 }
