@@ -86,6 +86,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  /**
+   * 演示态：给导航链接补上 ?demo=1。
+   *
+   * 登录墙只认 URL 参数（不认会话标记，否则访问过一次演示就等于永久免登录），
+   * 所以演示中点击导航时必须由链接自己把参数带过去，否则会被送回登录页。
+   */
+  const [demo, setDemo] = useState(false);
+  useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get("demo") === "1") {
+        sessionStorage.setItem("pedigree-demo", "1");
+      }
+      setDemo(sessionStorage.getItem("pedigree-demo") === "1");
+    } catch {
+      setDemo(false);
+    }
+  }, [pathname]);
+
+  const withDemo = (href: string) => (demo ? `${href}?demo=1` : href);
+
   // 登录页：不套光斑背景、不套顶栏，整屏交给登录页自己
   if (barePage) return <>{children}</>;
 
@@ -101,7 +121,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <header className="topbar">
         <div className="topbar-left">
-          <Link href="/chat" className="topbar-logo">
+          <Link href={withDemo("/chat")} className="topbar-logo">
             <span className="brand-mark" />
             家系
           </Link>
@@ -112,7 +132,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {NAV.map((item) => (
             <Link
               key={item.href}
-              href={item.href}
+              href={withDemo(item.href)}
               className={`topbar-nav-btn${pathname === item.href ? " active" : ""}`}
               title={item.hint}
             >

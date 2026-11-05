@@ -15,26 +15,21 @@ export function RequireLogin({ children }: { children: React.ReactNode }) {
   const params = useSearchParams();
   const { user, ready } = useAccount();
   /**
-   * 演示态在同一次浏览会话内保持：从 /chat?demo=1 点导航跳去 /（糖尿病风险页）时，
-   * 新路由不再带 ?demo=1，原来的判断会立刻把人送回登录页 —— 这是评审会踩的坑。
-   * 因此落地过任何 ?demo=1 就记进 sessionStorage，关掉标签页即失效。
+   * 只认 URL 上的 ?demo=1，不认会话标记。
+   *
+   * 之前用 sessionStorage 记住演示态，结果是「只要访问过演示，之后直接输网址也免登录」——
+   * 这会让登录墙形同虚设。现在演示态由链接自己携带：演示中点击导航时，
+   * AppShell 会给目标地址补上 ?demo=1（见 AppShell 里的 withDemo）。
    */
-  const [demoSession, setDemoSession] = useState(false);
-
   useEffect(() => {
     try {
-      if (params.get("demo") === "1") {
-        sessionStorage.setItem("pedigree-demo", "1");
-        setDemoSession(true);
-      } else {
-        setDemoSession(sessionStorage.getItem("pedigree-demo") === "1");
-      }
+      if (params.get("demo") === "1") sessionStorage.setItem("pedigree-demo", "1");
     } catch {
-      /* 隐私模式下 sessionStorage 不可用：退回只看 URL 参数 */
+      /* 隐私模式下不可用，仅影响「演示模式」标记，不影响放行判断 */
     }
   }, [params]);
 
-  const demo = params.get("demo") === "1" || demoSession;
+  const demo = params.get("demo") === "1";
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
