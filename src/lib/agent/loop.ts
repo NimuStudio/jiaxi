@@ -239,6 +239,20 @@ export function attachCitationSources(
   });
 }
 
+/**
+ * 事实类问题：问的是知识库里的信息，而不是用户自己的数据。
+ *
+ * 用词表判定而不是让模型判断——这是"把知识递到模型面前"的确定性一步，
+ * 判错的代价只是多检索一次（结果仍由模型决定用不用）。
+ */
+export function isFactualQuestion(question: string): boolean {
+  // 问自己的风险/家系不算事实题（虽然也可能出现「多少」）
+  if (/(我的|我是|我该|我需要|还剩|可回收)/.test(question)) return false;
+  return /(满分|阈值|标准|区别|定义|含义|是什么|为什么|怎么算|怎么打分|分档|几档|档|级别|分级|评分|条目|分数|指的是)/.test(
+    question,
+  );
+}
+
 const MAX_STEPS = 4;
 
 /**
@@ -276,6 +290,35 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
   /** 条目标题 → 出处；回答里的「依据：《标题》」会补上它 */
   const titleToSource = new Map<string, string>();
   let repeats = 0;
+
+  /** 记录一次工具调用：观察值、结构化事实、可引用的标题。 */
+  const record = (r: ReturnType<typeof runTool>) => {
+    observations.push(r.observation);
+    if (r.risk) facts.risk = r.risk;
+    if (r.pedigree) facts.pedigree = r.pedigree;
+    for (const c of r.citations ?? []) {
+      allowedTitles.add(c);
+      const src = r.citationSources?.[c];
+      if (src !== undefined) titleToSource.set(c, src);
+      if (!facts.citations.includes(c)) facts.citations.push(c);
+    }
+  };
+
+  // 事实类问题先检索，把条目直接摆在模型面前。
+  //
+  // 提示词里已经写了「问是什么/标准是多少要先 search_knowledge」，但 1.7B 经常不照做：
+  // 实测「FINDRISC 满分是多少」直接拒答，「0–20 和 0–26 有什么区别」干脆答成用户个人风险。
+  // 规则该做的是把知识递过去，而不是指望模型自觉——这一步是确定性的。
+  if (isFactualQuestion(question)) {
+    const r = runTool("search_knowledge", question, ctx);
+    record(r);
+    steps.push({
+      thought: "这个问题问的是知识库里的内容，先检索条目",
+      action: "search_knowledge",
+      input: question,
+      observation: r.observation,
+    });
+  }
 
   const finish = (raw: string): AgentResult => ({
     answer: attachCitationSources(
@@ -323,17 +366,7 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
     calls[d.action] = used + 1;
 
     const r = runTool(d.action, d.input, ctx);
-    observations.push(r.observation);
-    if (r.risk) facts.risk = r.risk;
-    if (r.pedigree) facts.pedigree = r.pedigree;
-    if (r.citations) {
-      for (const c of r.citations) {
-        allowedTitles.add(c);
-        const src = r.citationSources?.[c];
-        if (src) titleToSource.set(c, src);
-        if (!facts.citations.includes(c)) facts.citations.push(c);
-      }
-    }
+    record(r);
     steps.push({ ...d, observation: r.observation });
   }
 

@@ -101,11 +101,15 @@ export async function POST(request: Request) {
     );
   }
 
+  // 评测开关：noKb=1 时不给知识库，用于量化「检索增强到底提升了多少」。
+  // 只影响本请求，产品默认行为不变（前端不传这个参数）。
+  const noKb = new URL(request.url).searchParams.get("noKb") === "1";
+
   try {
     const result = await runAgent(question, {
       persons: parsePersons(body.persons),
       factors: parseFactors(body.factors),
-      kb: KB,
+      kb: noKb ? [] : KB,
     });
     return NextResponse.json(result);
   } catch (error) {
