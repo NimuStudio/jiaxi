@@ -4143,3 +4143,48 @@ input[type="range"]::-moz-range-thumb {
   .login-grid,
   .login-card { transform: none; transition: none; }
 }
+
+/* ---------- 光缝：更明显的分离与辉光 ---------- */
+
+/* 两片幕布分得更开一点，缝隙才看得见光 */
+.login-page.is-collapsed .login-tear-upper { transform: translate3d(11px, -11px, 0); }
+.login-page.is-collapsed .login-tear-lower { transform: translate3d(-11px, 11px, 0); }
+
+/* 幕布给一点冷色，缝隙的亮光才有对比 */
+.login-tear-half {
+  background: linear-gradient(200deg, #eaf3fc 0%, #dfeefb 46%, #eef6fd 100%);
+}
+
+/* 整条对角线的辉光带：折叠态亮，展开后淡出 */
+.login-seam-glow {
+  opacity: 1;
+  transition: opacity 0.5s ease;
+  animation: seam-glow-breathe 3.6s ease-in-out infinite;
+}
+
+.login-page.is-expanded .login-seam-glow {
+  opacity: 0;
+  animation: none;
+}
+
+@keyframes seam-glow-breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* 中间那段光点：加粗、加长、加亮 */
+.login-seam-line {
+  width: 3px;
+  height: 210px;
+  filter: drop-shadow(0 0 16px rgba(58, 150, 214, 0.95));
+}
+
+.login-seam-hint {
+  font-size: 13px;
+  color: var(--text-muted);
+  text-shadow: 0 1px 8px rgba(255, 255, 255, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-seam-glow { animation: none; opacity: 0.85; }
+}

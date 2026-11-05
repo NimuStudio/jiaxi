@@ -87,7 +87,7 @@ export default function LoginPage() {
     const onMove = (e: PointerEvent) => {
       const dx = e.clientX - window.innerWidth / 2;
       const dy = e.clientY - window.innerHeight / 2;
-      if (Math.hypot(dx, dy) < 260) setExpanded(true);
+      if (Math.hypot(dx, dy) < 110) setExpanded(true);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
@@ -135,6 +135,23 @@ export default function LoginPage() {
         preserveAspectRatio="none"
         aria-hidden="true"
       >
+        <defs>
+          <filter id="seamBlur" x="-20%" y="-200%" width="140%" height="500%">
+            <feGaussianBlur stdDeviation="7" />
+          </filter>
+        </defs>
+        {/* 辉光带：让整条缝都发亮，而不是只有中间一小段 */}
+        <line
+          className="login-seam-glow"
+          x1="0"
+          y1="12"
+          x2="100"
+          y2="100"
+          stroke="rgba(96, 176, 235, 0.85)"
+          strokeWidth="14"
+          strokeLinecap="round"
+          filter="url(#seamBlur)"
+        />
         <line
           x1="0"
           y1="12"
