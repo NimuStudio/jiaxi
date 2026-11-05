@@ -1,3 +1,4 @@
+import { DnaHelix } from "@/components/home/DnaHelix";
 import { EvidencePanel } from "@/components/rag/EvidencePanel";
 import { ReclaimSimulator } from "@/components/simulator/ReclaimSimulator";
 
@@ -10,6 +11,8 @@ export default function Home() {
           FINDRISC 把 10 年糖尿病风险拆成「改不了的」和「能拿回来的」——拖动滑块，看后一部分值多少分。
         </p>
       </div>
+
+      <DnaHelix />
 
       <ReclaimSimulator />
       <EvidencePanel />
