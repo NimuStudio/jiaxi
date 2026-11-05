@@ -3784,3 +3784,104 @@ input[type="range"]::-moz-range-thumb {
   .login-stat + .login-stat { padding-left: 0; }
   .login-stat + .login-stat::before { display: none; }
 }
+
+/* ---------- 登录页：渐进展开 ---------- */
+.login-cta {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.login-cta-btn {
+  min-width: 200px;
+  height: 58px;
+  padding: 0 46px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  cursor: pointer;
+  box-shadow:
+    0 12px 34px -10px rgba(26, 111, 181, 0.55),
+    0 0 0 8px rgba(26, 111, 181, 0.08);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.2s ease;
+}
+
+.login-cta-btn:hover,
+.login-cta-btn:focus-visible {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 18px 44px -12px rgba(26, 111, 181, 0.62),
+    0 0 0 12px rgba(26, 111, 181, 0.1);
+  outline: none;
+}
+
+.login-cta-hint {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--text-faint);
+}
+
+/* 折叠态：除背景与按钮外一律隐藏 */
+.login-page.is-collapsed .login-hero,
+.login-page.is-collapsed .login-card-wrap,
+.login-page.is-collapsed .login-stats-strip,
+.login-page.is-collapsed .login-diagonal,
+.login-page.is-collapsed .login-diagonal-line,
+.login-page.is-collapsed .login-stage {
+  opacity: 0;
+  transform: translateY(14px) scale(0.995);
+  pointer-events: none;
+  /* visibility 一起关掉：否则折叠态仍能用 Tab 聚焦到看不见的输入框 */
+  visibility: hidden;
+}
+
+.login-page.is-collapsed .login-topmeta {
+  opacity: 0;
+}
+
+.login-page.is-expanded .login-cta {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+}
+
+/* 展开时各元素的过渡与错峰 */
+.login-hero,
+.login-card-wrap,
+.login-stats-strip,
+.login-diagonal,
+.login-diagonal-line,
+.login-stage {
+  visibility: visible;
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.login-page.is-expanded .login-diagonal { transition-delay: 0s; }
+.login-page.is-expanded .login-hero { transition-delay: 0.06s; }
+.login-page.is-expanded .login-stage { transition-delay: 0.12s; }
+.login-page.is-expanded .login-card-wrap { transition-delay: 0.18s; }
+.login-page.is-expanded .login-stats-strip { transition-delay: 0.26s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .login-cta,
+  .login-hero,
+  .login-card-wrap,
+  .login-stats-strip,
+  .login-diagonal,
+  .login-stage {
+    transition: none;
+  }
+}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAccount } from "@/lib/auth/account-client";
@@ -30,9 +30,45 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  /**
+   * 渐进展开：进门只有品牌和一个按钮；指针靠近（或键盘聚焦、触屏点开）后，
+   * 标题 / 对角切割 / DNA / 登录卡 / 指标带依次浮现。
+   *
+   * 几个必须处理好的边界：
+   *  - 触屏没有 hover：直接展开，否则用户会卡在一个"打不开"的页面；
+   *  - 减少动效：直接展开；
+   *  - 展开后不回缩：来回开关会闪，且没有功能价值。
+   */
+  const [expanded, setExpanded] = useState(false);
+  const ctaRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     if (ready && user) router.replace("/chat");
   }, [user, ready, router]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const noHover = window.matchMedia("(hover: none)").matches;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (noHover || reduce) {
+      setExpanded(true);
+      return;
+    }
+    if (expanded) return; // 已展开就不再监听，避免无意义的重复 setState
+    // 指针进入按钮周围 240px 就展开
+    const onMove = (e: PointerEvent) => {
+      const el = ctaRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dx = e.clientX - cx;
+      const dy = e.clientY - cy;
+      if (Math.hypot(dx, dy) < 240) setExpanded(true);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => window.removeEventListener("pointermove", onMove);
+  }, [expanded]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -54,7 +90,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="login-page">
+    <main className={`login-page ${expanded ? "is-expanded" : "is-collapsed"}`}>
       {/* 对角切割：左下浅蓝三角 + 一条发丝线 */}
       <div className="login-diagonal" aria-hidden="true" />
       {/* 背景动效：漂移的极光 + 缓慢流动的点阵 */}
@@ -104,6 +140,19 @@ export default function LoginPage() {
         </span>
         <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
       </header>
+
+      {/* 折叠态：只有一个按钮。指针靠近或点它，整个场景展开 */}
+      <div className="login-cta" ref={ctaRef}>
+        <button
+          type="button"
+          className="login-cta-btn"
+          onClick={() => setExpanded(true)}
+          onFocus={() => setExpanded(true)}
+        >
+          登录
+        </button>
+        <p className="login-cta-hint">鼠标靠近，或直接点开</p>
+      </div>
 
       <section className="login-hero">
         <p className="login-kicker">遗传健康的家族史梳理</p>
