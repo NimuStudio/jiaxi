@@ -4454,3 +4454,26 @@ input[type="range"]::-moz-range-thumb {
 
 /* 柔光垫右移，避开左侧标题区 */
 .login-stage::before { left: 20%; right: 22%; }
+
+/* ---------- 提示词贴着线写 ---------- */
+.login-seam-hint {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: 0;
+  white-space: nowrap;
+  font-size: 12.5px;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  /* 先跟随对角线角度旋转，再沿自身法线方向抬到线的上方 */
+  transform:
+    translate(-50%, -50%)
+    rotate(var(--seam-angle, 30deg))
+    translateY(-26px);
+  text-shadow: 0 1px 10px rgba(255, 255, 255, 0.95), 0 0 3px rgba(255, 255, 255, 0.9);
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .login-seam-hint { font-size: 11px; letter-spacing: 0.1em; }
+}

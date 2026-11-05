@@ -72,14 +72,23 @@ export default function LoginPage() {
       el.style.setProperty("--px", nx.toFixed(3));
       el.style.setProperty("--py", ny.toFixed(3));
     };
+    // 对角线的实际倾角随视口比例变化：算出来写进 --seam-angle，提示词才能贴着线写
+    const setAngle = () => {
+      const deg = (Math.atan2(0.88 * window.innerHeight, window.innerWidth) * 180) / Math.PI;
+      el.style.setProperty("--seam-angle", deg.toFixed(2) + "deg");
+    };
+    setAngle();
+
     const onMove = (e: PointerEvent) => {
       nx = (e.clientX / window.innerWidth - 0.5) * 2;
       ny = (e.clientY / window.innerHeight - 0.5) * 2;
       if (!raf) raf = window.requestAnimationFrame(apply);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("resize", setAngle);
     return () => {
       window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("resize", setAngle);
       if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);
@@ -264,10 +273,7 @@ export default function LoginPage() {
           onFocus={() => setExpanded(true)}
           aria-label="展开登录界面"
         />
-        <p className="login-seam-hint">
-          <span className="login-seam-dot" aria-hidden="true" />
-          从右上往左下划，或点击任意处
-        </p>
+        <p className="login-seam-hint">从右上往左下划，或点击任意处</p>
       </div>
 
       <section className="login-hero">
