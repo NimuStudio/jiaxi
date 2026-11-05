@@ -282,16 +282,24 @@ export default function LoginPage() {
       {/* 提示词挂在 main 下：父级有 transform 时 position:fixed 会失效 */}
       <p className="login-seam-hint">从右上往左下划，或点击任意处</p>
 
-      {/* DNA 旁的注解：说明这些粒子是什么，以及可以怎么玩（都是真实行为） */}
-      <div className="dna-notes" aria-hidden="true">
-        <p className="dna-note dna-note-tag">
-          <span className="dna-leader" />
-          每个点 = 一条病史
-        </p>
-        <p className="dna-note dna-note-hint">
-          <span className="dna-dot" />
-          鼠标移过去，粒子会散开
-        </p>
+      {/* 螺旋周围的纯装饰：两圈细虚线弧 + 四枚十字定位角标（印刷制版感） */}
+      <div className="dna-orbit" aria-hidden="true">
+        <svg viewBox="0 0 640 640">
+          {/* 一枚实线细圆 + 圆外四枚对位角标（45° 位置），像制版的对位标记 */}
+          <circle className="orbit-ring" cx="320" cy="320" r="250" />
+          <g className="orbit-ticks">
+            <path d="M320 62 v14" />
+            <path d="M320 564 v14" />
+            <path d="M62 320 h14" />
+            <path d="M564 320 h14" />
+          </g>
+          <g className="orbit-cross">
+            <path d="M156 156 h13 M162.5 149.5 v13" />
+            <path d="M471 156 h13 M477.5 149.5 v13" />
+            <path d="M156 471 h13 M162.5 464.5 v13" />
+            <path d="M471 471 h13 M477.5 464.5 v13" />
+          </g>
+        </svg>
       </div>
 
       <section className="login-hero">
