@@ -5243,3 +5243,13 @@ input[type="range"]::-moz-range-thumb {
 
 /* 统计条从三格变四格后收一点间距，避免挤在一起 */
 .login-stats-strip { gap: clamp(18px, 3vw, 44px); }
+
+/* 英文品牌名：小一号、字距略宽，作为中文的注脚而不是并列主语 */
+.login-brand-en {
+  margin-left: 6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-weight: 500;
+}

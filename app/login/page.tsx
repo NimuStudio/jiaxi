@@ -247,7 +247,7 @@ export default function LoginPage() {
       <header className="login-topbar">
         <span className="login-brand">
           <span className="login-brand-dot" aria-hidden="true" />
-          家系 ClearMind
+          家系 <span className="login-brand-en">Pedigree</span>
         </span>
         <span className="login-topmeta-col">
           <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
