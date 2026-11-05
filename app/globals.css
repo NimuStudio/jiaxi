@@ -3382,7 +3382,7 @@ input[type="range"]::-moz-range-thumb {
 
 .login-sub {
   margin: 0;
-  max-width: 40ch;
+  max-width: none;
   font-size: 15px;
   line-height: 1.85;
   color: var(--text-muted);
@@ -3702,4 +3702,85 @@ input[type="range"]::-moz-range-thumb {
     animation: none;
   }
   .login-diagonal-spark { opacity: 0.35; }
+}
+
+/* ---------- 登录页版式打磨 ---------- */
+
+/* ① 标题区柔光：DNA 与发丝线从背后穿过时，文字仍然清晰 */
+.login-hero::before {
+  content: "";
+  position: absolute;
+  inset: -50px -70px -50px -46px;
+  z-index: -1;
+  background: radial-gradient(72% 68% at 28% 52%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.6) 46%, rgba(255, 255, 255, 0) 78%);
+  pointer-events: none;
+}
+
+/* ② 左侧竖排刊头：填掉左上空白，又不会抢内容 */
+.login-page::after {
+  content: "PEDIGREE · CLEARMIND";
+  position: absolute;
+  left: 20px;
+  top: 44%;
+  z-index: 2;
+  writing-mode: vertical-rl;
+  transform: translateY(-50%) rotate(180deg);
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  color: var(--text-faint);
+  opacity: 0.66;
+  pointer-events: none;
+}
+
+/* ③ 指标带：三项之间用竖线分隔，跟刊头的秩序感一致 */
+.login-stat {
+  position: relative;
+}
+
+.login-stat + .login-stat {
+  padding-left: clamp(24px, 4vw, 64px);
+}
+
+.login-stat + .login-stat::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 22px;
+  background: var(--line-strong);
+  opacity: 0.7;
+}
+
+/* ④ 卡片顶部主线：给卡片一个视觉锚点，并与品牌色呼应 */
+.login-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary) 0%, rgba(26, 111, 181, 0.55) 34%, rgba(26, 111, 181, 0) 78%);
+}
+
+/* ⑤ 标题行距与副文案更紧一点，让整块更有整体感 */
+.login-title {
+  margin-bottom: 18px;
+}
+
+.login-sub {
+  line-height: 1.9;
+}
+
+@media (max-width: 900px) {
+  .login-page::after { display: none; }
+  .login-hero::before { inset: -30px -24px; }
+  .login-stat + .login-stat { padding-left: 0; }
+  .login-stat + .login-stat::before { display: none; }
 }
