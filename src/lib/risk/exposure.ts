@@ -25,7 +25,8 @@ export interface ExposureHint {
 }
 
 /** 一级亲属 + 肺部相关病种：用于判断"家族底子"是否存在 */
-const LUNG_CODES = new Set(["lung-cancer", "copd", "chronic-bronchitis", "asthma"]);
+/** 只用于「一级亲属患肺癌」这一条断言：ILCCO 的 OR 1.51 只针对肺癌，不能套到哮喘/慢阻肺 */
+const LUNG_CANCER = new Set(["lung-cancer"]);
 
 const FIRST_DEGREE = new Set([
   "father",
@@ -40,7 +41,7 @@ export function hasFirstDegreeLung(persons: ExtractedPerson[]): boolean {
   return persons.some(
     (p) =>
       FIRST_DEGREE.has(p.relation) &&
-      (p.conditions ?? []).some((c) => LUNG_CODES.has(c.code)),
+      (p.conditions ?? []).some((c) => LUNG_CANCER.has(c.code)),
   );
 }
 
@@ -74,7 +75,7 @@ export function exposureHints(
     const sibling = persons.some(
       (p) =>
         (p.relation === "brother" || p.relation === "sister") &&
-        (p.conditions ?? []).some((c) => LUNG_CODES.has(c.code)),
+        (p.conditions ?? []).some((c) => LUNG_CANCER.has(c.code)),
     );
     hints.push({
       id: "family-lung-history",

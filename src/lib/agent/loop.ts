@@ -479,6 +479,22 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
 
   // 步数用完还没收敛，逼它给一个回答，而不是把中间过程丢给用户
   const d = await decide(question, steps, true);
-  steps.push({ ...d, observation: "" });
-  return finish(d.input);
+
+  // GBNF 只约束"四个 action 之一"，不保证模型真的收尾。
+  // 若它仍返回工具调用，d.input 是检索词而不是结论 —— 直接当回答会输出一句
+  // 「为什么要关心家族史」这种东西。这里只接受 final_answer，其余走确定性兜底。
+  if (d.action === "final_answer" && d.input.trim().length > 0) {
+    steps.push({ ...d, observation: "" });
+    return finish(d.input);
+  }
+
+  steps.push({
+    thought: "（步数已用完，模型仍未给出结论）",
+    action: "final_answer",
+    input: "",
+    observation: "",
+  });
+  return finish(
+    "这个问题我这次没能在限定步数内梳理出可靠结论。你可以换一种更具体的问法，或者直接看页面上的风险卡——那里的每个数字都标了出处。",
+  );
 }

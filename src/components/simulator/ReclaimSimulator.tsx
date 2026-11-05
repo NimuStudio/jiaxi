@@ -106,11 +106,11 @@ export function ReclaimSimulator() {
             <>
               这 <strong>{reclaimable} 分</strong>
               来自 BMI、腰围、体力活动和蔬果摄入——都是能改的。
-              剩下的 {result.bestAchievableScore} 分来自年龄和家族史，改不了，也不该由你自责。
+              剩下的 {result.bestAchievableScore} 分来自年龄、家族史和正在服用的降压药，改不了，也不该由你自责。
             </>
           ) : (
             <>
-              你已经把这四项都做到最好了。<strong>剩下的分数来自年龄和家族史</strong>
+              你已经把这四项都做到最好了。<strong>剩下的分数来自年龄、家族史和降压药</strong>
               ，这部分改不了，但值得让医生知道。
             </>
           )}

@@ -143,6 +143,8 @@ function ascvdFamilyHistory(
 type SideMode = "record" | "qa";
 
 export default function ChatPage() {
+  /** 演示模式：?demo=1 时填一整套虚构家系，但绝不写入本地存储与云端 */
+  const [demoMode, setDemoMode] = useState(false);
   const [mode, setMode] = useState<SideMode>("record");
   const [persons, setPersons] = useState<ExtractedPerson[]>([]);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
@@ -189,6 +191,7 @@ export default function ChatPage() {
   // 演示模式：/chat?demo=1 直接填好一整套家系，方便录制与调试图的渲染。
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("demo") === "1") {
+      setDemoMode(true);
       setPersons(DEMO);
       setLastAdded(null);
       // 演示时默认选中一位，便于直接展示「依据」面板
@@ -201,13 +204,34 @@ export default function ChatPage() {
 
   // 家系每次变化都同步到 localStorage，供 /cvd 读出心血管家族史。
   // 只存结构化结果（亲属+病名），原话仍只留在本页会话里。
+  // 首次挂载先把本地副本读回来：否则初始的 [] 会立刻覆盖掉，
+  // /cvd 靠这个键读心血管家族史，刷新一次 /chat 那条链路就永久失效。
+  const hydratedRef = useRef(false);
   useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pedigree-persons");
+      if (raw) {
+        const saved = JSON.parse(raw) as ExtractedPerson[];
+        if (Array.isArray(saved) && saved.length > 0) setPersons(saved);
+      }
+    } catch {
+      /* 本地数据损坏就按空家系开始 */
+    } finally {
+      hydratedRef.current = true;
+    }
+  }, []);
+
+  useEffect(() => {
+    // 演示数据不落盘：否则 /cvd 会把虚构亲属当成用户家族史，自动勾上 China-PAR 的家族史项
+    if (demoMode) return;
+    // 还没完成本地恢复时不要写，避免用 [] 覆盖既有家系
+    if (!hydratedRef.current) return;
     try {
       localStorage.setItem("pedigree-persons", JSON.stringify(persons));
     } catch {
       /* 存不进去不影响本页功能 */
     }
-  }, [persons]);
+  }, [persons, demoMode]);
 
   /* ---------- 账户与云端同步 ----------
    * 本地 localStorage 始终是工作副本（未登录也一切照旧）；
@@ -317,7 +341,8 @@ export default function ChatPage() {
   // 注意不能以 persons.length===0 跳过——删空也是一次合法变更，
   // 不备份的话云端残留会在下次对账时复活已删除的节点。
   useEffect(() => {
-    if (!account || !cloudSyncedRef.current) return;
+    // 演示数据绝不上传：已登录用户打开 ?demo=1 时，否则 7 个虚构亲属会被写进真实档案
+    if (demoMode || !account || !cloudSyncedRef.current) return;
     const t = setTimeout(() => {
       void fetch("/api/me/pedigree", {
         method: "PUT",
@@ -326,7 +351,7 @@ export default function ChatPage() {
       }).catch(() => {});
     }, 800);
     return () => clearTimeout(t);
-  }, [persons, account]);
+  }, [persons, account, demoMode]);
 
   // 登录期间：体检数字每次变更自动备份。
   // cloudSyncedRef 门闩同样必要：防止登录对账完成前，

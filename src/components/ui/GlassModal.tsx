@@ -73,11 +73,19 @@ export function GlassModal({
     };
   }, []);
 
+  // onClose 用 ref 持有：调用方几乎都传内联箭头函数，每次渲染都是新引用。
+  // 若把它放进下面 effect 的依赖，用户每敲一个字符都会重跑一次 effect，
+  // 其中的 focus() 会把焦点从输入框抢回对话框 —— 弹层里根本没法连续输入。
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   useEffect(() => {
     if (!open) return;
 
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     }
     document.addEventListener("keydown", onKey);
 
@@ -85,15 +93,16 @@ export function GlassModal({
     document.body.style.overflow = "hidden";
 
     // 打开后把焦点移进对话框，键盘用户不用再 Tab 一路找
-    requestAnimationFrame(() => {
+    const raf = requestAnimationFrame(() => {
       dialogRef.current?.focus();
     });
 
     return () => {
+      cancelAnimationFrame(raf);
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!visible) return null;
 

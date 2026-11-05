@@ -20,6 +20,9 @@ out/
 .vscode/
 .idea/
 
+# Windows 保留名产物：无头浏览器截图时 '> /dev/null' 会被 MSYS 映射成实体文件 nul
+nul
+
 # 第三方期刊补充材料：版权归出版方，只在本地参考，不进仓库（docs 里记 URL 与结论）
 docs/djac176_supplementary_data.pdf
 

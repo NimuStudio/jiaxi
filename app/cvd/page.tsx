@@ -185,7 +185,12 @@ export default function CvdPage() {
         )}
 
         <LabReportImport
-          onApply={(patch) => setForm((f) => ({ ...f, ...patch }))}
+          onApply={(patch) => {
+            setForm((f) => ({ ...f, ...patch }));
+            // 导入后不再是论文示例，否则会出现「写着示例 10.8%、显示另一个数」
+            setIsPaperExample(false);
+            setFhSources([]);
+          }}
         />
 
         <div className="factors-grid cvd-grid">
@@ -329,9 +334,10 @@ export default function CvdPage() {
             <p>
               当前默认值即论文示例（Circulation 2016 正文 Table 2）：60 岁、SBP 130、
               TC 5.4、HDL 1.4、腰围 80、不吸烟、有糖尿病、北方城市、无家族史 →
-              论文报告男性 11.0%，本实现算得 10.8%。该表 8 个验证点与本实现的
-              偏差均在 0.35 个百分点以内（系数按论文补充材料取 4 位有效数字所致），
-              回归测试按此容差断言。
+              论文报告男性 11.0%。页面默认值取整到 5.4 / 1.4 mmol/L，算得 10.9%；
+              用论文原始值（TC 210 mg/dL、HDL 55 mg/dL）算得 10.8% —— 这就是大字与
+              这句话数字不同的原因。该表 8 个验证点与本实现的偏差均在 0.35 个百分点以内
+              （系数按补充材料取 4 位有效数字），回归测试按此容差断言。
             </p>
           ) : (
             <p>改动任何一项，风险实时重算（纯本地计算，不上传）。</p>

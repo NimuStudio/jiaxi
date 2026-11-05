@@ -85,6 +85,8 @@ export function familySignals(persons: ExtractedPerson[]): FamilySignal[] {
       list.map((p) => {
         const r = p.relation;
         if (r.includes("grand")) return "祖辈";
+        // 子女不能算进「父辈」：祖父 + 儿子同病不是跨代聚集，是两端各一例
+        if (r === "son" || r === "daughter") return "子辈";
         if (FIRST_DEGREE.includes(r as RelationType)) return "父辈/同辈";
         return "旁系";
       }),

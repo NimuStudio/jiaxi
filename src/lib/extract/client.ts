@@ -384,7 +384,9 @@ export function expandSharedCondition(
   if (persons.length !== 1) return persons;
   const only = persons[0];
   if (!only || only.conditions.length === 0) return persons;
-  if (!/(和|还有|都|、|跟)/.test(segment)) return persons;
+  // 只认可「和 / 还有 / 都 / 跟」这类共享谓语的说法。
+  // 「、」多数情况是"不同人不同病"的列举（我爷爷高血压、我奶奶糖尿病），不能当作共享信号。
+  if (!/(和|还有|都|跟)/.test(segment)) return persons;
 
   const mentioned = RELATIONS.filter((spec) =>
     spec.aliases.some((a) => segment.includes(a) && !isLocative(segment, a)),
@@ -397,7 +399,8 @@ export function expandSharedCondition(
     out.push({
       relation: spec.relation,
       sex: spec.sex,
-      conditions: only.conditions.map((c) => ({ ...c })),
+      // 病名可以共享，年龄不能：别人的发病年龄与这位亲属无关，继承等于编造
+      conditions: only.conditions.map((c) => ({ ...c, onsetAge: null })),
     });
   }
   return out;
@@ -469,7 +472,7 @@ export async function extractPedigree(
   try {
     const parsed = JSON.parse(content) as ExtractResult;
     // 抽取完立刻用词表校正关系——文本里写明的称谓比模型猜的更可靠。
-    const cleaned = (parsed.persons ?? [])
+    const grounded = (parsed.persons ?? [])
       .map((p) => ({
         ...p,
         conditions: (p.conditions ?? []).map((c) => ({
@@ -479,8 +482,12 @@ export async function extractPedigree(
         })),
       }))
       .map((p) => reconcileRelation(text, p))
-      .map((p) => dropUnmentioned(text, p))
-      .flatMap((p) => expandSharedCondition(text, [p]));
+      .map((p) => dropUnmentioned(text, p));
+
+    // 共享病扩展必须对「整组」调用一次：逐个传入会让 persons.length===1 的守卫永远成立，
+    // 于是并列句里每个人的病都被复制给段内其他所有称谓
+    // （实测「我爷爷高血压、我奶奶糖尿病」→ 两人都变成高血压+糖尿病）。
+    const cleaned = expandSharedCondition(text, grounded);
 
     // 模型偶尔会把同一个人输出两次（GBNF 允许数组重复），
     // 这里统一合并去重，避免上游拿到脏数据。
