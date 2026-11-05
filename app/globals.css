@@ -4417,3 +4417,40 @@ input[type="range"]::-moz-range-thumb {
 .login-intro,
 .login-watermark,
 .login-page::after { z-index: 9; }
+
+/* ---------- DNA 真正压在线上：抬高层级 + 背后加柔光垫 ---------- */
+.login-stage {
+  z-index: 20;
+  position: absolute;
+  inset: 0;
+}
+
+/* 柔光垫：把 DNA 区域的线遮住，粒子之间不再「透」出斜线 */
+.login-stage::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 24%;
+  top: 6%;
+  bottom: 12%;
+  background: radial-gradient(
+    58% 52% at 46% 48%,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.66) 46%,
+    rgba(255, 255, 255, 0) 78%
+  );
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* 文字层要压在 DNA 的柔光垫之上 */
+.login-hero { z-index: 30; }
+.login-card-wrap { z-index: 30; }
+.login-stats-strip { z-index: 30; }
+.login-topbar,
+.login-intro,
+.login-watermark,
+.login-page::after { z-index: 40; }
+
+/* 柔光垫右移，避开左侧标题区 */
+.login-stage::before { left: 20%; right: 22%; }
