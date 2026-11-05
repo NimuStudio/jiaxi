@@ -3550,29 +3550,16 @@ input[type="range"]::-moz-range-thumb {
   .login-stats b { font-size: 20px; }
 }
 
-/* ---------- 登录页 DNA（SVG 版） ---------- */
-.dna-art {
+/* ---------- 登录页 DNA（粒子版） ---------- */
+.dna-particles {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  top: 4%;
-  width: min(520px, 94%);
-  /* 只占上方 58%：螺旋收在标题之上，不压正文 */
-  height: 58%;
+  top: 0;
+  width: min(780px, 130%);
+  height: 76%;
   pointer-events: none;
-  -webkit-mask-image: linear-gradient(180deg, #000 86%, rgba(0, 0, 0, 0) 100%);
-  mask-image: linear-gradient(180deg, #000 86%, rgba(0, 0, 0, 0) 100%);
-}
-
-@keyframes dna-flow {
-  0%, 100% { opacity: 0.35; }
-  50% { opacity: 0.9; }
-}
-
-.dna-rung {
-  animation: dna-flow 3.4s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dna-rung { animation: none; }
+  filter: saturate(1.05);
+  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, #000 22%, #000 78%, rgba(0,0,0,0) 100%);
+  mask-image: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, #000 22%, #000 78%, rgba(0,0,0,0) 100%);
 }
