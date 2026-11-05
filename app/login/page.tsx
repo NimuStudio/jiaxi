@@ -215,66 +215,63 @@ export default function LoginPage() {
             <stop offset="100%" stopColor="#41c6cf" />
           </linearGradient>
         </defs>
-        {/* 缝的四层：外辉光 / 内光晕 / 高光芯 / 针脚，整体两端渐隐 */}
+        {/* 缝分成两个半段：右上的一半是纯虚线（脉冲），左下的一半是实线（流光） */}
         <g className="login-seam-glow" mask="url(#seamMask)">
-          {/* 梭形：宽度按 sin 曲线在两端收成一点、中间最宽 */}
-          <path
-            d={(() => {
-              const N = 24;
-              const top: string[] = [];
-              const bottom: string[] = [];
-              for (let i = 0; i <= N; i++) {
-                const t = i / N;
-                const x = 100 * t;
-                const y = 12 + 88 * t;
-                const w = Math.pow(Math.sin(Math.PI * t), 0.6) * 7;
-                top.push(x.toFixed(2) + "," + (y - w).toFixed(2));
-                bottom.push(x.toFixed(2) + "," + (y + w).toFixed(2));
-              }
-              return "M" + top.join(" L") + " L" + bottom.reverse().join(" L") + " Z";
-            })()}
-            fill="url(#seamLensFill)"
-          />
-          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(88, 170, 232, 0.52)" strokeWidth="26" filter="url(#seamBlur)" />
-          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(140, 205, 248, 0.72)" strokeWidth="9" filter="url(#seamBlurSoft)" />
-          <line x1="0" y1="12" x2="100" y2="100" stroke="url(#seamTone)" strokeWidth="1.9" vectorEffect="non-scaling-stroke" />
-          {/* 流动的光脉冲：让缝有"正在裂开"的动势 */}
-          {[0, 0.5].map((offset, i) => (
+          {/* 上半：纯虚线，滑开后朝右上飘半个行程 */}
+          <g className="login-seam-half login-seam-half-dash">
             <line
-              key={i}
-              className="login-seam-pulse"
-              x1="0"
-              y1="12"
-              x2="100"
-              y2="100"
-              pathLength="100"
-              stroke="rgba(255, 255, 255, 0.98)"
-              strokeWidth="3.4"
-              strokeLinecap="round"
-              strokeDasharray="16 84"
+              x1="0" y1="12" x2="50" y2="56"
+              stroke="rgba(140, 205, 248, 0.5)"
+              strokeWidth="10"
               filter="url(#seamBlurSoft)"
               vectorEffect="non-scaling-stroke"
-              style={{ animationDelay: `${-offset * 4.5}s` }}
             />
-          ))}
-          <line
-            x1="0"
-            y1="12"
-            x2="100"
-            y2="100"
-            stroke="rgba(26, 111, 181, 0.38)"
-            strokeWidth="1.1"
-            strokeDasharray="0.55 1.15"
-            vectorEffect="non-scaling-stroke"
-          />
-          {/* 缝上闪烁的微粒：让这条线有颗粒与呼吸，不是一根均匀的直线 */}
+            <line
+              x1="0" y1="12" x2="50" y2="56"
+              pathLength="100"
+              stroke="#ffffff"
+              strokeWidth="2.6"
+              strokeDasharray="2.4 3.2"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </g>
+          {/* 下半：实线 + 上面跑的一道流光，滑开后朝左下飘半个行程 */}
+          <g className="login-seam-half login-seam-half-solid">
+            <line
+              x1="50" y1="56" x2="100" y2="100"
+              stroke="rgba(140, 205, 248, 0.5)"
+              strokeWidth="10"
+              filter="url(#seamBlurSoft)"
+              vectorEffect="non-scaling-stroke"
+            />
+            <line
+              x1="50" y1="56" x2="100" y2="100"
+              stroke="url(#seamTone)"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+            <line
+              className="login-seam-flow"
+              x1="50" y1="56" x2="100" y2="100"
+              pathLength="100"
+              stroke="rgba(255, 255, 255, 0.95)"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeDasharray="18 82"
+              filter="url(#seamBlurSoft)"
+              vectorEffect="non-scaling-stroke"
+            />
+          </g>
+          {/* 缝上闪烁的微粒 */}
           {SEAM_SPARKS.map((s, i) => (
             <circle
               key={i}
               className="login-seam-spark"
               cx={s.t * 100}
               cy={12 + s.t * 88}
-              r={s.r * 2.6}
+              r={s.r * 2.2}
               fill="#ffffff"
               style={{ animationDelay: `${s.delay}s` }}
             />

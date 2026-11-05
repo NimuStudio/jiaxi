@@ -4260,3 +4260,53 @@ input[type="range"]::-moz-range-thumb {
   color: rgba(26, 111, 181, 0.045);
   font-size: clamp(160px, 22vw, 360px);
 }
+
+/* ---------- 缝的两半：滑动 + 脉冲 ---------- */
+/** 滑开后，两半各沿法线方向飘出半个行程然后停住 */
+.login-seam-half {
+  transition: transform 1.1s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* 右上半：朝右上（x 增、y 减） */
+.login-page.is-expanded .login-seam-half-dash {
+  transform: translate(6px, -6px);
+}
+
+/* 左下半：朝左下（x 减、y 增） */
+.login-page.is-expanded .login-seam-half-solid {
+  transform: translate(-6px, 6px);
+}
+
+/* 实线上流动的那道光：沿左下方向持续跑 */
+.login-seam-flow {
+  animation: seam-flow 3.2s linear infinite;
+}
+
+@keyframes seam-flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+
+/* 虚线的脉冲：整段明暗呼吸 */
+.login-page.is-collapsed .login-seam-half-dash line:last-child {
+  animation: seam-dash-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes seam-dash-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+/* 展开后缝淡出，不再抢戏 */
+.login-page.is-expanded .login-seam-glow {
+  opacity: 0.0;
+  transition: opacity 0.6s ease 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-seam-flow,
+  .login-page.is-collapsed .login-seam-half-dash line:last-child {
+    animation: none;
+  }
+  .login-seam-half { transition: none; }
+}
