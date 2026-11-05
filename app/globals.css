@@ -4801,3 +4801,18 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 900px) {
   .login-topbar { position: absolute; top: 26px; left: 24px; right: 24px; }
 }
+
+/* 提示回到画框底部居中 */
+.login-page.is-collapsed .login-seam-hint {
+  left: 50%;
+  right: auto;
+  bottom: 46px;
+  transform: translateX(-50%);
+}
+
+/* 中间的水印字去掉：它只是把大字的轮廓重复了一遍，反而干扰留白 */
+.login-page.is-collapsed .login-watermark { display: none; }
+
+@media (max-width: 900px) {
+  .login-page.is-collapsed .login-seam-hint { left: 50%; right: auto; bottom: 22px; }
+}
