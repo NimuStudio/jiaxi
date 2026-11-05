@@ -55,6 +55,24 @@ export default function LoginPage() {
 
   return (
     <main className="login-page">
+      {/* 对角切割：左下浅蓝三角 + 一条发丝线 */}
+      <div className="login-diagonal" aria-hidden="true" />
+      <svg
+        className="login-diagonal-line"
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <line
+          x1="0"
+          y1="12"
+          x2="100"
+          y2="100"
+          stroke="rgba(26, 111, 181, 0.2)"
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
       <div className="login-stage">
         <DnaScene3D />
       </div>

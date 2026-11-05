@@ -3393,9 +3393,11 @@ input[type="range"]::-moz-range-thumb {
   z-index: 3;
   grid-column: 2;
   grid-row: 2;
-  align-self: center;
+  align-self: start;
   justify-self: end;
   width: 100%;
+  /* 往上收一点：卡片整体落在白色三角区内，不跨过对角发丝线 */
+  margin-top: clamp(0px, 4vh, 52px);
 }
 
 .login-card {
@@ -3579,4 +3581,26 @@ input[type="range"]::-moz-range-thumb {
     margin-left: 0;
     width: 100%;
   }
+}
+
+/* ---------- 对角切割版式 ---------- */
+.login-diagonal {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(200deg, #d8e9fb 0%, #e6f2fd 42%, #f2f8fe 100%);
+  /* 左下三角：从左侧 12% 切到右下角 */
+  clip-path: polygon(0 12%, 0 100%, 100% 100%);
+}
+
+.login-diagonal-line {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 100%);
 }

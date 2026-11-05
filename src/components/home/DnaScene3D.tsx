@@ -39,9 +39,9 @@ export function DnaScene3D() {
     host.appendChild(renderer.domElement);
 
     const group = new THREE.Group();
-    group.rotation.z = -0.28;
-    group.position.y = 0.35;
-    group.position.x = -2.15;
+    group.rotation.z = -0.08; // 只留一点点倾斜，保持螺旋可读
+    group.position.y = 0.1;
+    group.position.x = -0.35;
     scene.add(group);
 
     // ---- 粒子参数 ----
