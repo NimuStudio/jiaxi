@@ -561,9 +561,15 @@ export default function ChatPage() {
                   </Link>
                 </>
               ) : (
-                <Link className="next-step-cta" href="/">
-                  补几个体检数字，看“可回收风险” →
-                </Link>
+                <>
+                  <p className="next-step-body">
+                    家系里还没有「一级亲属心梗或脑卒中」的记录，所以这项不进方程；
+                    其余变量仍然可以算，也可以在 China-PAR 页补数字。
+                  </p>
+                  <Link className="next-step-cta" href="/cvd">
+                    去 China-PAR 页算心血管风险 →
+                  </Link>
+                </>
               )}
             </div>
           )}
