@@ -212,7 +212,7 @@ export default function LoginPage() {
           {/* ---------- 展开后：右上是脉冲纯虚线，左下是流动直线 ---------- */}
           <g className="login-seam-split">
             <line className="login-seam-out-up" x1="0" y1="12" x2="100" y2="100" stroke="rgba(26, 111, 181, 0.28)" strokeWidth="12" filter="url(#seamBlurSoft)" vectorEffect="non-scaling-stroke" />
-            <line className="login-seam-out-up login-seam-breathe" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#1a6fb5" strokeWidth="2.8" strokeDasharray="2.6 3.4" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            <line className="login-seam-out-up login-seam-dashflow" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#1a6fb5" strokeWidth="2.8" strokeDasharray="3.2 4.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
             <line className="login-seam-out-down" x1="0" y1="12" x2="100" y2="100" stroke="rgba(26, 111, 181, 0.28)" strokeWidth="12" filter="url(#seamBlurSoft)" vectorEffect="non-scaling-stroke" />
             <line className="login-seam-out-down" x1="0" y1="12" x2="100" y2="100" stroke="#2f7fc4" strokeWidth="2.8" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
             <line className="login-seam-out-down login-seam-flow" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="10 90" vectorEffect="non-scaling-stroke" />

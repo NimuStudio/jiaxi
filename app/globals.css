@@ -4387,3 +4387,21 @@ input[type="range"]::-moz-range-thumb {
 .login-page.is-expanded .login-seam-glow {
   opacity: 1;
 }
+
+/* 右上这条：虚线本身在流动（dashoffset 动画） */
+.login-seam-dashflow {
+  animation: seam-dashflow 2.6s linear infinite;
+}
+
+@keyframes seam-dashflow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+
+/* 两条线离对角线更远 */
+.login-page.is-expanded .login-seam-out-up { transform: translate(11px, -11px); }
+.login-page.is-expanded .login-seam-out-down { transform: translate(-11px, 11px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .login-seam-dashflow { animation: none; }
+}
