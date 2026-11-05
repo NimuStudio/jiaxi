@@ -15,13 +15,19 @@ import { PEDIGREE_GBNF } from "./grammar.ts";
 import { DISEASES, RELATIONS } from "./lexicon.ts";
 import { SYSTEM_PROMPT } from "./prompt.ts";
 
-const LLM_URL = process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080";
+export const LLM_URL = process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080";
 
 /**
  * 模型输出的是中文病名（见 grammar.ts 的说明），这里映射回内部编码。
- * 词表是唯一数据源，所以映射不可能漏。
+ * 映射范围与 GBNF 枚举一致：规范标签 + 名词性别名，
+ * 所以模型照抄原文的口语说法（「肿瘤」「瘤子」）也能落回同一个编码。
  */
-const LABEL_TO_CODE = new Map(DISEASES.map((d) => [d.label, d.code]));
+const LABEL_TO_CODE = new Map(
+  DISEASES.flatMap((d) => [
+    [d.label, d.code] as const,
+    ...d.nounAliases.map((a) => [a, d.code] as const),
+  ]),
+);
 
 export interface ExtractedCondition {
   code: string;
@@ -152,11 +158,59 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
   },
   {
     role: "user",
+    content: "我姥姥前年走的，尿毒症。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"慢性肾病","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
+    content: "我爸和我大伯都有冠心病。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"冠心病","onsetAge":null}]},{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"冠心病","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
+    content: "我外公那人，血糖高。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"maternal-grandfather","sex":"male","conditions":[{"code":"糖尿病","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
     content: "我妈身体还行。",
   },
   {
     role: "assistant",
     content: '{"persons":[]}',
+  },
+  {
+    // 泛称病名：教模型输出「癌症」而不是瞎猜成具体癌种。
+    // 这类词表外的说法最容易整句漏掉，必须给模型一个示范。
+    role: "user",
+    content: "我大伯得了肿瘤，五十多岁。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"癌症","onsetAge":null}]}]}',
+  },
+  {
+    // 词表外的具体病名：归「其他」，不要硬套成最接近的已知病。
+    role: "user",
+    content: "我三叔有肝硬化。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"其他","onsetAge":null}]}]}',
   },
 ];
 
@@ -180,7 +234,18 @@ export interface ExtractOptions {
    * 基线模型需要（否则几乎不可用）；微调后的模型不需要，上下文更短更快。
    */
   fewShot?: boolean;
+  /**
+   * 阶段进度回调（SSE 推给前端的「AI 思考状态可视化」）。
+   * 纯观察者：不传时行为与原来完全一致。
+   */
+  onStage?: (stage: ExtractStage) => void;
 }
+
+/** 抽取过程的可观察阶段事件。 */
+export type ExtractStage =
+  | { type: "split"; total: number; segments: string[] }
+  | { type: "segment"; index: number; total: number; segment: string }
+  | { type: "merged"; persons: number };
 
 /**
  * 判断某个称谓在句中是「方位指代」而不是主语。
@@ -314,7 +379,16 @@ export async function extractPedigree(
  * 所以：不含疾病词的片段不丢弃，而是作为「主语前缀」累积，
  * 拼到下一个含病名的片段上。
  */
-function splitSegments(text: string): string[] {
+/**
+ * 片段里是否出现了亲属称谓（排除「我妈那边」这类方位指代）。
+ */
+function hasRelationWord(segment: string): boolean {
+  return RELATIONS.some((spec) =>
+    spec.aliases.some((alias) => segment.includes(alias) && !isLocative(segment, alias)),
+  );
+}
+
+export function splitSegments(text: string): string[] {
   const parts = text
     .split(/[。；;]|(?<![和及与、])，/)
     .map((s) => s.trim())
@@ -324,17 +398,29 @@ function splitSegments(text: string): string[] {
   let prefix = "";
 
   for (const part of parts) {
-    if (hasDiseaseWord(part)) {
-      out.push(prefix ? `${prefix}，${part}` : part);
-      prefix = "";
+    if (looksRelevant(part)) {
+      if (prefix) {
+        // 前面有无病名片段：它是这部分的主语
+        out.push(`${prefix}，${part}`);
+        prefix = "";
+      } else if (out.length > 0 && !hasRelationWord(part)) {
+        // 前面已有抽取片段、这部分又没有称谓：它是对上一句的延续
+        // （如「我奶奶那人，血压高，后来中风了」的「后来中风了」）。
+        // 当独立句送抽会丢主语，模型只能输出空——接到上一句后面。
+        out[out.length - 1] = `${out[out.length - 1]}，${part}`;
+      } else {
+        out.push(part);
+      }
     } else {
       prefix = prefix ? `${prefix}，${part}` : part;
     }
   }
 
   // 末尾剩余的无病名片段：若前面已有片段，说明是对上一句的补充描述
-  // （如「后来中风了」），接到最后一个片段后面一起抽。
-  if (prefix && out.length > 0) {
+  // （如「那时候还不到六十」），接到最后一个片段后面一起抽。
+  // 但片段若自带称谓（如「我妈身体还行」），那是另一个人的独立陈述，
+  // 拼过去会让模型张冠李戴——单独留下（预筛会把它当闲聊过滤）。
+  if (prefix && out.length > 0 && !hasRelationWord(prefix)) {
     out[out.length - 1] = `${out[out.length - 1]}，${prefix}`;
   }
 
@@ -344,16 +430,77 @@ function splitSegments(text: string): string[] {
 /**
  * 片段里是否出现了疾病词。
  *
- * 作用：切句后会产生「我妈那边」「我爸身体还行」这类没有疾病信息的片段。
+ * 作用：切句后会产生「我妈那边」这类没有疾病信息的片段。
  * 这类片段如果送去抽取，小模型会凭空编一个病出来（实测出现过
- * 「我妈那边」→ maternal-uncle[乳腺癌]）。直接跳过比让模型输出空更可靠，
- * 也更快。
+ * 「我妈那边」→ maternal-uncle[乳腺癌]）。
  */
-function hasDiseaseWord(segment: string): boolean {
+export function hasDiseaseWord(segment: string): boolean {
   return DISEASES.some((d) =>
     [...d.nounAliases, ...(d.verbAliases ?? [])].some((alias) =>
       segment.includes(alias),
     ),
+  );
+}
+
+/**
+ * 疾病指示词：词表没收、但暗示「这里有病」的口语信号。
+ *
+ * 预筛的历史教训：早期版本只认词表，词表外的一切都被当成闲聊丢弃——
+ * 「我爸爸30岁有癌症」（癌症泛称当时没收录）整句消失，模型根本没机会看。
+ * 规则的任务应该是**防止模型幻觉**，而不是**替模型做判断**：
+ * 判断权交给模型，规则只在两头把关——
+ *   前面：只拦「确定没有疾病信息」的纯闲聊，可疑的一律放行；
+ *   后面：dropUnmentioned 证据校验删掉原文找不到依据的幻觉。
+ */
+const ILLNESS_HINTS = [
+  "病",
+  "癌",
+  "瘤",
+  "瘫",
+  "查出",
+  "确诊",
+  "检查出",
+  "去世",
+  "过世",
+  "走了",
+  "走的",
+  "没了",
+  "没熬过去",
+  "没挺过去",
+  "住院",
+  "住过院",
+  "手术",
+  "化疗",
+  "放疗",
+  "透析",
+  "移植",
+  "支架",
+  "搭桥",
+  "三高",
+  "不舒服",
+  "不对劲",
+  "恶化",
+  "复发",
+  "并发症",
+  "梗死",
+  "硬化",
+  "衰竭",
+];
+
+export function hasIllnessHint(segment: string): boolean {
+  return ILLNESS_HINTS.some((h) => segment.includes(h));
+}
+
+/**
+ * 片段是否值得送给模型：
+ *  1. 词表命中——快路径，最常见；
+ *  2. 有称谓 + 有疾病指示词——词表外的病名/说法，交给模型判断，
+ *     幻觉由下游证据校验兜底。
+ * 两者都不满足（如「我妈身体还行」）才是真正的闲聊。
+ */
+export function looksRelevant(segment: string): boolean {
+  return (
+    hasDiseaseWord(segment) || (hasRelationWord(segment) && hasIllnessHint(segment))
   );
 }
 
@@ -372,10 +519,16 @@ function mergeResults(results: ExtractResult[]): ExtractResult {
         continue;
       }
       for (const c of p.conditions) {
-        const dup = cur.conditions.some(
-          (d) => d.code === c.code && d.onsetAge === c.onsetAge,
-        );
-        if (!dup) cur.conditions.push(c);
+        // 按病种去重（而不是 code+onsetAge 精确匹配）：
+        // 同一个亲属的同一病种，一次抽出带年龄、一次不带，是真实会发生的
+        // （「我爷爷肺癌」与「我爷爷前年走的，肺癌」）。精确匹配会留下
+        // 两条重复病情；这里保留一条，年龄取更具体（非空）的那个。
+        const dup = cur.conditions.find((d) => d.code === c.code);
+        if (!dup) {
+          cur.conditions.push(c);
+        } else if (dup.onsetAge === null && c.onsetAge !== null) {
+          dup.onsetAge = c.onsetAge;
+        }
       }
     }
   }
@@ -396,20 +549,35 @@ export async function extractPedigreeSplit(
   text: string,
   options: ExtractOptions = {},
 ): Promise<ExtractResult> {
+  const { onStage } = options;
   const segments = splitSegments(text);
 
-  // 只有含疾病词的片段才值得抽取；否则模型会对着「我妈那边」凭空造病。
-  const meaningful = segments.filter((s) => hasDiseaseWord(s));
+  // 预筛只拦「确定无疾病信息」的纯闲聊；可疑片段放行给模型，
+  // 幻觉由 dropUnmentioned 证据校验兜底（词表外病名归「其他」，不参与校验）。
+  const meaningful = segments.filter((s) => looksRelevant(s));
+  onStage?.({
+    type: "split",
+    total: meaningful.length,
+    segments: meaningful,
+  });
   if (meaningful.length === 0) {
     return { persons: [] };
   }
   if (meaningful.length === 1) {
-    return extractPedigree(meaningful[0] as string, options);
+    onStage?.({ type: "segment", index: 1, total: 1, segment: meaningful[0] as string });
+    const single = await extractPedigree(meaningful[0] as string, options);
+    onStage?.({ type: "merged", persons: single.persons.length });
+    return single;
   }
 
   const results: ExtractResult[] = [];
+  let i = 0;
   for (const seg of meaningful) {
+    i += 1;
+    onStage?.({ type: "segment", index: i, total: meaningful.length, segment: seg });
     results.push(await extractPedigree(seg, options));
   }
-  return mergeResults(results);
+  const merged = mergeResults(results);
+  onStage?.({ type: "merged", persons: merged.persons.length });
+  return merged;
 }

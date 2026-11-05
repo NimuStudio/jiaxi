@@ -61,6 +61,8 @@ export interface DiseaseSpec {
   code: string;
   /** 界面展示用的中文名。GBNF 枚举与界面标签都从这里派生。 */
   label: string;
+  /** 展示分组（疾病清单弹层用）。纯展示元数据，不参与抽取与训练。 */
+  category: string;
   /** 名词性说法，可接「有 / 得了 / 是」 */
   nounAliases: string[];
   /**
@@ -82,11 +84,13 @@ export interface DiseaseSpec {
 export const DISEASES: DiseaseSpec[] = [
   // —— 心脑血管 ——
   {
+    category: "心脑血管",
     code: "myocardial-infarction",
     label: "心梗",
     nounAliases: ["心梗", "心肌梗死", "心肌梗塞"],
   },
   {
+    category: "心脑血管",
     code: "coronary-heart-disease",
     label: "冠心病",
     // 注意：匹配是子串判断，所以「放了支架」无法命中「放了心脏支架」。
@@ -94,6 +98,7 @@ export const DISEASES: DiseaseSpec[] = [
     nounAliases: ["冠心病", "心脏支架", "冠脉支架", "心脏血管堵"],
     verbAliases: [
       "放了支架",
+      "放的支架",
       "放了心脏支架",
       "做了支架",
       "下了支架",
@@ -103,6 +108,7 @@ export const DISEASES: DiseaseSpec[] = [
     ],
   },
   {
+    category: "心脑血管",
     code: "stroke",
     label: "脑卒中",
     nounAliases: [
@@ -116,43 +122,53 @@ export const DISEASES: DiseaseSpec[] = [
       "脑栓塞",
     ],
   },
-  { code: "hypertension", label: "高血压", nounAliases: ["高血压"], verbAliases: ["血压高"] },
-  { code: "heart-failure", label: "心衰", nounAliases: ["心衰", "心力衰竭"] },
-  { code: "atrial-fibrillation", label: "房颤", nounAliases: ["房颤", "心房颤动"] },
+  { category: "心脑血管", code: "hypertension", label: "高血压", nounAliases: ["高血压"], verbAliases: ["血压高"] },
+  { category: "心脑血管", code: "heart-failure", label: "心衰", nounAliases: ["心衰", "心力衰竭"] },
+  { category: "心脑血管", code: "atrial-fibrillation", label: "房颤", nounAliases: ["房颤", "心房颤动"] },
 
   // —— 代谢与肾脏 ——
-  { code: "type2-diabetes", label: "糖尿病", nounAliases: ["糖尿病"], verbAliases: ["血糖高"] },
-  { code: "gout", label: "痛风", nounAliases: ["痛风"] },
+  { category: "代谢与肾脏", code: "type2-diabetes", label: "糖尿病", nounAliases: ["糖尿病"], verbAliases: ["血糖高"] },
+  { category: "代谢与肾脏", code: "gout", label: "痛风", nounAliases: ["痛风"] },
   {
+    category: "代谢与肾脏",
     code: "chronic-kidney-disease",
     label: "慢性肾病",
     nounAliases: ["尿毒症", "肾病", "肾衰竭", "肾功能不全"],
   },
 
   // —— 呼吸 ——
-  { code: "copd", label: "慢阻肺", nounAliases: ["慢阻肺", "肺气肿", "慢性支气管炎"] },
-  { code: "asthma", label: "哮喘", nounAliases: ["哮喘"] },
+  { category: "呼吸", code: "copd", label: "慢阻肺", nounAliases: ["慢阻肺", "肺气肿", "慢性支气管炎"] },
+  { category: "呼吸", code: "asthma", label: "哮喘", nounAliases: ["哮喘"] },
 
   // —— 肿瘤 ——
-  { code: "colorectal-cancer", label: "肠癌", nounAliases: ["肠癌", "结直肠癌", "大肠癌"] },
-  { code: "breast-cancer", label: "乳腺癌", nounAliases: ["乳腺癌"] },
-  { code: "gastric-cancer", label: "胃癌", nounAliases: ["胃癌"] },
-  { code: "lung-cancer", label: "肺癌", nounAliases: ["肺癌"] },
-  { code: "liver-cancer", label: "肝癌", nounAliases: ["肝癌"] },
-  { code: "esophageal-cancer", label: "食管癌", nounAliases: ["食管癌", "食道癌"] },
-  { code: "pancreatic-cancer", label: "胰腺癌", nounAliases: ["胰腺癌"] },
-  { code: "prostate-cancer", label: "前列腺癌", nounAliases: ["前列腺癌"] },
-  { code: "cervical-cancer", label: "宫颈癌", nounAliases: ["宫颈癌", "子宫颈癌"] },
-  { code: "kidney-cancer", label: "肾癌", nounAliases: ["肾癌"] },
-  { code: "leukemia", label: "白血病", nounAliases: ["白血病", "血癌"] },
+  // 泛称必须单列：普通人最常说的就是「得了癌症/长了瘤子」，
+  // 说不出具体癌种。缺了这条，整句会被预筛规则当成「无疾病词」丢弃，
+  // 连模型都见不到（实测「我爸爸30岁有癌症」整句漏识别）。
+  {
+    category: "肿瘤",
+    code: "cancer-unspecified",
+    label: "癌症",
+    nounAliases: ["癌症", "肿瘤", "恶性肿瘤", "瘤子", "瘤"],
+  },
+  { category: "肿瘤", code: "colorectal-cancer", label: "肠癌", nounAliases: ["肠癌", "结直肠癌", "大肠癌"] },
+  { category: "肿瘤", code: "breast-cancer", label: "乳腺癌", nounAliases: ["乳腺癌"] },
+  { category: "肿瘤", code: "gastric-cancer", label: "胃癌", nounAliases: ["胃癌"] },
+  { category: "肿瘤", code: "lung-cancer", label: "肺癌", nounAliases: ["肺癌"] },
+  { category: "肿瘤", code: "liver-cancer", label: "肝癌", nounAliases: ["肝癌"] },
+  { category: "肿瘤", code: "esophageal-cancer", label: "食管癌", nounAliases: ["食管癌", "食道癌"] },
+  { category: "肿瘤", code: "pancreatic-cancer", label: "胰腺癌", nounAliases: ["胰腺癌"] },
+  { category: "肿瘤", code: "prostate-cancer", label: "前列腺癌", nounAliases: ["前列腺癌"] },
+  { category: "肿瘤", code: "cervical-cancer", label: "宫颈癌", nounAliases: ["宫颈癌", "子宫颈癌"] },
+  { category: "肿瘤", code: "kidney-cancer", label: "肾癌", nounAliases: ["肾癌"] },
+  { category: "肿瘤", code: "leukemia", label: "白血病", nounAliases: ["白血病", "血癌"] },
 
   // —— 神经与精神 ——
-  { code: "dementia", label: "痴呆", nounAliases: ["老年痴呆", "阿尔茨海默", "痴呆"] },
-  { code: "parkinson", label: "帕金森", nounAliases: ["帕金森"] },
+  { category: "神经与精神", code: "dementia", label: "痴呆", nounAliases: ["老年痴呆", "阿尔茨海默", "痴呆"] },
+  { category: "神经与精神", code: "parkinson", label: "帕金森", nounAliases: ["帕金森"] },
 
   // —— 兜底 ——
   // other 不设词条：既不参与「原文有依据」校验，也不会被口语过滤误删。
-  { code: "other", label: "其他", nounAliases: [] },
+  { category: "", code: "other", label: "其他", nounAliases: [] },
 ];
 
 /** 由关系枚举反查规范称谓（用于生成句子时挑选说法）。 */

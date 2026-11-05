@@ -11,14 +11,25 @@
 import { DISEASES } from "./lexicon.ts";
 
 /**
- * 疾病枚举由词表派生，且刻意使用**中文标签**而不是英文编码。
+ * 疾病枚举由词表派生，且刻意使用**中文**而不是英文编码。
  *
  * 原因：模型本来就能认出「肝癌」「老年痴呆」这些中文病名，
  * 但要求它直接吐出 "liver-cancer" 这种英文编码等于额外增加一层记忆负担，
  * 实测新增病种的识别率会掉到接近零。让它说中文，后端再映射成编码，
  * 既准确又不依赖示例覆盖每一个病种。
+ *
+ * 枚举范围 = 规范标签 + 全部名词性别名（如「肿瘤」「瘤子」）：
+ * 模型照抄原文的口语说法也能落进枚举，后端统一映射回编码。
+ * 谓语性说法（「放了支架」「血压高」）不进枚举——它们不能作宾语，
+ * 放进来会诱导模型输出「有放了支架」这类病句。
  */
-const DISEASE_UNION = DISEASES.map((d) => `"\\"${d.label}\\""`).join(" | ");
+const DISEASE_UNION = [
+  ...new Set(
+    DISEASES.flatMap((d) => [d.label, ...d.nounAliases]),
+  ),
+]
+  .map((w) => `"\\"${w}\\""` )
+  .join(" | ");
 
 export const PEDIGREE_GBNF = String.raw`
 root ::= "{" ws "\"persons\"" ws ":" ws persons ws "}"
