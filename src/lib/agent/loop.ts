@@ -248,7 +248,7 @@ export function attachCitationSources(
 export function isFactualQuestion(question: string): boolean {
   // 问自己的风险/家系不算事实题（虽然也可能出现「多少」）
   if (/(我的|我是|我该|我需要|还剩|可回收)/.test(question)) return false;
-  return /(满分|阈值|标准|区别|定义|含义|是什么|为什么|怎么算|怎么打分|分档|几档|档|级别|分级|评分|条目|分数|指的是)/.test(
+  return /(满分|阈值|标准|区别|定义|含义|是什么|为什么|怎么算|怎么打分|分档|几档|档|级别|分级|评分|条目|分数|指的是|研究|文献|论文|出处|证据|试验|指南)/.test(
     question,
   );
 }
@@ -271,6 +271,47 @@ export function withMedicalGuardrail(question: string, answer: string): string {
     answer +
     "\n\n（用药与治疗方案需要医生结合你的具体情况判断，这里不提供用药建议。）"
   );
+}
+
+/**
+ * 事实类问题但回答没有引用任何条目时，加一句中性的边界说明。
+ *
+ * 为什么用"没有引用"而不是"没检索到"：实测检索经常返回沾边但无关的条目
+ * （问「大庆研究」命中了《吃降压药为什么会增加糖尿病风险分》），模型不引用它们，
+ * 于是"检索为空"这条判据几乎不触发。用户看到的就是一段没有任何出处的断言。
+ *
+ * 文案必须中性：有时候答案是对的（如 FINDRISC 满分是 26），只是模型没写依据；
+ * 所以说"这段没有引用知识库条目"，而不是"查不到"。
+ */
+export function withNoSourceNotice(
+  question: string,
+  answer: string,
+  citedTitles: string[],
+): string {
+  if (!isFactualQuestion(question)) return answer;
+  if (citedTitles.length > 0) return answer;
+  if (/没有引用|查不到|知识库/.test(answer)) return answer;
+  return (
+    answer +
+    "\n\n（这段没有引用知识库条目。如果你需要可核对的出处，可以直接问「依据是什么」。）"
+  );
+}
+
+/**
+ * 依据是否与问题同题：条目自带的主题标签里，至少有一个出现在问题里。
+ *
+ * 标签是人工维护的（家族史/腰围/BMI/China-PAR…），比整句相似度稳定得多，
+ * 也避免把「糖尿病」这种到处都有的词当成相关。
+ */
+export function isTagRelevant(question: string, tags: string[]): boolean {
+  if (tags.length === 0) return false;
+  // 去掉连字符与空格再比：用户会打「chinapar」，标签写的是「China-PAR」
+  const norm = (s: string) => s.toLowerCase().replace(/[\s-]+/g, "");
+  const q = norm(question);
+  return tags.some((t) => {
+    const tag = norm(t);
+    return tag.length >= 2 && q.includes(tag);
+  });
 }
 
 const MAX_STEPS = 4;
@@ -317,6 +358,10 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
     if (r.risk) facts.risk = r.risk;
     if (r.pedigree) facts.pedigree = r.pedigree;
     for (const c of r.citations ?? []) {
+      // 只有"话题对得上"的条目才允许被引为依据。
+      // 实测「光合作用是什么」拿到检索条目后，模型给它安了「依据：《FINDRISC 是什么》」——
+      // 条目确实在检索结果里，但和问题毫无关系，这种"有依据的假象"比没依据更糟。
+      if (!isTagRelevant(question, r.citationTags?.[c] ?? [])) continue;
       allowedTitles.add(c);
       const src = r.citationSources?.[c];
       if (src !== undefined) titleToSource.set(c, src);
@@ -340,18 +385,32 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
     });
   }
 
+  /**
+   * 只保留回答里真正引用到的条目。
+   *
+   * 原来 facts.citations 是"检索到什么就显示什么"：实测「大庆研究能降低多少风险」
+   * 检索出两条不相干条目（《吃降压药为什么会增加糖尿病风险分》《FINDRISC 是什么》），
+   * 模型一条都没用，界面却把它们当成依据展示，比不显示更糟。
+   */
+  const onlyCited = (text: string): string[] =>
+    facts.citations.filter((t) => text.includes(`《${t}》`));
+
   const finish = (raw: string): AgentResult => ({
     answer: withMedicalGuardrail(
       question,
       attachCitationSources(
-        guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+        withNoSourceNotice(
+          question,
+          guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+          onlyCited(raw),
+        ),
         titleToSource,
       ),
     ),
     // 最终步的 input 是模型原始输出，可能带着编造的引用和数字；界面会把 steps
     // 渲染成"它怎么想的"，所以必须清空，不能让它绕过前面两道守卫。
     steps: steps.map((s) => (s.action === "final_answer" ? { ...s, input: "" } : s)),
-    facts,
+    facts: { ...facts, citations: onlyCited(raw) },
   });
 
   for (let i = 0; i < MAX_STEPS; i++) {
