@@ -70,7 +70,16 @@ export function AuthPanel() {
         <button
           type="button"
           className="account-logout"
-          onClick={() => void logout()}
+          onClick={() => {
+            // 登出时一并退出演示态：否则徽章会一直挂着，导航也还会带 ?demo=1
+            try {
+              sessionStorage.removeItem("pedigree-demo");
+              sessionStorage.removeItem("pedigree-persons-demo");
+            } catch {
+              /* 隐私模式不可用 */
+            }
+            void logout();
+          }}
         >
           登出
         </button>

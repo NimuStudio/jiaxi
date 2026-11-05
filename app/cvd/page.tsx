@@ -87,7 +87,14 @@ export default function CvdPage() {
   // 从聊天页存下的家系读心血管家族史（父母/兄弟姐妹心梗或脑卒中）
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("pedigree-persons");
+      // 演示态优先读演示家系（sessionStorage），否则读用户自己的家系。
+      // 之前 demo 分支不写 localStorage，导致演示路径上这块永远读不到数据。
+      const demoNow =
+        new URLSearchParams(window.location.search).get("demo") === "1" ||
+        sessionStorage.getItem("pedigree-demo") === "1";
+      const raw =
+        (demoNow ? sessionStorage.getItem("pedigree-persons-demo") : null) ??
+        localStorage.getItem("pedigree-persons");
       if (!raw) return;
       const persons = JSON.parse(raw) as ExtractedPerson[];
       const hits = readAscvdFamilyHistory(persons);

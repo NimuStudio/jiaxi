@@ -200,6 +200,9 @@ export default function ChatPage() {
       // 不记住就会立刻被登录墙送回登录页（评审会踩的坑）。关标签页即失效。
       try {
         sessionStorage.setItem("pedigree-demo", "1");
+        // 演示家系单独存一个键：/cvd 要读它才能演示「家系 → 方程变量」，
+        // 同时不能污染用户真实的 pedigree-persons。
+        sessionStorage.setItem("pedigree-persons-demo", JSON.stringify(DEMO));
       } catch {
         /* 隐私模式不可用，忽略 */
       }
@@ -219,6 +222,9 @@ export default function ChatPage() {
   // /cvd 靠这个键读心血管家族史，刷新一次 /chat 那条链路就永久失效。
   const hydratedRef = useRef(false);
   useEffect(() => {
+    // 演示模式下不要恢复本地真实家系：否则 ?demo=1 与本地副本竞争，
+    // 同一 commit 里后声明的这里会覆盖 DEMO，看到的是用户自己的档案。
+    if (demoMode) return;
     try {
       const raw = localStorage.getItem("pedigree-persons");
       if (raw) {
@@ -387,7 +393,8 @@ export default function ChatPage() {
   // cloudSyncedRef 门闩同样必要：防止登录对账完成前，
   // 本地较旧的数字抢先覆盖云端较新的数字。
   useEffect(() => {
-    if (!account || !factors || !cloudSyncedRef.current) return;
+    // 演示态绝不写云端：否则演示时填的数字会覆盖用户真实副本
+    if (demoMode || !account || !factors || !cloudSyncedRef.current) return;
     const t = setTimeout(() => {
       void fetch("/api/me/factors", {
         method: "PUT",
@@ -396,9 +403,18 @@ export default function ChatPage() {
       }).catch(() => {});
     }, 800);
     return () => clearTimeout(t);
-  }, [factors, account]);
+  }, [factors, account, demoMode]);
 
   function loadDemo() {
+    // 与 ?demo=1 走同一套语义：置 demoMode（不落盘、不上云）并登记演示家系，
+    // 否则「加载示例家系」会把 7 个虚构亲属写进 localStorage 并 PUT 到真实档案。
+    setDemoMode(true);
+    try {
+      sessionStorage.setItem("pedigree-demo", "1");
+      sessionStorage.setItem("pedigree-persons-demo", JSON.stringify(DEMO));
+    } catch {
+      /* 隐私模式下不可用，仅影响演示标记与下游展示 */
+    }
     setPersons(DEMO);
     setLastAdded(null);
     setSelected("paternal-grandfather");
@@ -586,7 +602,7 @@ export default function ChatPage() {
                   </>
                 ) : (
                   <p className="evidence-quote is-muted">
-                    这是演示数据，没有对应的原话记录。你自己说过的句子会出现在这里。
+                    没有找到这段话的原句记录（可能来自演示数据或云端历史）。你自己说过的句子会出现在这里。
                   </p>
                 )}
               </div>

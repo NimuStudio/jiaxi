@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { RiskFactors } from "@/lib/agent/tools";
 import { GlassModal } from "@/components/ui/GlassModal";
+import { FACTOR_BOUNDS } from "@/lib/risk/factors-validate";
+
+/** 与服务端共用的值域判断（数字字段） */
+const inRange = (v: number, [min, max]: readonly [number, number]) =>
+  Number.isFinite(v) && v >= min && v <= max;
 
 /**
  * 体检数字表单（Agent 问答用）。
@@ -61,9 +66,10 @@ function toFactors(d: Draft): RiskFactors | null {
   const age = Number(d.age);
   const bmi = Number(d.bmi);
   const waistCm = Number(d.waistCm);
-  if (!Number.isFinite(age) || age <= 0) return null;
-  if (!Number.isFinite(bmi) || bmi <= 0) return null;
-  if (!Number.isFinite(waistCm) || waistCm <= 0) return null;
+  // 与 /api/me/factors、/api/agent 共用同一份值域，避免本地说"可用"、服务端却拒收
+  if (!inRange(age, FACTOR_BOUNDS.age)) return null;
+  if (!inRange(bmi, FACTOR_BOUNDS.bmi)) return null;
+  if (!inRange(waistCm, FACTOR_BOUNDS.waistCm)) return null;
   if (d.sex !== "male" && d.sex !== "female") return null;
   return {
     age: Math.round(age),
@@ -203,12 +209,10 @@ export function RiskFactorsForm({ value, onChange, openSignal }: RiskFactorsForm
   }
 
   const missing = [
-    Number.isFinite(Number(draft.age)) && Number(draft.age) > 0 ? null : "年龄",
+    inRange(Number(draft.age), FACTOR_BOUNDS.age) ? null : "年龄",
     draft.sex === "" ? "性别" : null,
-    Number.isFinite(Number(draft.bmi)) && Number(draft.bmi) > 0 ? null : "BMI",
-    Number.isFinite(Number(draft.waistCm)) && Number(draft.waistCm) > 0
-      ? null
-      : "腰围",
+    inRange(Number(draft.bmi), FACTOR_BOUNDS.bmi) ? null : "BMI",
+    inRange(Number(draft.waistCm), FACTOR_BOUNDS.waistCm) ? null : "腰围",
   ].filter(Boolean) as string[];
 
   return (
@@ -242,7 +246,7 @@ export function RiskFactorsForm({ value, onChange, openSignal }: RiskFactorsForm
       <GlassModal
         open={open}
         onClose={() => setOpen(false)}
-        kicker="只存在这台浏览器里 · 不上传"
+        kicker="存在这台机器上 · 不传第三方"
         title="体检数字"
         footer={
           <button
@@ -342,7 +346,7 @@ export function RiskFactorsForm({ value, onChange, openSignal }: RiskFactorsForm
           </div>
 
           <p className="factors-note">
-            只存在这台浏览器里，用于本地计算风险，不会上传。
+            用于本地计算风险；登录后会备份到本机数据库（同一台机器），不传第三方。
             {missing.length > 0 && ` 填齐 ${missing.join("、")} 就能算了。`}
           </p>
         </div>

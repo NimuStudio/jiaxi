@@ -88,6 +88,11 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
     if (content.length === 0 || loading) return;
 
     setMessages((m) => [...m, { role: "user", text: content }]);
+    // 先滚一次：抽取要 3~9 秒且输入框在此期间是禁用的，不滚就看不见自己刚说的话
+    requestAnimationFrame(() => {
+      const list = listRef.current;
+      if (list) list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
+    });
     setInput("");
     setLoading(true);
     setStage(null);

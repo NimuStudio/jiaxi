@@ -5707,3 +5707,14 @@ input[type="range"]::-moz-range-thumb {
 
 .app-main, .topbar { animation-name: app-enter; }
 .topbar { animation-name: app-enter-soft; }
+
+/* overflow: hidden 仍然是一个「可被滚动」的容器：
+   点击/聚焦超出视口的元素时，浏览器会把这一层横向滚走，
+   于是整页内容整体左移（实测点「登录」后 login-hero 的 x 从 46 变成 -346）。
+   overflow: clip 不产生滚动容器，彻底避免这种偏移。 */
+.login-page {
+  overflow: clip;
+}
+
+/* 顶栏也同样处理：它是 sticky 容器，内部不该有横向滚动 */
+.topbar { overflow: clip; }

@@ -96,10 +96,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [demo, setDemo] = useState(false);
   useEffect(() => {
     try {
-      if (new URLSearchParams(window.location.search).get("demo") === "1") {
-        sessionStorage.setItem("pedigree-demo", "1");
-      }
-      setDemo(sessionStorage.getItem("pedigree-demo") === "1");
+      // 只认当前 URL 的 ?demo=1：标记只用于显示徽章，绝不能让「进过一次演示」
+      // 变成「以后点任何导航都带 ?demo=1」（那等于绕过登录墙）。
+      setDemo(new URLSearchParams(window.location.search).get("demo") === "1");
     } catch {
       setDemo(false);
     }
