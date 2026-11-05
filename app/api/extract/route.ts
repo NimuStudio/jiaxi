@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { allow, clientIp } from "@/lib/rate-limit";
 import { extractPedigreeSplit, isLlmReady } from "@/lib/extract/client";
 
 /**
@@ -15,6 +16,11 @@ interface ExtractBody {
 }
 
 export async function POST(request: Request) {
+  // 模型接口不需要登录，但必须限流：否则匿名调用方可以反复触发本机推理
+  if (!allow(`extract:${clientIp(request)}`, 30, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 });
+  }
+
   let body: ExtractBody;
   try {
     body = (await request.json()) as ExtractBody;
@@ -47,7 +53,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("[extract] 抽取失败：", error);
     return NextResponse.json(
-      { error: (error as Error).message },
+      { error: "抽取服务出错了，请稍后再试。" },
       { status: 500 },
     );
   }

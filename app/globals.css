@@ -4605,3 +4605,14 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .blob, .bg-scene::after { animation: none; }
 }
+
+/* 登录页的唯一键盘入口是视觉隐藏的按钮：必须给一个可见焦点环，
+   否则按 Tab 后焦点落在看不见的地方（WCAG 2.4.7） */
+.login-seam-btn:focus-visible {
+  outline: none;
+}
+
+.login-seam-btn:focus-visible + .login-seam-hint {
+  box-shadow: 0 0 0 3px rgba(26, 111, 181, 0.35), 0 4px 16px -8px rgba(16, 42, 68, 0.28);
+  color: var(--primary);
+}

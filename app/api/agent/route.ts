@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { allow, clientIp } from "@/lib/rate-limit";
 import kbData from "../../../data/kb/findrisc-kb.json";
 import { runAgent } from "@/lib/agent/loop";
 import type { RiskFactors } from "@/lib/agent/tools";
@@ -52,7 +53,7 @@ function parsePersons(v: unknown): ExtractedPerson[] {
             .filter((c) => c.code.length > 0)
         : [],
     }))
-    .filter((p) => p.conditions.length > 0);
+    // 不按「有无病症」过滤：图上显示的亲属数与 agent 观察值必须一致
 }
 
 // 体检数字统一走共享校验（含生理值域）：原来这里的 Boolean(x) 会把「字段缺失」
@@ -60,6 +61,11 @@ function parsePersons(v: unknown): ExtractedPerson[] {
 const parseFactors = (v: unknown): RiskFactors | null => parseRiskFactors(v);
 
 export async function POST(request: Request) {
+  // 模型接口不需要登录，但必须限流：否则匿名调用方可以反复触发本机推理
+  if (!allow(`agent:${clientIp(request)}`, 30, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 });
+  }
+
   let body: AgentBody;
   try {
     body = (await request.json()) as AgentBody;
@@ -98,7 +104,8 @@ export async function POST(request: Request) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("[agent] 执行失败：", error);
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+    console.error("[agent] 推理失败", error);
+    return NextResponse.json({ error: "推理服务出错了，请稍后再试。" }, { status: 500 });
   }
 }
 

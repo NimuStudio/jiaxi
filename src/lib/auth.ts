@@ -133,7 +133,7 @@ export async function destroySession(token: string | undefined): Promise<void> {
  */
 export async function currentUser(request: Request): Promise<SessionUser | null> {
   const cookie = request.headers.get("cookie") ?? "";
-  const match = cookie.match(new RegExp(`${SESSION_COOKIE}=([0-9a-f]{64})`));
+  const match = cookie.match(new RegExp(`(?:^|;\s*)${SESSION_COOKIE}=([0-9a-f]{64})`));
   const user = await getSessionUser(match?.[1]);
   if (user) {
     const pool = await db();

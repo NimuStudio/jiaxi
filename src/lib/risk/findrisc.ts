@@ -117,6 +117,7 @@ const RISK_PERCENT: Record<RiskBand, number> = {
 };
 
 function ageScore(age: number): number {
+  if (!Number.isFinite(age)) return 0; // NaN 走比较会落到最高分，必须显式处理
   if (age < 45) return 0;
   if (age <= 54) return 2;
   if (age <= 64) return 3;
@@ -124,12 +125,14 @@ function ageScore(age: number): number {
 }
 
 function bmiScore(bmi: number): number {
+  if (!Number.isFinite(bmi)) return 0;
   if (bmi < 25) return 0;
   if (bmi < 30) return 1;
   return 3;
 }
 
 function waistScore(waistCm: number, sex: Sex): number {
+  if (!Number.isFinite(waistCm)) return 0;
   if (sex === "male") {
     if (waistCm < 94) return 0;
     if (waistCm <= 102) return 3;

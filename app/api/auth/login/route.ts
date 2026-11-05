@@ -7,6 +7,7 @@ import {
   sessionCookie,
   isHttps,
 } from "@/lib/auth";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 /**
  * 登录：验证用户名密码，建立会话。
@@ -32,6 +33,15 @@ export async function POST(request: Request) {
   const { username, password } = body;
   if (!validateUsername(username) || typeof password !== "string") {
     return NextResponse.json({ error: "用户名或密码不对" }, { status: 401 });
+  }
+
+  // 按「IP + 用户名」限流：scrypt 只是线性减速，挡不住在线爆破；
+  // 而这里的账号一旦被撞开，暴露的是家族病史与体检数字。
+  if (!allow(`login:${clientIp(request)}:${username}`, 10, 10 * 60 * 1000)) {
+    return NextResponse.json(
+      { error: "尝试次数过多，请 10 分钟后再试" },
+      { status: 429 },
+    );
   }
 
   try {

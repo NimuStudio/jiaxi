@@ -62,7 +62,8 @@ export async function POST(request: Request) {
         send({ type: "done", persons: result.persons });
       } catch (error) {
         console.error("[extract/stream] 抽取失败：", error);
-        send({ type: "error", error: (error as Error).message });
+        console.error("[extract/stream] 抽取失败", error);
+      send({ type: "error", error: "抽取服务出错了，请稍后再试。" });
       } finally {
         controller.close();
       }

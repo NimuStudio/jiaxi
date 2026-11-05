@@ -75,6 +75,7 @@ export function EvidencePanel() {
       >
         <input
           className="kb-input"
+          aria-label="查询知识库条目"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="例如：为什么家族史的权重这么高"

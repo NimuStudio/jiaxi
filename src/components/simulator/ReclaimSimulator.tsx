@@ -63,7 +63,7 @@ export function ReclaimSimulator() {
   return (
     <>
       <section className="card">
-        <p className="section-label">未来 10 年 2 型糖尿病风险</p>
+        <p className="section-label">2 型糖尿病风险（该分档对应的人群参考值）</p>
 
         <div className="risk-headline">
           <span className={`risk-big ${bandTone}`}>

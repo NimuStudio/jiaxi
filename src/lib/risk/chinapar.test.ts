@@ -47,7 +47,7 @@ describe("China-PAR：论文 Table 2 全部 8 个验证点", () => {
 });
 
 describe("China-PAR：结构与边界", () => {
-  it("男性家族史抬高风险（45 岁示例；方程的年龄交互使 61 岁后该项转负）", () => {
+  it("男性家族史抬高风险（45 岁示例；方程的年龄交互使 58 岁后该项转负）", () => {
     const base = evaluateChinapar({ ...EXAMPLE, age: 45, familyHistory: false });
     const fh = evaluateChinapar({ ...EXAMPLE, age: 45, familyHistory: true });
     expect(fh.risk).toBeGreaterThan(base.risk);

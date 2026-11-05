@@ -241,6 +241,7 @@ export function AgentPanel({ persons, factors, onRequestFactors }: AgentPanelPro
       >
         <input
           className="chat-input"
+          aria-label="向家系助手提问"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={speech.listening ? "正在听你说……" : "例如：我的糖尿病风险有多高？"}

@@ -47,14 +47,30 @@ export async function GET(request: Request) {
   const user = await currentUser(request);
   if (!user) return NextResponse.json({ error: "未登录" }, { status: 401 });
 
-  const pool = await db();
-  const [rows] = await pool.query<RowDataPacket[]>(
-    "SELECT persons FROM pedigrees WHERE user_id = ?",
-    [user.id],
-  );
-  const row = rows[0] as { persons: unknown } | undefined;
-  const persons = row ? sanitizePersons(row.persons) : [];
-  return NextResponse.json({ persons: persons ?? [] });
+  try {
+    const pool = await db();
+    const [rows] = await pool.query<RowDataPacket[]>(
+      "SELECT persons FROM pedigrees WHERE user_id = ?",
+      [user.id],
+    );
+    const row = rows[0] as { persons: unknown } | undefined;
+    // 三态必须可区分：没有记录 ≠ 记录损坏。
+    // 以前损坏也返回 []，客户端见到空数组就用本地副本回写，云端数据被静默覆盖。
+    if (!row) return NextResponse.json({ persons: [], state: "empty" });
+
+    const persons = sanitizePersons(row.persons);
+    if (persons === null) {
+      console.error("[me/pedigree] 云端家系不符合当前结构", { userId: user.id });
+      return NextResponse.json(
+        { error: "云端记录损坏，请勿用本地副本覆盖" },
+        { status: 500 },
+      );
+    }
+    return NextResponse.json({ persons, state: "ok" });
+  } catch (error) {
+    console.error("[me/pedigree] 读取失败", error);
+    return NextResponse.json({ error: "数据库暂时不可用" }, { status: 500 });
+  }
 }
 
 export async function PUT(request: Request) {
@@ -73,11 +89,21 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "家系数据格式不合法" }, { status: 400 });
   }
 
-  const pool = await db();
-  await pool.query(
-    `INSERT INTO pedigrees (user_id, persons) VALUES (?, ?)
-     ON DUPLICATE KEY UPDATE persons = VALUES(persons)`,
-    [user.id, JSON.stringify(persons)],
-  );
-  return NextResponse.json({ ok: true, count: persons.length });
+  // 规模上限：单字段长度已有校验，但条数没限——一个账号就能把单行撑到很大
+  if (persons.length > 200) {
+    return NextResponse.json({ error: "亲属数量过多（上限 200）" }, { status: 413 });
+  }
+
+  try {
+    const pool = await db();
+    await pool.query(
+      `INSERT INTO pedigrees (user_id, persons) VALUES (?, ?)
+       ON DUPLICATE KEY UPDATE persons = VALUES(persons)`,
+      [user.id, JSON.stringify(persons)],
+    );
+    return NextResponse.json({ ok: true, count: persons.length });
+  } catch (error) {
+    console.error("[me/pedigree] 写入失败", error);
+    return NextResponse.json({ error: "数据库暂时不可用" }, { status: 500 });
+  }
 }

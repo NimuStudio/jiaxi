@@ -23,6 +23,16 @@ const ACTION_HINT: Record<string, string> = {
   final_answer: "把前面的结果组织成一句话",
 };
 
+/**
+ * 内部提示语（写给模型看的指令、去重说明）不能出现在用户可见的轨迹里。
+ * 之前只在最终回答上过了一遍，轨迹面板原样渲染 observation，提示词就漏了出来。
+ */
+function userFacing(text: string): string {
+  const trimmed = text.trim();
+  if (/^（.*(请直接|请换|已跳过|本轮已调用|已检索到内容).*）$/.test(trimmed)) return "";
+  return trimmed.replace(/（已检索到内容[^）]*）/g, "").replace(/（[^）]*(请直接|请换一个工具)[^）]*）/g, "");
+}
+
 export function StepList({ steps }: { steps: AgentStep[] }) {
   return (
     <ol className="trace">
@@ -36,8 +46,8 @@ export function StepList({ steps }: { steps: AgentStep[] }) {
             </div>
             {s.thought && <p className="trace-thought">「{s.thought}」</p>}
             {s.input && <p className="trace-input">参数：{s.input}</p>}
-            {s.observation && (
-              <pre className="trace-obs">{s.observation}</pre>
+            {userFacing(s.observation) && (
+              <pre className="trace-obs">{userFacing(s.observation)}</pre>
             )}
           </div>
         </li>

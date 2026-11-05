@@ -284,6 +284,7 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
         }}
       >        <input
           className="chat-input"
+          aria-label="描述家人的病史，例如：我爸五十岁放了支架"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={speech.listening ? "正在听你说……" : "例如：我爸前年放了支架，那时候五十五"}

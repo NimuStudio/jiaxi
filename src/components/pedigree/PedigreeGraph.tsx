@@ -107,8 +107,8 @@ export function PedigreeGraph({
     <svg
       className="pedigree-canvas"
       viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`}
-      role="img"
-      aria-label="家系图"
+      role="group"
+      aria-label="家系图（每个节点都可聚焦，回车查看依据）"
     >
       {/* 连线先画，节点后画，避免线压在节点上 */}
       <g className="pedigree-edges">
@@ -194,8 +194,16 @@ export function PedigreeGraph({
             style={{ cursor: onSelect ? "pointer" : "default" }}
             role="button"
             tabIndex={0}
+            aria-label={`${RELATION_LABEL[person.relation as RelationType] ?? person.relation}：${
+              person.conditions.length > 0
+                ? person.conditions.map((c) => DISEASE_LABEL[c.code] ?? c.code).join("、")
+                : "无记录"
+            }`}
             onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") onSelect?.(person.relation);
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onSelect?.(person.relation);
+              }
             }}
           >
             {male ? (

@@ -133,17 +133,31 @@ export default function CvdPage() {
         {result ? (
           <>
             <div className="risk-headline">
-              <span className={`risk-big ${result.band === "low" ? "is-low" : result.band === "medium" ? "is-mid" : "is-high"}`}>
-                {fmtPct(riskAnim)}
+              <span
+                className={`risk-big ${
+                  result.band === "low" ? "is-low" : result.band === "medium" ? "is-mid" : result.band === "high" ? "is-high" : ""
+                }`}
+              >
+                {Number.isFinite(result.risk) ? fmtPct(riskAnim) : "—"}
                 <span className="risk-unit">%</span>
               </span>
-              <span className={`band-chip ${result.band === "low" ? "is-low" : result.band === "medium" ? "is-mid" : "is-high"}`}>
+              <span
+                className={`band-chip ${
+                  result.band === "low" ? "is-low" : result.band === "medium" ? "is-mid" : result.band === "high" ? "is-high" : ""
+                }`}
+              >
                 {ASCVD_BAND_LABEL[result.band]}
               </span>
               <span className="risk-caption">
                 分层：&lt;5% 低危 · 5–10% 中危 · ≥10% 高危
               </span>
             </div>
+
+            {(form.age < 35 || form.age > 74) && (
+              <p className="cvd-delta">
+                年龄 {form.age} 岁超出该方程的推导范围（35–74 岁），下面这个数字仅供参考。
+              </p>
+            )}
 
             {form.familyHistory && result.familyHistoryDelta !== null && (
               <p className="cvd-delta">
@@ -330,6 +344,11 @@ export default function CvdPage() {
         </div>
 
         <div className="cvd-verify">
+          <p className="cvd-verify-note">
+            注：China-PAR 男性方程里腰围系数为负（−0.712），所以在本页把腰围调大，
+            算出来的风险反而会略降。这是原方程的系数（已与补充材料核对），不是本项目的符号错误；
+            女性方程里腰围系数为正（1.48）。跨性别比较腰围时请留意这点。
+          </p>
           {isPaperExample ? (
             <p>
               当前默认值即论文示例（Circulation 2016 正文 Table 2）：60 岁、SBP 130、

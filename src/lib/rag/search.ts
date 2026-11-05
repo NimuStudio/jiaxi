@@ -36,6 +36,8 @@ export interface KnowledgeEntry {
 
 export interface ScoredEntry extends KnowledgeEntry {
   score: number;
+  /** 问题实词被该条目覆盖的比例（0~1），用于过滤「结构相似但主题无关」的命中 */
+  coverage?: number;
   /** 命中的实词个数（虚词不算），用于过滤"看起来有关其实无关"的检索结果 */
   meaningfulHits?: number;
 }
@@ -116,10 +118,20 @@ export function searchKnowledge(
     // 标题命中加权：短问题里正文提到同一个词条名的条目会挤掉真正的答案条目
     // （实测「FINDRISC 的满分是多少」命中了《可回收这个说法是怎么来的》）。
     // 标题重合更接近「这篇讲的就是这个」，因此给固定倍数。
-    const titleTokens = new Set(tokenize(d.entry.title));
-    if ([...new Set(qTokens)].some((t) => titleTokens.has(t))) score *= TITLE_BOOST;
+    // 标题加权只认实词：以前把「怎么」「这个」这类停用词也算进标题重合，
+    // 结果是「腰围怎么量」把《「可回收」这个说法是怎么来的》顶到第一条。
+    const titleTokens = new Set(tokenize(d.entry.title).filter((t) => !STOP_TOKENS.has(t)));
+    const queryContent = new Set([...new Set(qTokens)].filter((t) => !STOP_TOKENS.has(t)));
+    if ([...queryContent].some((t) => titleTokens.has(t))) score *= TITLE_BOOST;
 
-    return { ...d.entry, score, meaningfulHits };
+    // 实词覆盖率：命中几个「问题里的实词」决定这条到底在不在讲这件事。
+    // 只靠分数不够——「光合作用是什么」也能靠「作用」这类 2-gram 拿到 4.7 分。
+    const docSet = new Set(d.tokens);
+    const qContentList = [...new Set(qTokens)].filter((t) => !STOP_TOKENS.has(t));
+    const covered = qContentList.filter((t) => docSet.has(t)).length;
+    const coverage = qContentList.length > 0 ? covered / qContentList.length : 0;
+
+    return { ...d.entry, score, meaningfulHits, coverage };
   });
 
   // 阈值按当前语料规模标定：相关问题的首条得分通常在 3 以上，
@@ -127,6 +139,10 @@ export function searchKnowledge(
   // 取 1.8 作为下限，宁可回答「没找到」，也不给一条不相干的依据。
   const MIN_SCORE = 1.8;
 
+  // 注：曾试过再加一道「实词覆盖率 ≥ 0.5 / 命中 ≥ 2」的门槛，实测会把
+  // 「腰围怎么量」「大庆研究能降低多少风险」这类正常问句一起杀掉，
+  // 而「光合作用是什么」仍能靠 2-gram 命中。启发式解决不了这个问题，
+  // 真正的解法是给知识库条目加主题标签并要求主题一致（见 docs/audit.md）。
   return scored
     .filter((s) => s.score >= MIN_SCORE && (s.meaningfulHits ?? 0) > 0)
     .sort((a, b) => b.score - a.score)

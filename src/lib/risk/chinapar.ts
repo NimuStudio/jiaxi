@@ -16,7 +16,8 @@
  * 0.9851 为准，并用 Table 2 全部 8 个点做回归测试。
  */
 
-export type AscvdBand = "low" | "medium" | "high";
+/** unknown：输入异常导致算不出有限值时的显式状态，不要伪装成任何一档 */
+export type AscvdBand = "low" | "medium" | "high" | "unknown";
 
 export interface ChinaparInput {
   /** 年龄（岁），方程适用 35–74 岁（推导队列范围），越界值只做提示不拒绝 */
@@ -116,7 +117,7 @@ export interface ChinaparResult {
   band: AscvdBand;
   /**
    * 家族史对风险的影响（男性方程）：有 vs 无家族史的风险差，有符号。
-   * 注意方程的年龄交互项 6.221−1.534×ln(年龄)：约 61 岁以上为负——
+   * 注意方程的年龄交互项 6.221−1.534×ln(年龄)：约 58 岁以上为负（6.221 / 1.534 = 4.055，e^4.055 ≈ 57.7 岁）——
    * 这是论文方程的原始行为（家族史对年轻人的边际影响更大）。
    * 女性方程不含家族史项，返回 null。
    */
@@ -166,6 +167,11 @@ export function evaluateChinapar(input: ChinaparInput): ChinaparResult {
 
   // 分层必须基于最终返回的风险（含家族史），否则会出现
   // 「显示 11% 却标中危」的矛盾（男性家族史把风险推过 10% 阈值时）。
+  // NaN 走比较会一路落到 else，被标成「高危」—— 输入异常时不能给出一个看起来确定的结论
+  if (!Number.isFinite(risk)) {
+    return { risk: Number.NaN, band: "unknown", familyHistoryDelta: null };
+  }
+
   let band: AscvdBand;
   if (risk < 0.05) band = "low";
   else if (risk < 0.1) band = "medium";
@@ -184,4 +190,5 @@ export const ASCVD_BAND_LABEL: Record<AscvdBand, string> = {
   low: "低危",
   medium: "中危",
   high: "高危",
+  unknown: "无法评估",
 };

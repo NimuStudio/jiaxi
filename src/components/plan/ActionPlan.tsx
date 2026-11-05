@@ -27,6 +27,8 @@ function buildActions(
   breakdown: Record<ScoreKey, number>,
   currentBmi: number,
   currentWaist: number,
+  /** 腰围阈值按性别不同（男 94 cm、女 80 cm），与 findrisc.ts 的计分口径一致 */
+  waistTargetCm: number,
 ): Action[] {
   const list: Action[] = [];
 
@@ -43,7 +45,7 @@ function buildActions(
   if (breakdown.waist > 0) {
     list.push({
       key: "waist",
-      title: `把腰围从 ${currentWaist} cm 降到 94 cm 以下`,
+      title: `把腰围从 ${currentWaist} cm 降到 ${waistTargetCm} cm 以下`,
       step: "饭后走 15 分钟，比节食更容易坚持",
       points: breakdown.waist,
       difficulty: 2,
@@ -78,10 +80,13 @@ export interface ActionPlanProps {
   result: FindriscResult;
   currentBmi: number;
   currentWaist: number;
+  /** 性别决定腰围目标值（男 94 / 女 80）；默认按男性，与首页的固定示例一致 */
+  sex?: "male" | "female";
 }
 
-export function ActionPlan({ result, currentBmi, currentWaist }: ActionPlanProps) {
-  const actions = buildActions(result.breakdown, currentBmi, currentWaist);
+export function ActionPlan({ result, currentBmi, currentWaist, sex = "male" }: ActionPlanProps) {
+  const waistTargetCm = sex === "male" ? 94 : 80;
+  const actions = buildActions(result.breakdown, currentBmi, currentWaist, waistTargetCm);
 
   if (actions.length === 0) {
     return (

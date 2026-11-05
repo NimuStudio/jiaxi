@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { allow, clientIp } from "@/lib/rate-limit";
 import { mapLabItems, parseOcrJson } from "@/lib/ocr/parse";
 
 /**
@@ -32,6 +33,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  // 视觉模型更贵：每 IP 每 10 分钟最多 12 次
+  if (!allow(`ocr:${clientIp(request)}`, 12, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "识别请求过于频繁，请稍后再试" }, { status: 429 });
+  }
+
   let body: { image?: unknown; mime?: unknown };
   try {
     body = (await request.json()) as { image?: unknown; mime?: unknown };
