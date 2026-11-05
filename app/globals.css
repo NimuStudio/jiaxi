@@ -5457,3 +5457,32 @@ input[type="range"]::-moz-range-thumb {
   left: 49.5%;
   width: min(47vw, 660px);
 }
+
+/* 回到虚线双环 + 游离弧线，可见度沿用调高后的值 */
+.orbit-ring {
+  stroke: rgba(26, 111, 181, 0.24);
+  stroke-width: 1;
+  stroke-dasharray: 3 13;
+  transform-origin: 320px 320px;
+  animation: orbit-spin 140s linear infinite;
+}
+
+.orbit-ring-slow {
+  stroke: rgba(26, 111, 181, 0.15);
+  stroke-dasharray: 1 18;
+  animation-duration: 220s;
+  animation-direction: reverse;
+}
+
+.orbit-arc {
+  stroke: rgba(26, 111, 181, 0.28);
+  stroke-width: 1.5;
+}
+
+.orbit-cross path { stroke: rgba(26, 111, 181, 0.3); }
+
+.orbit-ticks { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-ring { animation: none; }
+}

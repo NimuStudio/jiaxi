@@ -285,19 +285,15 @@ export default function LoginPage() {
       {/* 螺旋周围的纯装饰：两圈细虚线弧 + 四枚十字定位角标（印刷制版感） */}
       <div className="dna-orbit" aria-hidden="true">
         <svg viewBox="0 0 640 640">
-          {/* 一枚实线细圆 + 圆外四枚对位角标（45° 位置），像制版的对位标记 */}
-          <circle className="orbit-ring" cx="320" cy="320" r="250" />
-          <g className="orbit-ticks">
-            <path d="M320 62 v14" />
-            <path d="M320 564 v14" />
-            <path d="M62 320 h14" />
-            <path d="M564 320 h14" />
-          </g>
+          {/* 虚线双环 + 一段游离弧线（作者偏好这一版），外加四枚对位角标 */}
+          <circle className="orbit-ring" cx="320" cy="320" r="238" />
+          <circle className="orbit-ring orbit-ring-slow" cx="320" cy="320" r="288" />
+          <path className="orbit-arc" d="M320 22 A298 298 0 0 1 616 236" />
           <g className="orbit-cross">
-            <path d="M156 156 h13 M162.5 149.5 v13" />
-            <path d="M471 156 h13 M477.5 149.5 v13" />
-            <path d="M156 471 h13 M162.5 464.5 v13" />
-            <path d="M471 471 h13 M477.5 464.5 v13" />
+            <path d="M150 150 h13 M156.5 143.5 v13" />
+            <path d="M477 150 h13 M483.5 143.5 v13" />
+            <path d="M150 477 h13 M156.5 470.5 v13" />
+            <path d="M477 477 h13 M483.5 470.5 v13" />
           </g>
         </svg>
       </div>
