@@ -143,6 +143,12 @@ export default function LoginPage() {
         <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
       </header>
 
+      {/* 撕裂幕布：上下两块共享同一条对角线边缘，展开时分别朝右上 / 左下推开 */}
+      <div className="login-tear" aria-hidden="true">
+        <div className="login-tear-half login-tear-upper" />
+        <div className="login-tear-half login-tear-lower" />
+      </div>
+
       {/* 折叠态：只有一个按钮。指针靠近或点它，整个场景展开 */}
       <div className="login-cta" ref={ctaRef}>
         <button
