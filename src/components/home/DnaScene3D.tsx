@@ -269,6 +269,7 @@ export function DnaScene3D() {
       raf = window.requestAnimationFrame(frame);
     };
 
+    let staticTimer = 0;
     if (reduce) {
       // 减少动态效果：只画静态帧。挂载瞬间 canvas 尺寸可能还是 0，
       // 所以稍后再补画一次，否则会出现"DNA 不见了"。
@@ -277,7 +278,9 @@ export function DnaScene3D() {
         composer.render();
       };
       paint();
-      window.setTimeout(paint, 260);
+      // 记下 timer：组件在 260ms 内卸载时必须清掉，
+      // 否则回调会去操作已经 dispose 的 renderer/composer
+      staticTimer = window.setTimeout(paint, 260);
     } else {
       raf = window.requestAnimationFrame(frame);
     }
@@ -301,6 +304,7 @@ export function DnaScene3D() {
 
     return () => {
       window.cancelAnimationFrame(raf);
+      if (staticTimer) window.clearTimeout(staticTimer);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerleave", onLeave);

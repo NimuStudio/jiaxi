@@ -64,14 +64,18 @@ function mergePersons(
   current: ExtractedPerson[],
   incoming: ExtractedPerson[],
 ): ExtractedPerson[] {
-  const map = new Map(
-    current.map((p) => [p.relation, { ...p, conditions: [...p.conditions] }]),
-  );
+  // conditions 必须深拷：只拷数组的话，下面 dup.onsetAge = ... 会就地改写 state 里的对象，
+  // ?demo=1 时甚至会把模块级 DEMO 常量永久改掉（下次加载示例带着上次的年龄）。
+  const copy = (p: ExtractedPerson): ExtractedPerson => ({
+    ...p,
+    conditions: p.conditions.map((c) => ({ ...c })),
+  });
+  const map = new Map(current.map((p) => [p.relation, copy(p)]));
 
   for (const p of incoming) {
     const existing = map.get(p.relation);
     if (!existing) {
-      map.set(p.relation, { ...p, conditions: [...p.conditions] });
+      map.set(p.relation, copy(p));
       continue;
     }
     for (const c of p.conditions) {
@@ -253,13 +257,30 @@ export default function ChatPage() {
    */
   const cloudSyncedRef = useRef(false);
 
+  /** 逐字段比较两份体检数字（键序无关） */
+  function sameFactors(a: unknown, b: unknown): boolean {
+    if (!a || !b || typeof a !== "object" || typeof b !== "object") return false;
+    const x = a as Record<string, unknown>;
+    const y = b as Record<string, unknown>;
+    const keys = Object.keys(y);
+    return keys.length > 0 && keys.every((k) => x[k] === y[k]);
+  }
+
   function syncFromCloud() {
     void (async () => {
       try {
-        const [pedRes, facRes] = await Promise.all([
-          fetch("/api/me/pedigree").then((r) => r.json() as Promise<{ persons?: ExtractedPerson[] }>),
-          fetch("/api/me/factors").then((r) => r.json() as Promise<{ factors?: RiskFactors | null }>),
+        const [pedHttp, facHttp] = await Promise.all([
+          fetch("/api/me/pedigree"),
+          fetch("/api/me/factors"),
         ]);
+        // 读失败（500 / 断网 / 记录损坏）时不能当"云端为空"：
+        // 否则紧接着的回写会用本地副本覆盖云端，医学数据无痕丢失。
+        if (!pedHttp.ok || !facHttp.ok) {
+          console.warn("[sync] 云端读取失败，本次跳过对账", pedHttp.status, facHttp.status);
+          return;
+        }
+        const pedRes = (await pedHttp.json()) as { persons?: ExtractedPerson[] };
+        const facRes = (await facHttp.json()) as { factors?: RiskFactors | null };
 
         // 家系：云端有 → 与本地并集合并（谁都不丢）；云端空且本地有 → 迁移上云。
         // 注意副作用（fetch）不放进 setPersons 的 updater——
@@ -278,7 +299,9 @@ export default function ChatPage() {
         if (cloudFactors) {
           try {
             const localRaw = localStorage.getItem(FACTORS_KEY);
-            const same = localRaw && JSON.stringify(JSON.parse(localRaw)) === JSON.stringify(cloudFactors);
+            // 逐字段比较：JSON.stringify 依赖键序，而 MySQL 的 JSON 列会重排键，
+            // 一旦键序不同就会误判为"有变化"，每次都重挂载表单
+            const same = localRaw ? sameFactors(JSON.parse(localRaw), cloudFactors) : false;
             if (!same) {
               localStorage.setItem(FACTORS_KEY, JSON.stringify(cloudFactors));
               setFactorsEpoch((n) => n + 1); // 表单重挂载，从 localStorage 重读

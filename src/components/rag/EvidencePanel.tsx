@@ -28,20 +28,30 @@ export function EvidencePanel() {
   const [results, setResults] = useState<ScoredEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const [failed, setFailed] = useState(false);
+
   async function ask(q: string) {
     const text = q.trim();
     if (text.length === 0 || loading) return;
     setQuery(text);
     setLoading(true);
+    setFailed(false);
     try {
       const res = await fetch("/api/explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: text }),
       });
+      // 非 2xx 是"检索服务出错"，不是"知识库里没有"——两者不能混为一谈
+      if (!res.ok) {
+        setFailed(true);
+        setResults([]);
+        return;
+      }
       const data = (await res.json()) as { results?: ScoredEntry[] };
       setResults(data.results ?? []);
     } catch {
+      setFailed(true);
       setResults([]);
     } finally {
       setLoading(false);
@@ -92,7 +102,11 @@ export function EvidencePanel() {
 
       {results !== null && (
         <div className="kb-results">
-          {results.length === 0 ? (
+          {failed ? (
+            <p className="kb-empty">
+              检索服务这次没有连上（不是「没有找到」）。刷新后可以再试——我们不会用猜测填这个空。
+            </p>
+          ) : results.length === 0 ? (
             <p className="kb-empty">
               知识库里没有与这个问题匹配的条目。与其给一个听起来合理的答案，不如直接说没有。
             </p>

@@ -172,7 +172,21 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
         return;
       }
 
-      const result = persons ?? [];
+      // 没收到 done 事件（流被中途切断）时，不能把「没结果」说成「没有患病亲属」——
+      // 那是把失败当事实，恰好违背这个项目最在意的一条。
+      if (persons === null) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: "system",
+            text: "抽取没有返回结果（连接可能中断了），请再试一次。",
+            tone: "error",
+          },
+        ]);
+        return;
+      }
+
+      const result = persons;
       if (result.length > 0) onExtracted(result, content);
       setMessages((m) => [
         ...m,

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import kbData from "../../../data/kb/findrisc-kb.json";
 import { runAgent } from "@/lib/agent/loop";
 import type { RiskFactors } from "@/lib/agent/tools";
+import { parseRiskFactors } from "@/lib/risk/factors-validate";
 import { isLlmReady } from "@/lib/extract/client";
 import type { KnowledgeEntry } from "@/lib/rag/search";
 import type { ExtractedPerson } from "@/lib/extract/client";
@@ -54,29 +55,9 @@ function parsePersons(v: unknown): ExtractedPerson[] {
     .filter((p) => p.conditions.length > 0);
 }
 
-function parseFactors(v: unknown): RiskFactors | null {
-  if (typeof v !== "object" || v === null) return null;
-  const f = v as Record<string, unknown>;
-  const num = (x: unknown) => (typeof x === "number" && isFinite(x) ? x : null);
-  const age = num(f.age);
-  const bmi = num(f.bmi);
-  const waistCm = num(f.waistCm);
-  if (age === null || bmi === null || waistCm === null) return null;
-  if (f.sex !== "male" && f.sex !== "female") return null;
-  return {
-    age,
-    bmi,
-    waistCm,
-    sex: f.sex,
-    physicallyActive: Boolean(f.physicallyActive),
-    eatsVegetablesDaily: Boolean(f.eatsVegetablesDaily),
-    onAntihypertensive: Boolean(f.onAntihypertensive),
-    historyOfHighGlucose: Boolean(f.historyOfHighGlucose),
-    smoker: Boolean(f.smoker),
-    drinker: Boolean(f.drinker),
-    lungDisease: Boolean(f.lungDisease),
-  };
-}
+// 体检数字统一走共享校验（含生理值域）：原来这里的 Boolean(x) 会把「字段缺失」
+// 静默变成 false，等于替用户回答「不运动、不吃蔬菜、有高血压」，直接加分。
+const parseFactors = (v: unknown): RiskFactors | null => parseRiskFactors(v);
 
 export async function POST(request: Request) {
   let body: AgentBody;
