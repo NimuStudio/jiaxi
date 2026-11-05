@@ -24,6 +24,12 @@ import {
   type ToolContext,
   type ToolName,
 } from "./tools.ts";
+import {
+  STOP_TOKENS,
+  tokenize,
+  topicCompatible,
+  type KnowledgeEntry,
+} from "../rag/search.ts";
 
 /** 决策的 GBNF：只有一个对象，action 是四个工具之一，其余两个字段是字符串。 */
 const AGENT_GBNF = String.raw`
@@ -326,6 +332,16 @@ export function withNoSourceNotice(
  * 标签是人工维护的（家族史/腰围/BMI/China-PAR…），比整句相似度稳定得多，
  * 也避免把「糖尿病」这种到处都有的词当成相关。
  */
+/** 标题与问题是否共享至少一个实词（2-gram，排除虚词） */
+export function sharesContentWord(question: string, title: string): boolean {
+  const content = (s: string) =>
+    new Set(tokenize(s).filter((t) => !STOP_TOKENS.has(t) && t.length >= 2));
+  const q = content(question);
+  if (q.size === 0) return false;
+  for (const t of content(title)) if (q.has(t)) return true;
+  return false;
+}
+
 export function isTagRelevant(question: string, tags: string[]): boolean {
   if (tags.length === 0) return false;
   // 去掉连字符与空格再比：用户会打「chinapar」，标签写的是「China-PAR」
@@ -370,6 +386,10 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
   const observations: string[] = [];
 
   const facts: AgentFacts = { risk: null, pedigree: [], citations: [] };
+  /** 条目标题 → 条目：门控需要拿主题（topic）判断是否跨主题引用 */
+  const entryByTitle = new Map<string, KnowledgeEntry>(
+    (ctx.kb as KnowledgeEntry[]).map((e) => [e.title, e]),
+  );
   const allowedTitles = new Set<string>();
   /** 条目标题 → 出处；回答里的「依据：《标题》」会补上它 */
   const titleToSource = new Map<string, string>();
@@ -384,7 +404,13 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
       // 只有"话题对得上"的条目才允许被引为依据。
       // 实测「光合作用是什么」拿到检索条目后，模型给它安了「依据：《FINDRISC 是什么》」——
       // 条目确实在检索结果里，但和问题毫无关系，这种"有依据的假象"比没依据更糟。
-      if (!isTagRelevant(question, r.citationTags?.[c] ?? [])) continue;
+      const entry = entryByTitle.get(c);
+      // 主题门控：问糖代谢时不引心血管条目，反之亦然（两者共用「家族史」「阈值」等 tag）
+      if (entry && !topicCompatible(question, entry)) continue;
+      // 相关性门控：tag 命中，或标题与问题共享实词。
+      // 只用 tag 会误杀（「哪个条目分值最高」被删，尽管条目明显对题）。
+      const tagHit = isTagRelevant(question, r.citationTags?.[c] ?? []);
+      if (!tagHit && !sharesContentWord(question, c)) continue;
       allowedTitles.add(c);
       const src = r.citationSources?.[c];
       if (src !== undefined) titleToSource.set(c, src);

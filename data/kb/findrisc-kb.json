@@ -8,7 +8,8 @@
       "概述",
       "量表",
       "FINDRISC"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-family-history",
@@ -20,7 +21,8 @@
       "权重",
       "一级亲属",
       "二级亲属"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-age",
@@ -30,7 +32,8 @@
     "tags": [
       "年龄",
       "阈值"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-bmi",
@@ -41,7 +44,8 @@
       "BMI",
       "体重",
       "阈值"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-waist",
@@ -52,7 +56,8 @@
       "腰围",
       "腹型肥胖",
       "阈值"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-activity",
@@ -62,7 +67,8 @@
     "tags": [
       "运动",
       "体力活动"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-diet",
@@ -72,7 +78,8 @@
     "tags": [
       "饮食",
       "蔬果"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-bp-med",
@@ -82,7 +89,8 @@
     "tags": [
       "高血压",
       "降压药"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-glucose",
@@ -93,7 +101,8 @@
       "高血糖",
       "血糖",
       "筛查"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-bands",
@@ -104,7 +113,8 @@
       "风险分层",
       "百分比",
       "阈值"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-why-not-probability",
@@ -115,7 +125,8 @@
       "安全边界",
       "概率",
       "设计原则"
-    ]
+    ],
+    "topic": "both"
   },
   {
     "id": "kb-version",
@@ -126,7 +137,8 @@
       "版本",
       "文献",
       "0-26"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-reclaimable",
@@ -137,7 +149,8 @@
       "可回收风险",
       "设计",
       "干预"
-    ]
+    ],
+    "topic": "diabetes"
   },
   {
     "id": "kb-chinapar-what",
@@ -148,7 +161,8 @@
       "概述",
       "China-PAR",
       "心血管"
-    ]
+    ],
+    "topic": "ascvd"
   },
   {
     "id": "kb-chinapar-fh",
@@ -159,7 +173,8 @@
       "家族史",
       "China-PAR",
       "心血管"
-    ]
+    ],
+    "topic": "ascvd"
   },
   {
     "id": "kb-ascvd-band",
@@ -170,6 +185,7 @@
       "分层",
       "China-PAR",
       "心血管"
-    ]
+    ],
+    "topic": "ascvd"
   }
 ]

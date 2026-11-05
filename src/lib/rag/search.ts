@@ -13,6 +13,33 @@
 /** 标题命中时的加权倍数：短问题里正文提到同一词条名的条目会挤掉真正的答案条目 */
 const TITLE_BOOST = 1.6;
 
+const DIABETES_HINT = /(糖尿病|血糖|胰岛素|糖化|糖耐|口服糖|FINDRISC|空腹)/i;
+const ASCVD_HINT = /(心血管|血压|血脂|胆固醇|心梗|心绞痛|脑卒中|中风|冠心病|China-?PAR|ASCVD)/i;
+
+/**
+ * 判断问题属于哪个主题。
+ *
+ * 这是修「张冠李戴」的关键：知识库里 diabetes 与 ascvd 共用「家族史」「阈值」等 tag，
+ * 只靠 tag 字面匹配会让《心血管病家族史怎么进入 China-PAR》成为糖尿病家族史问题的依据。
+ */
+export function questionTopic(question: string): KbTopic | "any" | "mixed" {
+  const d = DIABETES_HINT.test(question);
+  const a = ASCVD_HINT.test(question);
+  if (d && a) return "mixed";
+  if (d) return "diabetes";
+  if (a) return "ascvd";
+  return "any";
+}
+
+/** 条目能否作为这个问题的依据（主题必须兼容） */
+export function topicCompatible(question: string, entry: KnowledgeEntry): boolean {
+  const topic = entry.topic ?? "both";
+  if (topic === "both") return true;
+  const q = questionTopic(question);
+  if (q === "any" || q === "mixed") return true; // 问题本身没限定主题时不额外否决
+  return q === topic;
+}
+
 
 /**
  * 虚词表：这些 2-gram 在任何问题里都会出现，命中它们不代表话题相关。
@@ -20,11 +47,14 @@ const TITLE_BOOST = 1.6;
  * 实测它也能拿到 1.8 以上的分数并返回一条不相干的"依据"。
  * 因此额外要求：至少命中一个**实词**，否则视为查不到。
  */
-const STOP_TOKENS = new Set([
+export const STOP_TOKENS = new Set([
   "今天", "天气", "怎么", "什么", "多少", "哪些", "如何", "可以", "应该",
   "我的", "我是", "这个", "那个", "一下", "请问", "是不", "不是", "有没",
-  "么样", "怎么样",
+  "么样", "怎么样", "是什", "有什", "么的", "的吗", "呢吗",
 ]);
+
+/** 条目所属主题：用于门控「问糖代谢却引心血管条目」这类张冠李戴 */
+export type KbTopic = "diabetes" | "ascvd" | "both";
 
 export interface KnowledgeEntry {
   id: string;
@@ -32,6 +62,7 @@ export interface KnowledgeEntry {
   text: string;
   source: string;
   tags: string[];
+  topic?: KbTopic;
 }
 
 export interface ScoredEntry extends KnowledgeEntry {
