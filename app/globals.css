@@ -4541,3 +4541,67 @@ input[type="range"]::-moz-range-thumb {
   visibility: hidden;
   transition: opacity 0.4s ease;
 }
+
+/* ---------- 全站统一底景：与登录页同款（渐变 + 漂移光斑 + 点阵），不含 DNA ---------- */
+.bg-scene {
+  background:
+    radial-gradient(1200px 680px at 18% 12%, #eaf4fd 0%, rgba(234, 244, 253, 0) 62%),
+    linear-gradient(180deg, #ffffff 0%, #f4f9fe 100%);
+}
+
+.blob {
+  filter: blur(72px);
+  opacity: 0.72;
+}
+
+.blob-1 {
+  width: 46vw;
+  height: 46vw;
+  left: -8vw;
+  top: 6vh;
+  background: radial-gradient(circle, rgba(138, 188, 232, 0.85) 0%, rgba(138, 188, 232, 0) 68%);
+  animation: blob-drift-1 34s ease-in-out infinite;
+}
+
+.blob-2 {
+  width: 38vw;
+  height: 38vw;
+  right: -6vw;
+  bottom: -10vh;
+  background: radial-gradient(circle, rgba(112, 200, 210, 0.6) 0%, rgba(112, 200, 210, 0) 66%);
+  animation: blob-drift-2 46s ease-in-out infinite;
+}
+
+.blob-3 {
+  width: 30vw;
+  height: 30vw;
+  left: 38%;
+  top: -6vh;
+  background: radial-gradient(circle, rgba(176, 208, 240, 0.6) 0%, rgba(176, 208, 240, 0) 70%);
+  animation: blob-drift-3 40s ease-in-out infinite;
+}
+
+.blob-4 {
+  width: 26vw;
+  height: 26vw;
+  right: 18%;
+  top: 22vh;
+  background: radial-gradient(circle, rgba(196, 222, 245, 0.5) 0%, rgba(196, 222, 245, 0) 70%);
+  animation: blob-drift-1 52s ease-in-out infinite reverse;
+}
+
+/* 点阵层：与登录页同一个 keyframes */
+.bg-scene::after {
+  content: "";
+  position: absolute;
+  inset: -60px;
+  background-image: radial-gradient(rgba(26, 111, 181, 0.12) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(120% 90% at 22% 20%, #000 0%, rgba(0, 0, 0, 0.35) 52%, transparent 80%);
+  mask-image: radial-gradient(120% 90% at 22% 20%, #000 0%, rgba(0, 0, 0, 0.35) 52%, transparent 80%);
+  animation: grid-drift 28s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob, .bg-scene::after { animation: none; }
+}
