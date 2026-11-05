@@ -5253,3 +5253,99 @@ input[type="range"]::-moz-range-thumb {
   color: var(--text-faint);
   font-weight: 500;
 }
+
+/* ===== DNA 旁的小注解 ===== */
+.dna-notes {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.login-page.is-collapsed .dna-notes { opacity: 0; }
+
+.dna-note {
+  position: absolute;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: rgba(43, 71, 99, 0.62);
+  white-space: nowrap;
+}
+
+/* 右上：引线 + 说明，指向链上的一颗粒子 */
+.dna-note-tag {
+  left: 52%;
+  top: 21%;
+}
+
+.dna-leader {
+  display: block;
+  width: 54px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(26, 111, 181, 0.5), rgba(26, 111, 181, 0.06));
+  position: relative;
+}
+
+.dna-leader::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(26, 111, 181, 0.65);
+}
+
+/* 左下：交互提示 */
+.dna-note-hint {
+  left: 40%;
+  top: 73%;
+  color: rgba(43, 71, 99, 0.5);
+}
+
+.dna-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+  opacity: 0.55;
+}
+
+@media (max-width: 900px) {
+  .dna-notes { display: none; }
+}
+
+/* 标注改到螺旋左侧：右侧会被登录卡裁掉 */
+.dna-note-tag {
+  left: 21%;
+  top: 25%;
+  flex-direction: row-reverse;
+}
+
+/* 引线镜像：点落在右端，指向螺旋 */
+.dna-note-tag .dna-leader {
+  background: linear-gradient(270deg, rgba(26, 111, 181, 0.5), rgba(26, 111, 181, 0.06));
+}
+
+.dna-note-tag .dna-leader::before {
+  left: auto;
+  right: -3px;
+}
+
+/* 交互提示移到螺旋下方居左，避开右侧内容 */
+.dna-note-hint {
+  left: 34%;
+  top: 75%;
+}
+
+/* 标注挪到「标题之上、螺旋之左」的空档：21%/25% 会压住大标题 */
+.dna-note-tag {
+  left: 39%;
+  top: 15.5%;
+}

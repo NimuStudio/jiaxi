@@ -282,6 +282,18 @@ export default function LoginPage() {
       {/* 提示词挂在 main 下：父级有 transform 时 position:fixed 会失效 */}
       <p className="login-seam-hint">从右上往左下划，或点击任意处</p>
 
+      {/* DNA 旁的注解：说明这些粒子是什么，以及可以怎么玩（都是真实行为） */}
+      <div className="dna-notes" aria-hidden="true">
+        <p className="dna-note dna-note-tag">
+          <span className="dna-leader" />
+          每个点 = 一条病史
+        </p>
+        <p className="dna-note dna-note-hint">
+          <span className="dna-dot" />
+          鼠标移过去，粒子会散开
+        </p>
+      </div>
+
       <section className="login-hero">
         <p className="login-kicker">遗传健康的家族史梳理</p>
         <h1 className="login-title">
