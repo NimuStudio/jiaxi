@@ -20,6 +20,9 @@ out/
 .vscode/
 .idea/
 
+# 第三方期刊补充材料：版权归出版方，只在本地参考，不进仓库（docs 里记 URL 与结论）
+docs/djac176_supplementary_data.pdf
+
 # Remotion 缓存与渲染产物（成片不进仓库，作为提交材料单独上传）
 video/.remotion/
 video/out/
