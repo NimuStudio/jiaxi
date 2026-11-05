@@ -460,6 +460,8 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl   # 口语�
 
 ## 团队
 
+**队伍名称：无限进步**
+
 | 角色 | 姓名 | 主要工作 |
 | --- | --- | --- |
 | 队长 / 全栈 | （待填） | 产品定义、前端与 AI 链路、演示 |
