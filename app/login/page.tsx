@@ -218,6 +218,24 @@ export default function LoginPage() {
         </defs>
         {/* 缝分成两个半段：右上的一半是纯虚线（脉冲），左下的一半是实线（流光） */}
         <g className="login-seam-glow" mask="url(#seamMask)">
+          {/* 梭形亮带：两端收成一点、中间最宽 —— 有它才不像"一根线" */}
+          <path
+            d={(() => {
+              const N = 24;
+              const top: string[] = [];
+              const bottom: string[] = [];
+              for (let i = 0; i <= N; i++) {
+                const t = i / N;
+                const x = 100 * t;
+                const y = 12 + 88 * t;
+                const w = Math.pow(Math.sin(Math.PI * t), 0.65) * 6.5;
+                top.push(x.toFixed(2) + "," + (y - w).toFixed(2));
+                bottom.push(x.toFixed(2) + "," + (y + w).toFixed(2));
+              }
+              return "M" + top.join(" L") + " L" + bottom.reverse().join(" L") + " Z";
+            })()}
+            fill="url(#seamLensFill)"
+          />
           {/* 上半：纯虚线，滑开后朝右上飘半个行程 */}
           <g className="login-seam-half login-seam-half-dash">
             <line
@@ -258,25 +276,13 @@ export default function LoginPage() {
               x1="50" y1="56" x2="100" y2="100"
               pathLength="100"
               stroke="#ffffff"
-              strokeWidth="3.2"
+              strokeWidth="1.6"
               strokeLinecap="round"
-              strokeDasharray="18 82"
+              strokeDasharray="9 91"
               filter="url(#seamBlurSoft)"
               vectorEffect="non-scaling-stroke"
             />
           </g>
-          {/* 缝上闪烁的微粒 */}
-          {SEAM_SPARKS.map((s, i) => (
-            <circle
-              key={i}
-              className="login-seam-spark"
-              cx={s.t * 100}
-              cy={12 + s.t * 88}
-              r={s.r * 2.2}
-              fill="#ffffff"
-              style={{ animationDelay: `${s.delay}s` }}
-            />
-          ))}
         </g>
         <line
           x1="0"
@@ -301,6 +307,17 @@ export default function LoginPage() {
           pathLength="100"
         />
       </svg>
+
+      {/* 折叠态的文字层级：一句主张 + 三个步骤编号，避免整屏只有一条线 */}
+      <div className="login-intro" aria-hidden="true">
+        <p className="login-intro-line">把家里人的病史，画成一张看得懂的家系图</p>
+        <ol className="login-intro-steps">
+          <li><b>01</b><span>说病史</span></li>
+          <li><b>02</b><span>看家系</span></li>
+          <li><b>03</b><span>算风险</span></li>
+        </ol>
+      </div>
+
       <div className="login-stage">
         <DnaScene3D />
       </div>
