@@ -3,16 +3,15 @@
 import { useEffect, useRef } from "react";
 
 /**
- * 登录页背景：完全由粒子组成的 DNA，鼠标靠近时粒子散开、离开后弹回。
+ * 登录页背景：粒子化 DNA 双螺旋 + 鼠标排斥。
  *
- * 交互模型（每个粒子独立，O(n) 每帧）：
- *  1. 粒子有"家"——它在双螺旋上的三维位置，随视角缓慢旋转后投影到屏幕；
- *  2. 鼠标半径 R 内的粒子受到向外的推力，力度随距离平方衰减；
- *  3. 同时始终有一个把粒子拉回家（投影位置）的弹簧力，配合阻尼回弹。
+ * 结构上照着真实的 DNA 画（之前失败的版本是"两条链各自独立"，读起来像两条波浪线）：
+ *  - 两条主链：密排的"核苷酸珠"，每颗有高光，看起来是立体小球；
+ *  - 碱基对：两条链之间密集的横档，由小粒子连成一条条短棒 —— 这是"梯子"的横级；
+ *  - 整体绕 Z 轴倾斜约 17°，避免正面看像弹簧。
  *
- * 性能：
- *  - 光斑贴图预渲染成 3 张 64px 图，每帧只做 drawImage；
- *  - dpr 上限 1.5；窄屏自动降粒子数；标签页隐藏停帧；reduced-motion 只画一帧。
+ * 交互：鼠标 62px 内的粒子受平方反比推力散开，靠阻尼弹簧回位。
+ * 性能：所有贴图（光晕 / 珠体）预渲染，每帧只做 drawImage。
  */
 export function DnaParticles() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -25,12 +24,13 @@ export function DnaParticles() {
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
-    let angle = 0.15;
+    let angle = 0.18;
     let w = 1;
     let h = 1;
     const pointer = { x: -9999, y: -9999, active: false };
 
-    const sprite = (rgb: string) => {
+    /** 光晕贴图：只做一次 */
+    const glowSprite = (rgb: string) => {
       const size = 64;
       const c = document.createElement("canvas");
       c.width = size;
@@ -38,27 +38,64 @@ export function DnaParticles() {
       const g = c.getContext("2d");
       if (g) {
         const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-        // 边缘收硬：从 0.62 开始快速衰减，避免大范围柔光把相邻粒子连成一片
         grad.addColorStop(0, `rgba(${rgb}, 1)`);
-        grad.addColorStop(0.42, `rgba(${rgb}, 0.95)`);
-        grad.addColorStop(0.62, `rgba(${rgb}, 0.5)`);
-        grad.addColorStop(0.82, `rgba(${rgb}, 0.12)`);
+        grad.addColorStop(0.35, `rgba(${rgb}, 0.55)`);
+        grad.addColorStop(0.7, `rgba(${rgb}, 0.16)`);
         grad.addColorStop(1, `rgba(${rgb}, 0)`);
         g.fillStyle = grad;
         g.fillRect(0, 0, size, size);
       }
       return c;
     };
-    const SPR = { blue: sprite("92, 156, 224"), cyan: sprite("92, 212, 218"), white: sprite("236, 246, 255") };
+
+    /** 珠体贴图：带左上高光的实心球，看起来是立体的核苷酸 */
+    const beadSprite = (base: string, light: string) => {
+      const size = 64;
+      const c = document.createElement("canvas");
+      c.width = size;
+      c.height = size;
+      const g = c.getContext("2d");
+      if (g) {
+        // 球体主体
+        const body = g.createRadialGradient(size * 0.38, size * 0.34, size * 0.05, size * 0.5, size * 0.5, size * 0.5);
+        body.addColorStop(0, light);
+        body.addColorStop(0.55, base);
+        body.addColorStop(1, `${base}`);
+        g.fillStyle = body;
+        g.beginPath();
+        g.arc(size / 2, size / 2, size * 0.46, 0, Math.PI * 2);
+        g.fill();
+        // 边缘压暗 + 高光点
+        const rim = g.createRadialGradient(size * 0.5, size * 0.5, size * 0.3, size * 0.5, size * 0.5, size * 0.48);
+        rim.addColorStop(0, "rgba(0,0,0,0)");
+        rim.addColorStop(1, "rgba(10, 40, 70, 0.35)");
+        g.fillStyle = rim;
+        g.beginPath();
+        g.arc(size / 2, size / 2, size * 0.46, 0, Math.PI * 2);
+        g.fill();
+        g.beginPath();
+        g.arc(size * 0.36, size * 0.32, size * 0.09, 0, Math.PI * 2);
+        g.fillStyle = "rgba(255,255,255,0.9)";
+        g.fill();
+      }
+      return c;
+    };
+
+    const SPR = {
+      glowBlue: glowSprite("80, 150, 226"),
+      glowCyan: glowSprite("70, 200, 210"),
+      glowAmber: glowSprite("232, 168, 96"),
+      beadBlue: beadSprite("#2f6fb0", "#8fc0ea"),
+      beadCyan: beadSprite("#128f9c", "#8ee0e4"),
+      beadAmber: beadSprite("#b9762a", "#f0c08a"),
+    };
 
     type P = {
-      /** 三维家坐标（单位半径） */
       hx: number;
       hy: number;
       hz: number;
       size: number;
-      tint: 0 | 1 | 2; // blue / cyan / white
-      /** 屏幕空间偏移与速度 */
+      tint: 0 | 1 | 2;
       ox: number;
       oy: number;
       vx: number;
@@ -67,47 +104,67 @@ export function DnaParticles() {
 
     const rnd = mulberry(20261105);
     let particles: P[] = [];
+    let rungCount = 0;
 
     const build = () => {
       const out: P[] = [];
       const small = w < 760;
-      const strandN = small ? 620 : 1600;
-      const rungN = small ? 90 : 260;
-      const turns = 2.9;
+      // 关键比例：珠子要"少而大"才像参考图里的球体；粒子太密会叠成发光管子。
+      // 近景构图：圈数少 + 珠子几乎相触，才像参考图；圈数多了珠子必然被拉开成散点。
+      const pairs = small ? 58 : 96; // 碱基对（横档）数量 = 每条链的珠子数量（珠子几乎相触，靠高光区分个体）
+      const perStrand = 1; // 一段横档对应一颗链上珠子
+      const rungDots = small ? 5 : 7; // 每根横档由几颗小粒子连成
+      const turns = 1.55;
 
-      for (let i = 0; i < strandN; i++) {
-        const t = (i / strandN) * Math.PI * 2 * turns;
-        const y = i / strandN - 0.5;
-        for (const [phase, tint] of [[0, 0], [Math.PI, 1]] as const) {
-          // 半径带抖动：看起来是粒子云，不是一根管子
-          const r = 0.92 + rnd() * 0.16;
+      const strandA = (t: number) => Math.cos(t) * 1;
+      const strandB = (t: number) => Math.cos(t + Math.PI) * 1;
+
+      // ① 两条主链：密排的核苷酸珠
+      const total = pairs * perStrand;
+      for (let i = 0; i < total; i++) {
+        const t = (i / total) * Math.PI * 2 * turns;
+        const y = i / total - 0.5;
+        out.push({
+          hx: strandA(t),
+          hy: y * 0.88,
+          hz: Math.sin(t),
+          size: 1.7 + rnd() * 0.5,
+          tint: 0,
+          ox: 0, oy: 0, vx: 0, vy: 0,
+        });
+        out.push({
+          hx: strandB(t),
+          hy: y * 0.88,
+          hz: Math.sin(t + Math.PI),
+          size: 1.7 + rnd() * 0.5,
+          tint: 1,
+          ox: 0, oy: 0, vx: 0, vy: 0,
+        });
+      }
+
+      // ② 碱基对：横档上的小粒子（两种颜色交替，像 A-T / G-C 配对）
+      for (let p = 0; p < pairs; p++) {
+        const t = (p / pairs) * Math.PI * 2 * turns;
+        const y = p / pairs - 0.5;
+        const ax = strandA(t);
+        const az = Math.sin(t);
+        const bx = strandB(t);
+        const bz = Math.sin(t + Math.PI);
+        const amber = p % 2 === 0;
+        for (let d = 1; d < rungDots; d++) {
+          const k = d / rungDots;
           out.push({
-            hx: Math.cos(t + phase) * r,
-            hy: y * (0.86 + rnd() * 0.03),
-            hz: Math.sin(t + phase) * r,
-            size: 0.9 + rnd() * 1.5,
-            tint,
+            hx: ax + (bx - ax) * k,
+            hy: y * 0.88,
+            hz: az + (bz - az) * k,
+            size: 0.8 + rnd() * 0.25,
+            tint: amber ? 2 : 0,
             ox: 0, oy: 0, vx: 0, vy: 0,
           });
         }
       }
 
-      for (let i = 0; i < rungN; i++) {
-        const t = (i / rungN) * Math.PI * 2 * turns;
-        const y = i / rungN - 0.5;
-        const k = rnd();
-        const ax = Math.cos(t), az = Math.sin(t);
-        const bx = Math.cos(t + Math.PI), bz = Math.sin(t + Math.PI);
-        out.push({
-          hx: ax + (bx - ax) * k,
-          hy: y * 0.86,
-          hz: az + (bz - az) * k,
-          size: 0.7 + rnd() * 1.1,
-          tint: k < 0.5 ? 0 : 1,
-          ox: 0, oy: 0, vx: 0, vy: 0,
-        });
-      }
-
+      rungCount = pairs * (rungDots - 1);
       return out;
     };
 
@@ -122,55 +179,62 @@ export function DnaParticles() {
       particles = build();
     };
 
+    let last = 0;
+    let dt = 1 / 60;
+
     const draw = () => {
       ctx.globalCompositeOperation = "source-over";
       ctx.clearRect(0, 0, w, h);
 
-      // 底色柔光
-      const bg = ctx.createRadialGradient(w * 0.5, h * 0.42, 0, w * 0.5, h * 0.42, Math.max(w, h) * 0.75);
-      bg.addColorStop(0, "rgba(214, 232, 249, 0.5)");
-      bg.addColorStop(0.6, "rgba(234, 243, 252, 0.2)");
+      const bg = ctx.createRadialGradient(w * 0.5, h * 0.45, 0, w * 0.5, h * 0.45, Math.max(w, h) * 0.75);
+      bg.addColorStop(0, "rgba(212, 231, 249, 0.55)");
+      bg.addColorStop(0.6, "rgba(233, 242, 252, 0.22)");
       bg.addColorStop(1, "rgba(255, 255, 255, 0)");
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, w, h);
 
-      const cx = w * 0.46;
-      const cy = h * 0.44;
-      const base = Math.min(w * 0.3, h * 0.36);
-      const radius = base * 0.62;
-      const span = base * 2.3;
-      const persp = 620;
+      const cx = w * 0.47;
+      const cy = h * 0.40;
+      // 统一尺度：x/y/z 都在"模型单位"里计算，最后只乘以一个 base，
+      // 否则先按归一化坐标倾斜、再分别乘 radius/span，会把螺旋切成斜条纹。
+      const base = Math.min(w * 0.26, h * 0.31);
+      const RAD = 0.86; // 螺旋半径（模型单位）：近景视角下要宽
+      const HGT = 2.05; // 螺旋高度（模型单位）
+      const persp = 5.2; // 透视距离（模型单位）
+      const tiltZ = -0.26; // 整体倾斜
+      const cosZ = Math.cos(tiltZ);
+      const sinZ = Math.sin(tiltZ);
+
+      const R = 62; // 鼠标影响半径（收小）
+      const R2 = R * R;
+      const SOFT = 20;
+      const K = 6.4e6;
+      const OMEGA = 10.5;
+      const ZETA = 0.6;
+      const dragK = Math.exp(-3.6 * dt);
 
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
 
-      // ---- 物理参数（单位：像素 / 秒）----
-      const R = 95; // 影响半径：只有很近的粒子才被吹动
-      const R2 = R * R;
-      const SOFT = 26; // 软化长度：避免 d→0 时力发散成无穷大（真实物理里也有最小作用距离）
-      const K = 9.2e6; // 平方反比系数 = 力 × (d² + SOFT²)
-      const OMEGA = 10; // 弹簧角频率 ω：决定回弹快慢
-      const ZETA = 0.62; // 阻尼比 <1 略欠阻尼：回来时有一点轻微过冲，像真的
-      const DRAG = 3.6; // 空气阻力系数（速度每秒衰减 exp(-DRAG·dt)）
-      const MAX_V = 4200; // 速度上限，防止极端情况炸开
-      const dragK = Math.exp(-DRAG * dtReal);
-      const springA = OMEGA * OMEGA;
-      const dampA = 2 * ZETA * OMEGA;
-
-      ctx.globalCompositeOperation = "lighter";
-
       for (const p of particles) {
-        // 绕 Y 轴旋转后再投影
-        const x3 = p.hx * cos - p.hz * sin;
-        const z3 = p.hx * sin + p.hz * cos;
-        const k = persp / (persp - z3 * radius);
-        const homeX = cx + x3 * radius * k;
-        const homeY = cy + p.hy * span * k;
+        // 模型单位：hx/hz ∈ [-1,1]（乘以 RAD），hy ∈ [-0.5,0.5]（乘以 HGT）
+        const mx = p.hx * RAD;
+        const mz = p.hz * RAD;
+        const my = p.hy * HGT;
+        // 绕 Y 轴旋转
+        const x1 = mx * cos - mz * sin;
+        const z1 = mx * sin + mz * cos;
+        // 绕 Z 轴倾斜（此时 x/y 同尺度，倾斜才不会变形）
+        const px3 = x1 * cosZ - my * sinZ;
+        const py3 = x1 * sinZ + my * cosZ;
+
+        const k = persp / (persp - z1);
+        const homeX = cx + px3 * base * k;
+        const homeY = cy + py3 * base * k;
 
         let px = homeX + p.ox;
         let py = homeY + p.oy;
 
-        // ---- 受力：排斥（平方反比）----
         let ax = 0;
         let ay = 0;
         if (pointer.active) {
@@ -178,78 +242,56 @@ export function DnaParticles() {
           const dy = py - pointer.y;
           const d2 = dx * dx + dy * dy;
           if (d2 < R2) {
-            const soft2 = d2 + SOFT * SOFT;
-            const mag = K / soft2; // ~1/d²，近处强、远处迅速衰减
+            const mag = K / (d2 + SOFT * SOFT);
             const d = Math.sqrt(d2) || 1;
-            // 边界平滑：接近 R 时把力收敛到 0，避免"进圈瞬间被踢一下"
             const edge = 1 - d2 / R2;
             ax += (dx / d) * mag * edge;
             ay += (dy / d) * mag * edge;
           }
         }
+        ax += OMEGA * OMEGA * (homeX - px) - 2 * ZETA * OMEGA * p.vx;
+        ay += OMEGA * OMEGA * (homeY - py) - 2 * ZETA * OMEGA * p.vy;
 
-        // ---- 受力：弹簧（回家）+ 阻尼 ----
-        const dxHome = homeX - px;
-        const dyHome = homeY - py;
-        ax += springA * dxHome - dampA * p.vx;
-        ay += springA * dyHome - dampA * p.vy;
-
-        // ---- 积分（半隐式欧拉，dt 保证不同刷新率手感一致）----
         p.vx = (p.vx + ax * dt) * dragK;
         p.vy = (p.vy + ay * dt) * dragK;
         const sp = Math.hypot(p.vx, p.vy);
-        if (sp > MAX_V) {
-          p.vx = (p.vx / sp) * MAX_V;
-          p.vy = (p.vy / sp) * MAX_V;
+        if (sp > 3600) {
+          p.vx = (p.vx / sp) * 3600;
+          p.vy = (p.vy / sp) * 3600;
         }
         p.ox += p.vx * dt;
         p.oy += p.vy * dt;
         px = homeX + p.ox;
         py = homeY + p.oy;
 
-        const depth = Math.min(1, Math.max(0, (z3 + 1) / 2));
-        const s = p.size * k * (0.5 + depth * 0.8) * 1.5;
-        if (s <= 0.15) continue;
+        const depth = Math.min(1, Math.max(0, (z1 + 1) / 2));
+        const glow = p.tint === 0 ? SPR.glowBlue : p.tint === 1 ? SPR.glowCyan : SPR.glowAmber;
+        const bead = p.tint === 0 ? SPR.beadBlue : p.tint === 1 ? SPR.beadCyan : SPR.beadAmber;
 
-        const img = p.tint === 0 ? SPR.blue : p.tint === 1 ? SPR.cyan : SPR.white;
-        const core = Math.max(0.6, s * 0.42);
+        // 0.034 × base(~192) ≈ 15px 直径的珠子，才看得出是"球"
+        const bs = p.size * k * base * 0.034 * (0.62 + depth * 0.55);
+        if (bs <= 0.2) continue;
 
-        // ① 均匀的淡辉光：所有粒子都有，但很淡——既让链的走势读得出来，
-        //    又不会把相邻粒子糊成一片（这是"颗粒分明"和"看得出是螺旋"的平衡点）
-        const halo = core * (2.4 + depth * 0.9);
+        // ① 光晕（加法，负责"发光"）
+        const gs = bs * (2.2 + depth * 1.0);
         ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = 0.06 + depth * 0.14;
-        ctx.drawImage(img, px - halo / 2, py - halo / 2, halo, halo);
+        ctx.globalAlpha = (p.tint === 2 ? 0.12 : 0.16) + depth * 0.2;
+        ctx.drawImage(glow, px - gs / 2, py - gs / 2, gs, gs);
 
-        // ② 实心核心点（普通混合 + 不透明填充）→ 这一步决定"颗粒感"
+        // ② 珠体（普通混合，负责"颗粒分明"）
         ctx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = 1;
-        ctx.beginPath();
-        ctx.arc(px, py, core, 0, Math.PI * 2);
-        ctx.fillStyle =
-          p.tint === 0
-            ? `rgba(70, 140, 216, ${(0.55 + depth * 0.45).toFixed(3)})`
-            : p.tint === 1
-              ? `rgba(30, 182, 192, ${(0.55 + depth * 0.45).toFixed(3)})`
-              : `rgba(214, 236, 252, ${(0.5 + depth * 0.5).toFixed(3)})`;
-        ctx.fill();
+        ctx.globalAlpha = 0.55 + depth * 0.45;
+        ctx.drawImage(bead, px - bs / 2, py - bs / 2, bs, bs);
       }
 
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = "source-over";
     };
 
-    let last = 0;
-    let dtReal = 1 / 60;
-    let dt = 1 / 60;
     const loop = (now: number) => {
-      if (last) {
-        // 限制最大步长：标签页切回来时不会一次积分一大步导致"炸开"
-        dtReal = Math.min(0.05, (now - last) / 1000);
-      }
+      if (last) dt = Math.min(0.05, (now - last) / 1000);
       last = now;
-      dt = dtReal;
-      angle += 0.0026 * (dtReal * 60); // 旋转也与帧率无关
+      angle += 0.0026 * (dt * 60);
       draw();
       raf = window.requestAnimationFrame(loop);
     };
@@ -258,18 +300,11 @@ export function DnaParticles() {
     if (reduce) draw();
     else raf = window.requestAnimationFrame(loop);
 
-    const onResize = () => {
-      resize();
-      if (reduce) draw();
-    };
+    const onResize = () => { resize(); if (reduce) draw(); };
     const onVis = () => {
       if (reduce) return;
-      if (document.hidden) {
-        window.cancelAnimationFrame(raf);
-        raf = 0;
-      } else if (!raf) {
-        raf = window.requestAnimationFrame(loop);
-      }
+      if (document.hidden) { window.cancelAnimationFrame(raf); raf = 0; }
+      else if (!raf) raf = window.requestAnimationFrame(loop);
     };
     const onMove = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect();
