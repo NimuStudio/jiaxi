@@ -57,6 +57,13 @@ export default function LoginPage() {
     <main className="login-page">
       {/* 对角切割：左下浅蓝三角 + 一条发丝线 */}
       <div className="login-diagonal" aria-hidden="true" />
+      {/* 背景动效：漂移的极光 + 缓慢流动的点阵 */}
+      <div className="login-aurora" aria-hidden="true">
+        <span className="login-blob login-blob-1" />
+        <span className="login-blob login-blob-2" />
+        <span className="login-blob login-blob-3" />
+      </div>
+      <div className="login-grid" aria-hidden="true" />
       <svg
         className="login-diagonal-line"
         viewBox="0 0 100 100"
@@ -71,6 +78,19 @@ export default function LoginPage() {
           stroke="rgba(26, 111, 181, 0.2)"
           strokeWidth="1"
           vectorEffect="non-scaling-stroke"
+        />
+        {/* 沿切割线缓慢滑动的光点：让这条线活起来 */}
+        <line
+          className="login-diagonal-spark"
+          x1="0"
+          y1="12"
+          x2="100"
+          y2="100"
+          stroke="rgba(26, 111, 181, 0.55)"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+          pathLength="100"
         />
       </svg>
       <div className="login-stage">

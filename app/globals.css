@@ -3604,3 +3604,102 @@ input[type="range"]::-moz-range-thumb {
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 100%);
   mask-image: linear-gradient(180deg, transparent 0%, #000 14%, #000 100%);
 }
+
+/* ---------- 登录页背景动效 ---------- */
+.login-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login-blob {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.72;
+  will-change: transform;
+}
+
+.login-blob-1 {
+  width: 46vw;
+  height: 46vw;
+  left: -8vw;
+  top: 8vh;
+  background: radial-gradient(circle, rgba(138, 188, 232, 0.9) 0%, rgba(150, 196, 236, 0) 68%);
+  animation: blob-drift-1 34s ease-in-out infinite;
+}
+
+.login-blob-2 {
+  width: 38vw;
+  height: 38vw;
+  right: -6vw;
+  bottom: -10vh;
+  background: radial-gradient(circle, rgba(112, 200, 210, 0.75) 0%, rgba(126, 205, 214, 0) 66%);
+  animation: blob-drift-2 46s ease-in-out infinite;
+}
+
+.login-blob-3 {
+  width: 30vw;
+  height: 30vw;
+  left: 38%;
+  top: -6vh;
+  background: radial-gradient(circle, rgba(176, 208, 240, 0.7) 0%, rgba(186, 214, 243, 0) 70%);
+  animation: blob-drift-3 40s ease-in-out infinite;
+}
+
+@keyframes blob-drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6vw, 5vh, 0) scale(1.12); }
+}
+
+@keyframes blob-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(-7vw, -4vh, 0) scale(0.95); }
+}
+
+@keyframes blob-drift-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(0.95); }
+  50% { transform: translate3d(-4vw, 6vh, 0) scale(1.1); }
+}
+
+/* 点阵：整体缓慢平移 */
+.login-grid {
+  position: absolute;
+  inset: -60px;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(26, 111, 181, 0.2) 1px, transparent 1px);
+  background-size: 26px 26px;
+  -webkit-mask-image: radial-gradient(120% 90% at 22% 24%, #000 0%, rgba(0, 0, 0, 0.4) 52%, transparent 80%);
+  mask-image: radial-gradient(120% 90% at 22% 24%, #000 0%, rgba(0, 0, 0, 0.4) 52%, transparent 80%);
+  animation: grid-drift 28s linear infinite;
+}
+
+@keyframes grid-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 26px 26px; }
+}
+
+/* 沿对角线跑的光点 */
+.login-diagonal-spark {
+  stroke-dasharray: 6 94;
+  animation: spark-run 7s linear infinite;
+  filter: drop-shadow(0 0 4px rgba(26, 111, 181, 0.5));
+}
+
+@keyframes spark-run {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-blob,
+  .login-grid,
+  .login-diagonal-spark {
+    animation: none;
+  }
+  .login-diagonal-spark { opacity: 0.35; }
+}
