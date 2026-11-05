@@ -220,11 +220,16 @@ export default function ChatPage() {
   // 只存结构化结果（亲属+病名），原话仍只留在本页会话里。
   // 首次挂载先把本地副本读回来：否则初始的 [] 会立刻覆盖掉，
   // /cvd 靠这个键读心血管家族史，刷新一次 /chat 那条链路就永久失效。
-  const hydratedRef = useRef(false);
+  // 用 state（而非 ref）作为「可以写了」的门闩：ref 在同一 commit 内就被置 true，
+  // 挡不住紧随其后的写入 effect，会把已有家系覆盖成 []。
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
-    // 演示模式下不要恢复本地真实家系：否则 ?demo=1 与本地副本竞争，
-    // 同一 commit 里后声明的这里会覆盖 DEMO，看到的是用户自己的档案。
-    if (demoMode) return;
+    // 演示模式不恢复本地真实家系：否则 ?demo=1 会显示用户自己的档案。
+    // 这里直接读 URL（effect 里能同步拿到真值），不依赖可能还是首帧值的 state。
+    if (new URLSearchParams(window.location.search).get("demo") === "1") {
+      setHydrated(true);
+      return;
+    }
     try {
       const raw = localStorage.getItem("pedigree-persons");
       if (raw) {
@@ -234,7 +239,7 @@ export default function ChatPage() {
     } catch {
       /* 本地数据损坏就按空家系开始 */
     } finally {
-      hydratedRef.current = true;
+      setHydrated(true);
     }
   }, []);
 
@@ -242,13 +247,13 @@ export default function ChatPage() {
     // 演示数据不落盘：否则 /cvd 会把虚构亲属当成用户家族史，自动勾上 China-PAR 的家族史项
     if (demoMode) return;
     // 还没完成本地恢复时不要写，避免用 [] 覆盖既有家系
-    if (!hydratedRef.current) return;
+    if (!hydrated) return;
     try {
       localStorage.setItem("pedigree-persons", JSON.stringify(persons));
     } catch {
       /* 存不进去不影响本页功能 */
     }
-  }, [persons, demoMode]);
+  }, [persons, demoMode, hydrated]);
 
   /* ---------- 账户与云端同步 ----------
    * 本地 localStorage 始终是工作副本（未登录也一切照旧）；

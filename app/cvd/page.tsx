@@ -12,6 +12,7 @@ import { RELATION_LABEL, DISEASE_LABEL } from "@/lib/pedigree/viz";
 import type { RelationType } from "@/lib/pedigree/types";
 import { useCountUp } from "@/components/ui/useCountUp";
 import { LabReportImport } from "@/components/cvd/LabReportImport";
+import { NumberField } from "@/components/cvd/NumberField";
 
 /**
  * China-PAR 心血管风险页。
@@ -215,16 +216,13 @@ export default function CvdPage() {
         />
 
         <div className="factors-grid cvd-grid">
-          <label className="factors-field">
-            <span className="factors-label">年龄</span>
-            <input
-              type="number"
-              min={20}
-              max={90}
-              value={form.age}
-              onChange={(e) => update({ age: Number(e.target.value) || 0 })}
-            />
-          </label>
+          <NumberField
+            label="年龄"
+            value={form.age}
+            min={20}
+            max={90}
+            onChange={(age) => update({ age })}
+          />
           <label className="factors-field">
             <span className="factors-label">性别</span>
             <select
@@ -235,50 +233,36 @@ export default function CvdPage() {
               <option value="female">女</option>
             </select>
           </label>
-          <label className="factors-field">
-            <span className="factors-label">收缩压 mmHg</span>
-            <input
-              type="number"
-              min={80}
-              max={250}
-              value={form.sbp}
-              onChange={(e) => update({ sbp: Number(e.target.value) || 0 })}
-            />
-          </label>
-          <label className="factors-field">
-            <span className="factors-label">总胆固醇 mmol/L</span>
-            <input
-              type="number"
-              min={1}
-              max={15}
-              step={0.1}
-              value={form.totalCholesterolMmol}
-              onChange={(e) =>
-                update({ totalCholesterolMmol: Number(e.target.value) || 0 })
-              }
-            />
-          </label>
-          <label className="factors-field">
-            <span className="factors-label">HDL 胆固醇 mmol/L</span>
-            <input
-              type="number"
-              min={0.2}
-              max={5}
-              step={0.1}
-              value={form.hdlMmol}
-              onChange={(e) => update({ hdlMmol: Number(e.target.value) || 0 })}
-            />
-          </label>
-          <label className="factors-field">
-            <span className="factors-label">腰围 cm</span>
-            <input
-              type="number"
-              min={50}
-              max={180}
-              value={form.waistCm}
-              onChange={(e) => update({ waistCm: Number(e.target.value) || 0 })}
-            />
-          </label>
+          <NumberField
+            label="收缩压 mmHg"
+            value={form.sbp}
+            min={80}
+            max={250}
+            onChange={(sbp) => update({ sbp })}
+          />
+          <NumberField
+            label="总胆固醇 mmol/L"
+            value={form.totalCholesterolMmol}
+            min={1}
+            max={15}
+            step={0.1}
+            onChange={(v) => update({ totalCholesterolMmol: v })}
+          />
+          <NumberField
+            label="HDL 胆固醇 mmol/L"
+            value={form.hdlMmol}
+            min={0.2}
+            max={5}
+            step={0.1}
+            onChange={(v) => update({ hdlMmol: v })}
+          />
+          <NumberField
+            label="腰围 cm"
+            value={form.waistCm}
+            min={50}
+            max={180}
+            onChange={(waistCm) => update({ waistCm })}
+          />
           <label className="factors-field">
             <span className="factors-label">地域</span>
             <select

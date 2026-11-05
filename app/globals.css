@@ -5718,3 +5718,17 @@ input[type="range"]::-moz-range-thumb {
 
 /* 顶栏也同样处理：它是 sticky 容器，内部不该有横向滚动 */
 .topbar { overflow: clip; }
+
+/* 登录页折叠态唯一可聚焦的是一个视觉隐藏按钮：
+   原写法 `.login-seam-btn:focus-visible + .login-seam-hint` 永远不匹配（两者不是兄弟），
+   键盘用户聚焦时没有任何可见反馈。改成 :focus-within。 */
+.login-seam-entry:focus-within .login-seam-hint {
+  box-shadow: 0 0 0 3px rgba(26, 111, 181, 0.35), 0 6px 20px -10px rgba(16, 42, 68, 0.4);
+  color: var(--primary);
+  border-color: rgba(26, 111, 181, 0.42);
+}
+
+.login-seam-btn:focus-visible { outline: none; }
+
+/* 展开后按钮只是 opacity:0 + pointer-events:none，仍能被 Shift+Tab 聚焦到看不见的位置 */
+.login-page.is-expanded .login-seam-entry { visibility: hidden; }
