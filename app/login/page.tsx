@@ -188,124 +188,36 @@ export default function LoginPage() {
           <filter id="seamBlurSoft" x="-20%" y="-200%" width="140%" height="500%">
             <feGaussianBlur stdDeviation="2.5" />
           </filter>
-          {/* 两端渐隐：缝不该是一根从头亮到尾的硬线 */}
-          {/* 注意：mask 按「亮度」计算，这里必须用白色；用黑色会把整条缝擦成透明 */}
+          {/* mask 按亮度计算：必须用白色，用黑色会把整条缝擦成透明 */}
           <linearGradient id="seamFade" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.12" />
             <stop offset="12%" stopColor="#ffffff" stopOpacity="0.9" />
             <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
             <stop offset="88%" stopColor="#ffffff" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.12" />
           </linearGradient>
           <mask id="seamMask">
             <rect x="0" y="0" width="100" height="100" fill="url(#seamFade)" />
           </mask>
-          {/* 梭形亮带用的填充 */}
-          <linearGradient id="seamLensFill" x1="0" y1="12" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
-            <stop offset="30%" stopColor="#eaf6ff" stopOpacity="0.85" />
-            <stop offset="52%" stopColor="#ffffff" stopOpacity="1" />
-            <stop offset="74%" stopColor="#eaf9ff" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.14" />
-          </linearGradient>
-          {/* 沿缝的色温渐变：不是一根均匀的蓝线 */}
-          <linearGradient id="seamTone" x1="0" y1="12" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#6ab0e4" />
-            <stop offset="38%" stopColor="#a8d8f5" />
-            <stop offset="62%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#41c6cf" />
-          </linearGradient>
         </defs>
-        {/* 缝分成两个半段：右上的一半是纯虚线（脉冲），左下的一半是实线（流光） */}
+
         <g className="login-seam-glow" mask="url(#seamMask)">
-          {/* 梭形亮带：两端收成一点、中间最宽 —— 有它才不像"一根线" */}
-          <path
-            d={(() => {
-              const N = 24;
-              const top: string[] = [];
-              const bottom: string[] = [];
-              for (let i = 0; i <= N; i++) {
-                const t = i / N;
-                const x = 100 * t;
-                const y = 12 + 88 * t;
-                const w = Math.pow(Math.sin(Math.PI * t), 0.65) * 6.5;
-                top.push(x.toFixed(2) + "," + (y - w).toFixed(2));
-                bottom.push(x.toFixed(2) + "," + (y + w).toFixed(2));
-              }
-              return "M" + top.join(" L") + " L" + bottom.reverse().join(" L") + " Z";
-            })()}
-            fill="url(#seamLensFill)"
-          />
-          {/* 上半：纯虚线，滑开后朝右上飘半个行程 */}
-          <g className="login-seam-half login-seam-half-dash">
-            <line
-              x1="0" y1="12" x2="50" y2="56"
-              stroke="rgba(26, 111, 181, 0.3)"
-              strokeWidth="14"
-              filter="url(#seamBlurSoft)"
-              vectorEffect="non-scaling-stroke"
-            />
-            <line
-              x1="0" y1="12" x2="50" y2="56"
-              pathLength="100"
-              stroke="#1a6fb5"
-              strokeWidth="3.4"
-              strokeDasharray="2.6 3.4"
-              strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
-            />
+          {/* ---------- 没展开：一条完整的缝，脉冲 + 流动 ---------- */}
+          <g className="login-seam-single">
+            <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(26, 111, 181, 0.26)" strokeWidth="16" filter="url(#seamBlurSoft)" vectorEffect="non-scaling-stroke" />
+            <line className="login-seam-breathe" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#1a6fb5" strokeWidth="2.6" strokeDasharray="2.4 3.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            <line className="login-seam-flow" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="10 90" vectorEffect="non-scaling-stroke" />
           </g>
-          {/* 下半：实线 + 上面跑的一道流光，滑开后朝左下飘半个行程 */}
-          <g className="login-seam-half login-seam-half-solid">
-            <line
-              x1="50" y1="56" x2="100" y2="100"
-              stroke="rgba(26, 111, 181, 0.3)"
-              strokeWidth="14"
-              filter="url(#seamBlurSoft)"
-              vectorEffect="non-scaling-stroke"
-            />
-            <line
-              x1="50" y1="56" x2="100" y2="100"
-              stroke="#2f7fc4"
-              strokeWidth="3.4"
-              strokeLinecap="round"
-              vectorEffect="non-scaling-stroke"
-            />
-            <line
-              className="login-seam-flow"
-              x1="50" y1="56" x2="100" y2="100"
-              pathLength="100"
-              stroke="#ffffff"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeDasharray="9 91"
-              filter="url(#seamBlurSoft)"
-              vectorEffect="non-scaling-stroke"
-            />
+
+          {/* ---------- 展开后：右上是脉冲纯虚线，左下是流动直线 ---------- */}
+          <g className="login-seam-split">
+            <line className="login-seam-out-up" x1="0" y1="12" x2="100" y2="100" stroke="rgba(26, 111, 181, 0.28)" strokeWidth="12" filter="url(#seamBlurSoft)" vectorEffect="non-scaling-stroke" />
+            <line className="login-seam-out-up login-seam-breathe" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#1a6fb5" strokeWidth="2.8" strokeDasharray="2.6 3.4" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            <line className="login-seam-out-down" x1="0" y1="12" x2="100" y2="100" stroke="rgba(26, 111, 181, 0.28)" strokeWidth="12" filter="url(#seamBlurSoft)" vectorEffect="non-scaling-stroke" />
+            <line className="login-seam-out-down" x1="0" y1="12" x2="100" y2="100" stroke="#2f7fc4" strokeWidth="2.8" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+            <line className="login-seam-out-down login-seam-flow" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="10 90" vectorEffect="non-scaling-stroke" />
           </g>
         </g>
-        <line
-          x1="0"
-          y1="12"
-          x2="100"
-          y2="100"
-          stroke="rgba(26, 111, 181, 0.2)"
-          strokeWidth="1"
-          vectorEffect="non-scaling-stroke"
-        />
-        {/* 沿切割线缓慢滑动的光点：让这条线活起来 */}
-        <line
-          className="login-diagonal-spark"
-          x1="0"
-          y1="12"
-          x2="100"
-          y2="100"
-          stroke="rgba(26, 111, 181, 0.55)"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-          pathLength="100"
-        />
       </svg>
 
       {/* 折叠态的文字层级：一句主张 + 三个步骤编号，避免整屏只有一条线 */}

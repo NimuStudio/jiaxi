@@ -4346,3 +4346,44 @@ input[type="range"]::-moz-range-thumb {
   .login-intro { left: 22px; bottom: 26px; }
   .login-intro-line { font-size: 14px; margin-bottom: 12px; }
 }
+
+/* ---------- 缝：折叠态一条线 / 展开后两条线 ---------- */
+.login-seam-single, .login-seam-split { transition: opacity 0.55s ease; }
+.login-page.is-collapsed .login-seam-single { opacity: 1; }
+.login-page.is-expanded .login-seam-single { opacity: 0; }
+.login-page.is-collapsed .login-seam-split { opacity: 0; }
+.login-page.is-expanded .login-seam-split { opacity: 1; }
+
+/* 虚线呼吸 */
+.login-seam-breathe { animation: seam-breathe-dash 2.4s ease-in-out infinite; }
+@keyframes seam-breathe-dash {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* 白光流动（沿用 seam-flow 关键帧，确保存在） */
+@keyframes seam-flow {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+.login-seam-flow { animation: seam-flow 3.2s linear infinite; }
+
+/* 展开后两线分离：右上一条、左下一条，各走半个行程后停住 */
+.login-seam-out-up {
+  transition: transform 1.1s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.login-seam-out-down {
+  transition: transform 1.1s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.login-page.is-expanded .login-seam-out-up { transform: translate(7px, -7px); }
+.login-page.is-expanded .login-seam-out-down { transform: translate(-7px, 7px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .login-seam-breathe, .login-seam-flow { animation: none; }
+  .login-seam-out-up, .login-seam-out-down { transition: none; }
+}
+
+/* 覆盖：展开后整个 glow 组要保持可见，由 single/split 各自控制显隐 */
+.login-page.is-expanded .login-seam-glow {
+  opacity: 1;
+}
