@@ -308,17 +308,137 @@ function dropUnmentioned(segment: string, person: ExtractedPerson): ExtractedPer
     if (aliases.length === 0) return true;
     return aliases.some((a) => segment.includes(a));
   });
+  // 全被丢掉但原句里确有疾病词：用词表兜底，避免"什么都不剩"
+  if (kept.length === 0 && person.conditions.length > 0) {
+    const rescued = rescueCondition(segment);
+    if (rescued) return { ...person, conditions: [rescued] };
+  }
   return { ...person, conditions: kept };
+}
+
+const CN_DIGIT: Record<string, number> = {
+  零: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9,
+};
+
+/** 原文里出现过的所有数字（阿拉伯 + 中文 1~99），用于校验模型给的发病年龄 */
+export function agesInText(text: string): number[] {
+  const found = new Set<number>();
+  for (const m of text.matchAll(/\d+/g)) found.add(Number(m[0]));
+  for (const tok of text.match(/[一二三四五六七八九十]+/g) ?? []) {
+    let val = -1;
+    if (tok.includes("十")) {
+      const [a, b] = tok.split("十");
+      const tens = a ? (CN_DIGIT[a] ?? 0) : 1;
+      const ones = b ? (CN_DIGIT[b] ?? 0) : 0;
+      val = tens * 10 + ones;
+    } else if (tok.length === 1) {
+      val = CN_DIGIT[tok] ?? -1;
+    }
+    if (val > 0) found.add(val);
+  }
+  return [...found];
+}
+
+/**
+ * 发病年龄必须能在原文里找到，否则置空。
+ *
+ * 为什么会编：实测「我大伯胃癌，做完手术了。」模型吐出 onsetAge=50——原句没有任何年龄。
+ * 而年龄是 FINDRISC 与 China-PAR 的**核心输入**，编一个数会直接改变风险结论，
+ * 这是比"抽错病名"更危险的错误，因此在这里硬性接地。
+ */
+export function groundAge(segment: string, age: number | null): number | null {
+  if (age == null) return null;
+  return agesInText(segment).includes(age) ? age : null;
+}
+
+/**
+ * 病名被"必须能回查原文"校验丢掉后的兜底：用词表在原文里找最长命中。
+ *
+ * 场景：「我爷爷肝癌走的。」模型把病名泛化成「癌症」，而原句里没有「癌症」二字，
+ * 校验于是把整条抽掉，结果什么都没留下。这里用词表兜底——命中的别名**就在原文里**，
+ * 属于确定性证据，不是猜测；找不到就保持为空。
+ */
+export function rescueCondition(segment: string): ExtractedCondition | null {
+  let best: { code: string; alias: string } | null = null;
+  for (const d of DISEASES) {
+    for (const a of [...d.nounAliases, ...(d.verbAliases ?? [])]) {
+      if (segment.includes(a) && (best === null || a.length > best.alias.length)) {
+        best = { code: d.code, alias: a };
+      }
+    }
+  }
+  return best ? { code: best.code, onsetAge: null } : null;
+}
+
+/**
+ * 一句话里两个主语共享同一个病：「我爸和我叔都心梗。」
+ *
+ * 模型只会抽出第一个主语，第二个整条丢失（评测集 c14 的失分点）。
+ * 这里用词表补：当输出只有 1 人、句中却提到 ≥2 个亲属称谓、且出现并列词时，
+ * 把这组病复制给其他被提到的亲属。条件给得很窄，避免把不同人的病串错。
+ */
+export function expandSharedCondition(
+  segment: string,
+  persons: ExtractedPerson[],
+): ExtractedPerson[] {
+  if (persons.length !== 1) return persons;
+  const only = persons[0];
+  if (!only || only.conditions.length === 0) return persons;
+  if (!/(和|还有|都|、|跟)/.test(segment)) return persons;
+
+  const mentioned = RELATIONS.filter((spec) =>
+    spec.aliases.some((a) => segment.includes(a) && !isLocative(segment, a)),
+  );
+  if (mentioned.length < 2) return persons;
+
+  const out: ExtractedPerson[] = [only];
+  for (const spec of mentioned) {
+    if (spec.relation === only.relation) continue;
+    out.push({
+      relation: spec.relation,
+      sex: spec.sex,
+      conditions: only.conditions.map((c) => ({ ...c })),
+    });
+  }
+  return out;
 }
 
 /**
  * 从一段口语描述里抽取家系节点。
  * 抛错时带上原始输出，方便定位是语法问题还是模型问题。
  */
+/**
+ * 把口语说法归一成规范病名，再交给模型。
+ *
+ * 为什么需要：模型（Qwen3-1.7B + LoRA）对规范名词的召回远高于口语动词短语。
+ * 实测「我爸五十岁放了支架」「我爸做了心脏搭桥手术」在原始措辞下都输出 other，
+ * 即便把这些说法加进 GBNF 可选字面量也没有改善——模型自己就不选它们。
+ * 而这两类说法在词表里是**确定的**（「放了支架」就是冠心病），交给规则归一更可靠。
+ *
+ * 归一后仍用原文做关系校正与"必须能回查原文"校验，展示给用户的依据不受影响。
+ */
+export function normalizeSegment(segment: string): string {
+  const pairs: Array<[string, string]> = [];
+  for (const d of DISEASES) {
+    for (const a of [...d.nounAliases, ...(d.verbAliases ?? [])]) {
+      if (a !== d.label && a.length >= 2) pairs.push([a, d.label]);
+    }
+  }
+  // 长别名优先：「放了心脏支架」要在「心脏支架」之前替换，否则会残留半句
+  pairs.sort((x, y) => y[0].length - x[0].length);
+  let out = segment;
+  for (const [alias, label] of pairs) {
+    if (out.includes(alias)) out = out.split(alias).join(label);
+  }
+  return out;
+}
+
 export async function extractPedigree(
   text: string,
   options: ExtractOptions = {},
 ): Promise<ExtractResult> {
+  // 送模型的是归一世后的文本；校验与关系校正仍用原始 text
+  const modelInput = normalizeSegment(text);
   const res = await fetch(`${LLM_URL}/v1/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -327,7 +447,7 @@ export async function extractPedigree(
       messages: [
         { role: "system", content: SYSTEM_PROMPT_TEXT },
         ...(options.fewShot ? FEW_SHOT : []),
-        { role: "user", content: text },
+        { role: "user", content: modelInput },
       ],
       temperature: 0.1,
       max_tokens: 512,
@@ -355,10 +475,12 @@ export async function extractPedigree(
         conditions: (p.conditions ?? []).map((c) => ({
           ...c,
           code: LABEL_TO_CODE.get(c.code) ?? c.code,
+          onsetAge: groundAge(text, c.onsetAge ?? null),
         })),
       }))
       .map((p) => reconcileRelation(text, p))
-      .map((p) => dropUnmentioned(text, p));
+      .map((p) => dropUnmentioned(text, p))
+      .flatMap((p) => expandSharedCondition(text, [p]));
 
     // 模型偶尔会把同一个人输出两次（GBNF 允许数组重复），
     // 这里统一合并去重，避免上游拿到脏数据。

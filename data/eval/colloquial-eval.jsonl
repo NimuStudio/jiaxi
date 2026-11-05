@@ -19,3 +19,11 @@
 {"id":"c19","input":"我爸 52 岁那年放了心脏支架。","expected":[{"relation":"father","sex":"male","conditions":[{"code":"coronary-heart-disease","onsetAge":52}]}]}
 {"id":"c20","input":"我爷爷肝癌走的。","expected":[{"relation":"paternal-grandfather","sex":"male","conditions":[{"code":"liver-cancer","onsetAge":null}]}]}
 {"id":"c21","input":"我叔叔尿毒症，透析好几年了。","expected":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"chronic-kidney-disease","onsetAge":null}]}]}
+{"id":"c22","input":"我爸五十岁放了支架","expected":[{"relation":"father","sex":"male","conditions":[{"code":"coronary-heart-disease","onsetAge":50}]}]}
+{"id":"c23","input":"我爸做了心脏搭桥手术","expected":[{"relation":"father","sex":"male","conditions":[{"code":"coronary-heart-disease","onsetAge":null}]}]}
+{"id":"c24","input":"我妈装了支架","expected":[{"relation":"mother","sex":"female","conditions":[{"code":"coronary-heart-disease","onsetAge":null}]}]}
+{"id":"c25","input":"我外婆六十岁时放了支架","expected":[{"relation":"maternal-grandmother","sex":"female","conditions":[{"code":"coronary-heart-disease","onsetAge":60}]}]}
+{"id":"c26","input":"我爷爷血糖高","expected":[{"relation":"paternal-grandfather","sex":"male","conditions":[{"code":"type2-diabetes","onsetAge":null}]}]}
+{"id":"c27","input":"我奶奶血压高","expected":[{"relation":"paternal-grandmother","sex":"female","conditions":[{"code":"hypertension","onsetAge":null}]}]}
+{"id":"c28","input":"我叔叔搭了桥","expected":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"coronary-heart-disease","onsetAge":null}]}]}
+{"id":"c29","input":"我妈那边查过没事","expected":[]}
