@@ -237,21 +237,10 @@ export default function LoginPage() {
         </ol>
       </div>
 
-      {/* 右下的三个事实：填住空角，同时说明产品边界（数值与展开态一致） */}
-      <dl className="login-facts" aria-hidden="true">
-        <div>
-          <dt>25</dt>
-          <dd>种疾病可识别</dd>
-        </div>
-        <div>
-          <dt>2</dt>
-          <dd>套指南方程</dd>
-        </div>
-        <div>
-          <dt>100%</dt>
-          <dd>本机推理</dd>
-        </div>
-      </dl>
+      {/* 页脚一行：与底部提示同一基线，读作版权说明而不是规格表 */}
+      <p className="login-colophon" aria-hidden="true">
+        25 种疾病 · 2 套指南方程 · 100% 本机推理
+      </p>
 
       {/* 海报式细边框：给整屏一个版面边界，避免大字与画布边缘直接相撞 */}
       <div className="login-frame" aria-hidden="true" />
