@@ -30,6 +30,9 @@ export function DnaScene3D() {
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
     camera.position.set(0, 0.1, 14.2);
     camera.lookAt(0, 0, 0);
+    // 用「滚动相机」实现斜置：几何一点不变，只是把画面整体旋转，
+    // 比旋转物体更能保住螺旋的清晰度（旋转物体会让圈与圈在斜视下叠在一起）。
+    camera.rotateZ(-0.78);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
@@ -39,9 +42,9 @@ export function DnaScene3D() {
     host.appendChild(renderer.domElement);
 
     const group = new THREE.Group();
-    group.rotation.z = -0.08; // 只留一点点倾斜，保持螺旋可读
+    group.rotation.z = -0.02; // 物体本身基本竖直，斜置交给相机 roll
     group.position.y = 0.1;
-    group.position.x = -0.35;
+    group.position.x = -0.5;
     scene.add(group);
 
     // ---- 粒子参数 ----
