@@ -71,6 +71,7 @@ Lindström J, Tuomilehto J. **The diabetes risk score: a practical tool to predi
 | 大庆研究、DPP 的糖尿病发病风险下降幅度 | 仅有模糊印象 | 原始论文的效应量与随访年限 |
 | 结直肠癌/乳腺癌筛查起始年龄阈值 | 未核 | 对应中国指南原文条目 |
 | 各类生活方式干预的效应量 | 未核 | 随机对照试验或 meta 分析 |
+| 肺癌「家族史 × 吸烟」的效应量 | 仅核实题录，未读系数/效应量（见 docs/lung-cancer-interaction-evidence.md） | CKB 绝对风险模型（PMID 36083018）系数表；中文交互作用研究（中华流行病学杂志 2006(12)）原文 |
 
 ### 2026-11-04 核实完成：China-PAR 全套系数（原「待核实」第 1、2 项）
 
