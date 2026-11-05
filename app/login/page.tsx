@@ -199,6 +199,8 @@ export default function LoginPage() {
             <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(26, 111, 181, 0.26)" strokeWidth="16" filter="url(#seamBlurSoft)" vectorEffect="non-scaling-stroke" />
             <line className="login-seam-breathe" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#1a6fb5" strokeWidth="2.6" strokeDasharray="2.4 3.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
             <line className="login-seam-flow" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeDasharray="10 90" vectorEffect="non-scaling-stroke" />
+            {/* 光点：极短的小段 + 圆头，配合 dashoffset 动画就是沿线滑动的光粒 */}
+            <line className="login-seam-sparkline" x1="0" y1="12" x2="100" y2="100" pathLength="100" stroke="#ffffff" strokeWidth="3" strokeLinecap="round" strokeDasharray="0.9 13" vectorEffect="non-scaling-stroke" />
           </g>
 
           {/* ---------- 展开后：右上是脉冲纯虚线，左下是流动直线 ---------- */}
@@ -211,6 +213,11 @@ export default function LoginPage() {
           </g>
         </g>
       </svg>
+
+      {/* 中部的描边大字：作为图形元素（不是水印），只出现在折叠态 */}
+      <p className="login-logotype" aria-hidden="true">
+        PEDIGREE
+      </p>
 
       {/* 折叠态的文字层级：一句主张 + 三个步骤编号，避免整屏只有一条线 */}
       <div className="login-intro" aria-hidden="true">
