@@ -5691,3 +5691,19 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .enter-sweep { display: none; }
 }
+
+/* 入场动画只能用 opacity：
+   transform / filter 会让后代的 position: fixed 改为相对该元素定位，
+   而顶栏里挂着登录弹层（GlassModal），结果弹层被顶栏尺寸裁住、跑到屏幕中间。 */
+@keyframes app-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes app-enter-soft {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.app-main, .topbar { animation-name: app-enter; }
+.topbar { animation-name: app-enter-soft; }
