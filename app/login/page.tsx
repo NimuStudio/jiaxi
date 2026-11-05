@@ -189,12 +189,13 @@ export default function LoginPage() {
             <feGaussianBlur stdDeviation="2.5" />
           </filter>
           {/* 两端渐隐：缝不该是一根从头亮到尾的硬线 */}
+          {/* 注意：mask 按「亮度」计算，这里必须用白色；用黑色会把整条缝擦成透明 */}
           <linearGradient id="seamFade" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stopColor="#000" stopOpacity="0" />
-            <stop offset="18%" stopColor="#000" stopOpacity="0.85" />
-            <stop offset="50%" stopColor="#000" stopOpacity="1" />
-            <stop offset="82%" stopColor="#000" stopOpacity="0.85" />
-            <stop offset="100%" stopColor="#000" stopOpacity="0" />
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+            <stop offset="12%" stopColor="#ffffff" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="88%" stopColor="#ffffff" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.15" />
           </linearGradient>
           <mask id="seamMask">
             <rect x="0" y="0" width="100" height="100" fill="url(#seamFade)" />
@@ -221,17 +222,17 @@ export default function LoginPage() {
           <g className="login-seam-half login-seam-half-dash">
             <line
               x1="0" y1="12" x2="50" y2="56"
-              stroke="rgba(140, 205, 248, 0.5)"
-              strokeWidth="10"
+              stroke="rgba(26, 111, 181, 0.3)"
+              strokeWidth="14"
               filter="url(#seamBlurSoft)"
               vectorEffect="non-scaling-stroke"
             />
             <line
               x1="0" y1="12" x2="50" y2="56"
               pathLength="100"
-              stroke="#ffffff"
-              strokeWidth="2.6"
-              strokeDasharray="2.4 3.2"
+              stroke="#1a6fb5"
+              strokeWidth="3.4"
+              strokeDasharray="2.6 3.4"
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
             />
@@ -240,15 +241,15 @@ export default function LoginPage() {
           <g className="login-seam-half login-seam-half-solid">
             <line
               x1="50" y1="56" x2="100" y2="100"
-              stroke="rgba(140, 205, 248, 0.5)"
-              strokeWidth="10"
+              stroke="rgba(26, 111, 181, 0.3)"
+              strokeWidth="14"
               filter="url(#seamBlurSoft)"
               vectorEffect="non-scaling-stroke"
             />
             <line
               x1="50" y1="56" x2="100" y2="100"
-              stroke="url(#seamTone)"
-              strokeWidth="2.4"
+              stroke="#2f7fc4"
+              strokeWidth="3.4"
               strokeLinecap="round"
               vectorEffect="non-scaling-stroke"
             />
@@ -256,8 +257,8 @@ export default function LoginPage() {
               className="login-seam-flow"
               x1="50" y1="56" x2="100" y2="100"
               pathLength="100"
-              stroke="rgba(255, 255, 255, 0.95)"
-              strokeWidth="2.4"
+              stroke="#ffffff"
+              strokeWidth="3.2"
               strokeLinecap="round"
               strokeDasharray="18 82"
               filter="url(#seamBlurSoft)"
