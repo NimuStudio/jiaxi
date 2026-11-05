@@ -68,8 +68,8 @@ export function DnaParticles() {
     const build = () => {
       const out: P[] = [];
       const small = w < 760;
-      const strandN = small ? 520 : 1300;
-      const rungN = small ? 60 : 150;
+      const strandN = small ? 760 : 2000;
+      const rungN = small ? 90 : 260;
       const turns = 2.9;
 
       for (let i = 0; i < strandN; i++) {
@@ -140,8 +140,19 @@ export function DnaParticles() {
 
       const cos = Math.cos(angle);
       const sin = Math.sin(angle);
-      const R = 145; // 鼠标影响半径
+
+      // ---- 物理参数（单位：像素 / 秒）----
+      const R = 95; // 影响半径：只有很近的粒子才被吹动
       const R2 = R * R;
+      const SOFT = 26; // 软化长度：避免 d→0 时力发散成无穷大（真实物理里也有最小作用距离）
+      const K = 9.2e6; // 平方反比系数 = 力 × (d² + SOFT²)
+      const OMEGA = 10; // 弹簧角频率 ω：决定回弹快慢
+      const ZETA = 0.62; // 阻尼比 <1 略欠阻尼：回来时有一点轻微过冲，像真的
+      const DRAG = 3.6; // 空气阻力系数（速度每秒衰减 exp(-DRAG·dt)）
+      const MAX_V = 4200; // 速度上限，防止极端情况炸开
+      const dragK = Math.exp(-DRAG * dtReal);
+      const springA = OMEGA * OMEGA;
+      const dampA = 2 * ZETA * OMEGA;
 
       ctx.globalCompositeOperation = "lighter";
 
@@ -156,26 +167,40 @@ export function DnaParticles() {
         let px = homeX + p.ox;
         let py = homeY + p.oy;
 
-        // 鼠标排斥
+        // ---- 受力：排斥（平方反比）----
+        let ax = 0;
+        let ay = 0;
         if (pointer.active) {
           const dx = px - pointer.x;
           const dy = py - pointer.y;
           const d2 = dx * dx + dy * dy;
-          if (d2 < R2 && d2 > 0.01) {
-            const d = Math.sqrt(d2);
-            const force = (1 - d / R) ** 2 * 52;
-            p.vx += (dx / d) * force;
-            p.vy += (dy / d) * force;
+          if (d2 < R2) {
+            const soft2 = d2 + SOFT * SOFT;
+            const mag = K / soft2; // ~1/d²，近处强、远处迅速衰减
+            const d = Math.sqrt(d2) || 1;
+            // 边界平滑：接近 R 时把力收敛到 0，避免"进圈瞬间被踢一下"
+            const edge = 1 - d2 / R2;
+            ax += (dx / d) * mag * edge;
+            ay += (dy / d) * mag * edge;
           }
         }
 
-        // 弹簧回家 + 阻尼
-        p.vx += (homeX - px) * 0.055;
-        p.vy += (homeY - py) * 0.055;
-        p.vx *= 0.9;
-        p.vy *= 0.9;
-        p.ox += p.vx;
-        p.oy += p.vy;
+        // ---- 受力：弹簧（回家）+ 阻尼 ----
+        const dxHome = homeX - px;
+        const dyHome = homeY - py;
+        ax += springA * dxHome - dampA * p.vx;
+        ay += springA * dyHome - dampA * p.vy;
+
+        // ---- 积分（半隐式欧拉，dt 保证不同刷新率手感一致）----
+        p.vx = (p.vx + ax * dt) * dragK;
+        p.vy = (p.vy + ay * dt) * dragK;
+        const sp = Math.hypot(p.vx, p.vy);
+        if (sp > MAX_V) {
+          p.vx = (p.vx / sp) * MAX_V;
+          p.vy = (p.vy / sp) * MAX_V;
+        }
+        p.ox += p.vx * dt;
+        p.oy += p.vy * dt;
         px = homeX + p.ox;
         py = homeY + p.oy;
 
@@ -200,8 +225,17 @@ export function DnaParticles() {
       ctx.globalCompositeOperation = "source-over";
     };
 
-    const loop = () => {
-      angle += 0.0026;
+    let last = 0;
+    let dtReal = 1 / 60;
+    let dt = 1 / 60;
+    const loop = (now: number) => {
+      if (last) {
+        // 限制最大步长：标签页切回来时不会一次积分一大步导致"炸开"
+        dtReal = Math.min(0.05, (now - last) / 1000);
+      }
+      last = now;
+      dt = dtReal;
+      angle += 0.0026 * (dtReal * 60); // 旋转也与帧率无关
       draw();
       raf = window.requestAnimationFrame(loop);
     };
