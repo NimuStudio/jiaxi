@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "@/components/auth/AuthPanel";
 import { DemoBadge } from "@/components/layout/DemoBadge";
-import { EnterCurtain } from "@/components/layout/EnterCurtain";
+import { EnterSweep } from "@/components/layout/EnterSweep";
 
 /**
  * 全局应用壳：一条悬浮的圆角玻璃导航条 + 流动光斑背景。
@@ -112,8 +112,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {/* 进入主界面的开屏：与登录页同一套「沿对角线撕开」 */}
-      <EnterCurtain />
+      {/* 进入主界面：一束斜光扫过，内容在光后浮现（全程无空白帧） */}
+      <EnterSweep />
 
       {/* 光斑背景：纯 CSS，动画只动 transform（性能优先） */}
       <div className="bg-scene" aria-hidden="true">

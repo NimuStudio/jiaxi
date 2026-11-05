@@ -5625,3 +5625,69 @@ input[type="range"]::-moz-range-thumb {
   .enter-curtain { display: none; }
   .app-main, .topbar { animation: none; }
 }
+
+/* ===== 进入主界面：斜向扫光（替代此前那块不透明的幕布） ===== */
+/* 旧幕布的规则作废，避免残留不生效的样式 */
+.enter-curtain { display: none; }
+
+.enter-sweep {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 斜向光带：从左上扫到右下，宽而柔，扫过时不遮挡内容 */
+.enter-sweep-band {
+  position: absolute;
+  top: -30%;
+  left: -70%;
+  width: 58%;
+  height: 160%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.85) 42%,
+    rgba(26, 111, 181, 0.12) 58%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  filter: blur(3px);
+  transform: skewX(-28deg) translateX(0);
+  animation: enter-sweep-pass 950ms cubic-bezier(0.35, 0.02, 0.2, 1) both;
+}
+
+@keyframes enter-sweep-pass {
+  0% { transform: skewX(-28deg) translateX(0); opacity: 0; }
+  18% { opacity: 0.9; }
+  100% { transform: skewX(-28deg) translateX(430%); opacity: 0; }
+}
+
+/* 与登录页同一条对角线：光扫过时先亮一下再淡出，把「从哪来」接上 */
+.enter-sweep-line {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom right,
+    rgba(26, 111, 181, 0) 49.86%,
+    rgba(26, 111, 181, 0.5) 50%,
+    rgba(26, 111, 181, 0) 50.14%
+  );
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 82%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 82%);
+  animation: enter-line-fade 720ms ease both;
+}
+
+@keyframes enter-line-fade {
+  0% { opacity: 0.15; }
+  30% { opacity: 0.85; }
+  100% { opacity: 0; }
+}
+
+/* 内容在光后面浮现，比扫光略早一点开始，避免「先空一帧再出现」 */
+.app-main { animation-duration: 0.65s; animation-delay: 0.1s; }
+.topbar { animation-delay: 0.06s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .enter-sweep { display: none; }
+}
