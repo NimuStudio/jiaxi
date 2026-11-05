@@ -316,6 +316,59 @@ function dropUnmentioned(segment: string, person: ExtractedPerson): ExtractedPer
   return { ...person, conditions: kept };
 }
 
+/** 否定词：出现即表示这一分句在否认患病 */
+const NEGATION = /(没有|没得|没患|没查出|没查出来|查过没事|未见|否认|未发现|不属于|不是)/;
+/** 转折连词：否定只作用于它之前的那一小段（「没有糖尿病，但有高血压」） */
+const CONTRAST = /(但|不过|可是|然而|而是)/;
+/** 不确定表述：不能当确诊记录 */
+const UNCERTAIN = /(好像|可能|疑似|听说|据说|是不是|大概|也许|估计|不确定)/;
+
+/**
+ * 极性 / 确定性守卫。
+ *
+ * 实测「我爷爷没有糖尿病」会被模型抽成一个「爷爷·other」节点，
+ * 「我奶奶好像有糖尿病」会被记成确诊 2 型糖尿病 —— 这会让家系图凭空多出患病亲属，
+ * 进而改变 FINDRISC 的家族史分。约束解码保证不了极性，只能在这里拦。
+ *
+ * 规则保守处理：
+ *  - 分句里出现否定词、且否定之后没有转折 → 丢掉该分句抽出的所有病（整人无病则整人丢弃）；
+ *  - 分句里出现不确定表述 → 同样丢弃（宁可不记，也不把「可能」写成确诊）。
+ */
+export function dropNegatedOrUncertain(
+  segment: string,
+  person: ExtractedPerson,
+): ExtractedPerson | null {
+  // 逐分句判断：句号/分号/逗号切开后，只丢弃「被否定或被不确定修饰」的那些分句里的病
+  const clauses = segment.split(/[。；;！!？?\n]/).filter((s) => s.trim().length > 0);
+  if (clauses.length === 0) return person;
+
+  const isNegated = (clause: string) => {
+    const hit = NEGATION.exec(clause);
+    if (!hit) return false;
+    const rest = clause.slice(hit.index);
+    // 否定之后紧跟转折，说明后半句在陈述别的病，不能整句作废
+    return !CONTRAST.test(rest);
+  };
+
+  const kept = person.conditions.filter((c) => {
+    const spec = DISEASES.find((d) => d.code === c.code);
+    const aliases = spec ? [...spec.nounAliases, ...(spec.verbAliases ?? [])] : [];
+    // 找到提到这个病的那一分句
+    const clause =
+      aliases.length > 0
+        ? clauses.find((s) => aliases.some((a) => s.includes(a))) ?? segment
+        : segment;
+    if (UNCERTAIN.test(clause)) return false;
+    return !isNegated(clause);
+  });
+
+  if (kept.length === 0) {
+    // 「other」这种没有具体病名的占位节点，在被否定的句子里不该留下。
+    return null;
+  }
+  return { ...person, conditions: kept };
+}
+
 const CN_DIGIT: Record<string, number> = {
   零: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9,
 };
@@ -482,7 +535,9 @@ export async function extractPedigree(
         })),
       }))
       .map((p) => reconcileRelation(text, p))
-      .map((p) => dropUnmentioned(text, p));
+      .map((p) => dropUnmentioned(text, p))
+      .map((p) => dropNegatedOrUncertain(text, p))
+      .filter((p): p is ExtractedPerson => p !== null);
 
     // 共享病扩展必须对「整组」调用一次：逐个传入会让 persons.length===1 的守卫永远成立，
     // 于是并列句里每个人的病都被复制给段内其他所有称谓
