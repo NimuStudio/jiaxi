@@ -4913,3 +4913,90 @@ input[type="range"]::-moz-range-thumb {
 
 /* 骨架躲开缝的交叉点：右下挪一点，缝从「父辈」上方掠过，不压住标签 */
 .login-scaffold { left: 60%; top: 47.5%; }
+
+/* ===== 折叠态回到「纯排版海报」：留白靠字号与节奏撑住，中间不再放图形 ===== */
+.login-intro {
+  left: 64px;
+  bottom: 64px;
+  max-width: min(48ch, 50vw);
+}
+
+.login-intro-kicker {
+  margin-bottom: 22px;
+}
+
+.login-intro-line {
+  font-size: clamp(30px, 3.4vw, 50px);
+  line-height: 1.22;
+  letter-spacing: -0.022em;
+  margin-bottom: 20px;
+}
+
+.login-intro-sub {
+  font-size: 14.5px;
+  line-height: 1.75;
+  margin-bottom: 40px;
+  max-width: 32em;
+}
+
+/* 步骤带上一条细横线，和标题块形成上下两条水平线 */
+.login-intro-steps {
+  padding-top: 18px;
+  border-top: 1px solid rgba(26, 111, 181, 0.16);
+  max-width: 26em;
+}
+
+/* 骨架相关规则作废，避免留下不生效的样式 */
+.login-scaffold { display: none !important; }
+
+@media (max-width: 900px) {
+  .login-intro-line { font-size: 26px; }
+  .login-intro { left: 24px; bottom: 32px; }
+}
+
+/* 标题字号收到「两行正好」的档位：50px 时第二行放不下，会断出孤立的两个词 */
+.login-intro-line {
+  font-size: clamp(26px, 2.9vw, 44px);
+  line-height: 1.26;
+  margin-bottom: 22px;
+}
+
+/* 右下三行事实：与左下标题块形成对角平衡，内容都是真实数值 */
+.login-facts {
+  position: absolute;
+  right: 64px;
+  bottom: 64px;
+  z-index: 9;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  text-align: right;
+  transition: opacity 0.5s ease;
+}
+
+.login-page.is-expanded .login-facts { opacity: 0; pointer-events: none; }
+
+.login-facts div {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.login-facts dt {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #0d2b45;
+}
+
+.login-facts dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 900px) {
+  .login-facts { display: none; }
+}
