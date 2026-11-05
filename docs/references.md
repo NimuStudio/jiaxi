@@ -68,11 +68,28 @@ Lindström J, Tuomilehto J. **The diabetes risk score: a practical tool to predi
 
 | 内容 | 现状 | 需要什么才能用 |
 |---|---|---|
-| China-PAR 分性别 β 系数与交互项 | 只有公式形式，无系数表 | Circulation 2016;134(19):1430-1440 的补充材料 |
-| China-PAR 基线生存率 S10（男 0.97 / 女 0.99） | 来自他文转引（MDPI 论文） | 核对原文表格 |
 | 大庆研究、DPP 的糖尿病发病风险下降幅度 | 仅有模糊印象 | 原始论文的效应量与随访年限 |
 | 结直肠癌/乳腺癌筛查起始年龄阈值 | 未核 | 对应中国指南原文条目 |
 | 各类生活方式干预的效应量 | 未核 | 随机对照试验或 meta 分析 |
+
+### 2026-11-04 核实完成：China-PAR 全套系数（原「待核实」第 1、2 项）
+
+- **系数来源（双源交叉一致）**：
+  1. Yang X, et al. *Circulation*. 2016;134:1430-1440, Supplemental Table 1
+     （PDF：https://www.cvdrisk.com.cn/uploadedFile/20171227114818843.pdf ）
+  2. T/JPMA 024-2024《社区人群心血管病风险筛查技术规范》附录 C/D，
+     转引自《中国心血管病风险评估和管理指南》（中国循环杂志 2019;34(1):4-28）
+     （PDF：https://jspma.org/data/upload/file/202411/d3b637aae7929cef86d83e706b67655d.pdf ）
+- **关键发现——女性基线生存率**：Circulation 补充材料表格印作 0.99（两位小数），
+  与论文自己的示例矛盾（女性 60 岁示例应为 10.1%，用 0.99 只得 6.9%）。
+  按正文 Table 2 四个年龄点反推为 0.9851，与 2019 指南/团标完全一致。
+  **实现取 0.9851**，见 `src/lib/risk/chinapar.ts` 注释。
+- **验证**：论文正文 Table 2 全部 8 个点（男女 × 40/50/60/70 岁）已写进
+  `chinapar.test.ts` 回归测试，当前全部通过。
+- **实现位置**：`src/lib/risk/chinapar.ts`、`app/cvd/page.tsx`；
+  知识库条目 `kb-chinapar-what` / `kb-chinapar-fh` / `kb-ascvd-band`。
+- **家族史定义**：父母、兄弟姊妹中至少一人患心肌梗死或脑卒中（T/JPMA B.6）。
+  该项仅进入男性方程（6.221 − 1.534×ln 年龄，注意年龄交互使约 61 岁后转负）。
 
 ## 四、核实规则（后续所有引用都按这个来）
 

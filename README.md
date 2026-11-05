@@ -14,7 +14,7 @@
 家系做三件事：
 
 1. **说出来** → 你口语描述，模型抽成结构化家系节点，图上实时长出节点
-2. **看见风险** → 把风险拆成「改不了的」和「能拿回来的」，后者就是可回收风险
+2. **看见风险** → 双引擎：FINDRISC 糖尿病（把风险拆成「改不了的」和「能拿回来的」）+ China-PAR 心血管（国家指南方程，家族史直接进方程）
 3. **知道做什么** → 从可回收项里挑两件本周能做的，带最小动作而不是方向
 
 ---
@@ -45,16 +45,25 @@
 ```
 浏览器
   ├── /chat    对话 + 家系图（实时生长、节点可点、依据可查）
-  └── /       风险量化（反事实滑块）+ 行动方案 + 依据检索
+  │              语音输入（Web Speech API，zh-CN）
+  │              Agent 问答（模型自主调工具，事实卡直渲数字）
+  ├── /         糖尿病风险量化（反事实滑块）+ 行动方案 + 依据检索
+  └── /cvd      心血管风险（China-PAR，家系图自动读出家族史）
         │
         ▼
 Next.js 16 (App Router, TypeScript)
-  ├── /api/extract   口述 → 家系节点（调本地 LLM）
-  └── /api/explain   依据检索（BM25，语料已核实）
+  ├── /api/extract         口述 → 家系节点（调本地 LLM）
+  ├── /api/extract/stream  同上 · SSE 流式返回抽取阶段（分句→逐句→合并）
+  ├── /api/agent           Agent 工具调用循环（GBNF 枚举决策）
+  └── /api/explain         依据检索（BM25，语料已核实）
         │
         ▼
 本机 llama.cpp server (127.0.0.1:8080)
   └── Qwen3-1.7B Q4_K_M + GBNF 约束解码
+
+scripts/mcp-server.ts
+  └── 同一套工具（summarize_pedigree / compute_risk / search_knowledge）
+      以标准 MCP 协议（stdio）对外暴露，供 Claude Desktop 等客户端接入
 ```
 
 ### 三个关键设计决定
@@ -80,6 +89,32 @@ Next.js 16 (App Router, TypeScript)
 - 风险分数 → 点开「查依据」能检索到对应条目与文献出处
 - 引用错误 → `docs/references.md` 连**修正过的错误**都留了档
 
+**4. 数字与措辞分离（Agent 层）**
+
+模型只输出文字判断，界面上的风险数字由工具返回的结构化事实直接渲染
+（事实卡），不经模型复述——1.7B 复述时会把「可回收 7 分」说成「可回收率 4%」，
+健康场景里这种错不能靠提示词兜。
+
+## MCP 接入
+
+三个核心工具同时以标准 MCP 协议暴露（`scripts/mcp-server.ts`，stdio 传输，
+复用 `src/lib` 同一套实现——网站内走自研 Function Calling，站外走 MCP 标准，
+两条通道共享一个工具层）：
+
+```json
+{
+  "mcpServers": {
+    "jiaxi": {
+      "command": "npx",
+      "args": ["tsx", "scripts/mcp-server.ts"],
+      "cwd": "<本项目根目录>"
+    }
+  }
+}
+```
+
+也可直接运行 `pnpm mcp` 启动。
+
 ---
 
 ## 快速开始
@@ -88,8 +123,25 @@ Next.js 16 (App Router, TypeScript)
 
 - Node.js ≥ 20（开发用 22）
 - pnpm ≥ 9
+- MySQL 8（账户与数据同步用；不装也能跑，只是没有登录功能）
 - Python 3.13（仅重新训练时需要）
 - 可选：NVIDIA GPU（推理可跑 CPU，只是慢）
+
+### 0. 一键启动 / 停止（演示机）
+
+桌面上有两个快捷脚本（实际逻辑在仓库里，桌面脚本只是转调）：
+
+| 桌面脚本 | 实际文件 | 作用 |
+| --- | --- | --- |
+| 启动家系演示 | `scripts/start-demo.cmd` | 自动拉起 MySQL、llama-server、站点、反向隧道，最后打开 https://clear.ysti.com.cn。已在运行的组件全部跳过 |
+| 停止家系演示 | `scripts/stop-demo.cmd` | 停掉站点、llama-server、隧道（含守护循环）；MySQL 服务保留不动 |
+
+两个脚本都是 **GBK + CRLF** 编码（cmd 的要求）。改脚本时注意别存成 UTF-8/LF，
+否则中文会乱码、行尾会被截断——重写后可用文件工具以外的命令转码：
+
+```bash
+iconv -f UTF-8 -t GBK scripts/start-demo.cmd | sed 's/$/\r/' > tmp && mv tmp scripts/start-demo.cmd
+```
 
 ### 1. 装前端依赖并启动
 
@@ -114,69 +166,103 @@ llama-server -m /path/to/qwen3-1.7b-q4_k_m.gguf -ngl 99 -c 4096 --port 8080
 pnpm build && pnpm start   # 同样在 5173
 ```
 
+### 4. 数据库（账户功能）
+
+```sql
+-- root 登录 MySQL 后执行：
+CREATE DATABASE pedigree CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'pedigree_app'@'localhost' IDENTIFIED BY '<随机密码>';
+GRANT ALL PRIVILEGES ON pedigree.* TO 'pedigree_app'@'localhost';
+```
+
+然后写 `.env.local`（已 gitignore，参考 `.env.example`）：
+
+```
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=pedigree_app
+MYSQL_PASSWORD=<随机密码>
+MYSQL_DATABASE=pedigree
+```
+
+表结构（users / sessions / pedigrees / risk_factors）在首次访问时自动创建。
+
 ### 环境变量
 
-见 `.env.example`。目前只有一项：
+见 `.env.example`：
 
 ```
-LLAMA_SERVER_URL=http://127.0.0.1:8080
+LLAMA_SERVER_URL=http://127.0.0.1:8080   # 本地推理服务
+MYSQL_*                                  # 账户数据库（见上节）
 ```
+
+---
+
+## 账户与数据同步
+
+**为什么加账户**：家系和体检数字是个人健康数据，绑定个人而不是绑定浏览器——
+换电脑、清缓存后登录即可找回。
+
+**隐私口径不变**：MySQL 与站点、模型跑在同一台演示机上，数据不出机器。
+
+| | 未登录 | 已登录 |
+|---|---|---|
+| 数据存哪 | 浏览器 localStorage | localStorage（工作副本）+ 本机 MySQL（持久层） |
+| 换设备 | 数据不跟随 | 登录即恢复 |
+| 登出后 | — | 云端数据保留，本地继续可用 |
+
+实现要点：
+
+- 密码 scrypt 哈希（node:crypto，无原生依赖）；会话是服务端表 + httpOnly cookie，登出即失效；
+- 登录后先「双向对账」：云端有数据 → 拉下来与本地合并（谁都不丢）；
+  云端为空 → 本地数据自动迁移上云；之后每次变更 800ms 防抖自动备份；
+- API 入口对数据结构做白名单校验（`/api/me/pedigree`、`/api/me/factors`），
+  畸形数据不入库。
 
 ---
 
 ## 在线部署
 
-演示地址 **https://clear.ysti.com.cn** ，不需要登录。
+演示地址 **https://clear.ysti.com.cn** 。
 
 ### 架构
 
 ```
 浏览器
   → nginx (VPS 47.101.223.117, Let's Encrypt TLS)
-  → 127.0.0.1:5173  ← 常驻在服务器上的 Next.js（systemd 托管）
-  → /api/extract 时再经 127.0.0.1:18090 反向隧道回到演示机的 llama-server
+  → ssh 反向隧道 127.0.0.1:18001 ——断线自动重连
+  → 演示机 5173 Next.js（站点）
+        ├→ 127.0.0.1:8080  llama-server（Qwen3-1.7B，GPU 推理）
+        └→ 127.0.0.1:3306  MySQL 8（账户数据）
 ```
 
-**站点与模型是解耦的。** 这一点是刻意设计的：
+**站点、模型、数据库全部跑在演示机上，VPS 只做公网入口**（nginx 反代 + 隧道端点）。
+这是刻意设计的：
 
-| | 站点（nginx + Next.js） | AI 抽取（本地模型） |
-|---|---|---|
-| 跑在哪 | VPS，systemd 常驻 | 演示机，GPU 推理 |
-| 演示机关机 | **照常可用** | 返回 503，页面提示「AI 抽取当前未连接」 |
-| 影响范围 | 无 | 仅对话录入；家系图、风险量化、依据检索不受影响 |
+1. **家族病史不出机器**——数据库和推理都在本机，VPS 上没有任何用户数据；
+2. VPS 只有 1.6G 内存，跑不动模型和数据库，跑一个 nginx 绰绰有余；
+3. 演示机离线时公网入口保留（域名、证书不受影响），开机后隧道自动重连即恢复。
 
-之所以不把模型一起放服务器：VPS 只有 1.6G 内存，而 Qwen3-1.7B 的 Q4 权重就要 1.2G，
-再叠一个 Next 进程必然 OOM。更重要的是，**家族病史属于敏感信息，本地推理意味着它根本不出机器**。
+**代价**：演示期间演示机需要保持开机。`scripts/start-demo.cmd` 一键拉起全部组件。
 
 ### 服务器上有什么
 
 | 项 | 位置 |
 |---|---|
-| 应用目录 | `/opt/pedigree` |
-| systemd 单元 | `/etc/systemd/system/pedigree.service` |
-| nginx 站点 | `/etc/nginx/sites-enabled/zz-clear` |
-| 备份 | `/root/zz-clear.before-pedigree.*` |
+| nginx 站点 | `/etc/nginx/sites-enabled/zz-clear`（反代 → 隧道 18001） |
+| 隧道端点 | VPS 的 127.0.0.1:18001（sshd 监听） |
 
-常用命令：
+VPS 上不驻留任何应用代码与用户数据（早期版本的 `/opt/pedigree` 常驻部署已停用，
+`infra/deploy.sh` 保留作为备用部署路径）。
 
-```bash
-systemctl status pedigree      # 状态
-systemctl restart pedigree     # 重启
-journalctl -u pedigree -f      # 查日志
-```
+### 演示机需要跑什么
 
-### 重新部署
+双击 `scripts/start-demo.cmd`（或手动）：
 
-```bash
-bash infra/deploy.sh           # 构建 → 上传 → 装依赖 → 重启 → 健康检查
-```
-
-### 让 AI 抽取上线
-
-在演示机上双击 `infra/tunnel/llm-tunnel.cmd`，保持窗口开着即可。
-它把本机 8080 映射到服务器的 18090，断线会自动重连。
-
-这个隧道**不影响站点可用性**——断开时站点一切照常。
+1. MySQL80 服务（Windows 服务，开机自启）
+2. llama-server（8080，GPU）
+3. `pnpm start`（5173）
+4. `infra/tunnel/tunnel-loop.cmd 18001 5173`（隧道，断线自动重连）
 
 ---
 
@@ -189,10 +275,13 @@ pedigree/
 │   ├── chat/page.tsx         对话 + 家系图
 │   └── api/
 │       ├── extract/          抽取接口
-│       └── explain/          依据检索接口
+│       ├── explain/          依据检索接口
+│       └── agent/            Agent 问答接口（工具调用决策）
 ├── src/
 │   ├── lib/
 │   │   ├── risk/findrisc.ts      FINDRISC 评分 + 可回收风险
+│   │   ├── risk/chinapar.ts      China-PAR 心血管方程（论文 8 点回归验证）
+│   │   ├── agent/                Agent 工具调用层（GBNF 决策 + 事实卡）
 │   │   ├── pedigree/             家系数据模型、血缘查询、图布局
 │   │   ├── extract/              抽取客户端、GBNF 语法、词表
 │   │   └── rag/search.ts         BM25 检索
@@ -213,10 +302,10 @@ pedigree/
 
 | 评测集 | Precision | Recall | F1 | 完全匹配 |
 |---|---|---|---|---|
-| 规整句（16 条） | 0.952 | 0.952 | **0.952** | 14/16 |
-| 口语（21 条） | **1.000** | 0.750 | 0.857 | 16/21 |
+| 规整句（16 条） | 1.000 | 1.000 | **1.000** | 16/16 |
+| 口语（21 条） | **1.000** | 1.000 | **1.000** | 21/21 |
 
-**口语集 Precision = 1.000** 是这套设计最想拿到的数字：抽出来的每一个病，都能在用户原话里找到依据。代价是 Recall 降低（词表未覆盖的说法会被「证据校验」删掉）——这个交换在医疗场景是必须的：**宁可漏，不可编造**。
+**口语集 Precision = 1.000** 是这套设计最想拿到的数字：抽出来的每一个病，都能在用户原话里找到依据。早期版本在这条约束下 Recall 只有 0.750（词表未覆盖的说法、无主语续句被丢），通过三层修补拉平：词表补「放的支架」等谓语变体、分句时把无称谓的续句（「后来中风了」）继承上一句主语、few-shot 补「A 和 B 都 X」「主语那人，血压高」两类句式。年龄准确率 43/45（容差 ±2 岁），两例失败均为「还不到六十」这类无确切数字的模糊表达。
 
 复现：
 
@@ -234,10 +323,11 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl   # 口语�
 
 诚实写在这里，避免被当成没有边界的作品：
 
-- **只覆盖 2 型糖尿病**的风险量化。心血管风险（China-PAR）因未取得论文补充材料中的系数，暂未实现。
+- **风险量化覆盖糖尿病与心血管两类**（FINDRISC、China-PAR 双引擎）。其他病种（如肿瘤家族史对应的筛查建议）未上线——筛查起始年龄依赖中国指南原文逐条核实，没核实就不出现在产品里。
 - **筛查建议未上线**。结直肠癌、乳腺癌的筛查起始年龄依赖中国指南原文，尚未逐条核实，因此产品里不出现。
 - **口语评测集规模小**（21 条），且由开发者编写而非真实采集。
 - **词表是子串匹配**，「放了心脏支架」这类说法需要逐个补进词表，存在覆盖不全的风险。
+- **语音识别依赖浏览器引擎**（Web Speech API），Chrome / Edge 可用，Firefox 不支持——不支持时麦克风按钮自动隐藏，不提供坏掉的入口。
 - **在线演示中，AI 抽取依赖演示机在线**。站点本身常驻服务器、始终可用；但大模型是本地推理（家族信息不出机器），需要通过 SSH 反向隧道从演示机接入。演示机关机时抽取接口返回 503，页面顶部会明确提示，家系图、风险量化、依据检索等其余功能不受影响，也可用 `?demo=1` 加载示例家系浏览完整形态。
 
 ---
