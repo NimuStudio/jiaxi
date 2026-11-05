@@ -5500,3 +5500,10 @@ input[type="range"]::-moz-range-thumb {
   top: 44.5%;
   width: min(50vw, 740px);
 }
+
+/* 环的尺寸必须跟 DNA 一样按视口高度缩放：DNA 用固定相机 + 垂直视场，
+   它随视口高度变大，而之前 min(50vw, 740px) 被 740 上限卡死，最大化后就显小。
+   82vh 在 900 高的窗口约等于原来的 740px，保持现在的观感。 */
+.dna-orbit {
+  width: min(58vw, 82vh);
+}
