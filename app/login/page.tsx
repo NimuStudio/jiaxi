@@ -83,29 +83,37 @@ export default function LoginPage() {
       return;
     }
     if (expanded) return; // 已展开就不再监听，避免无意义的重复 setState
-    // 触发：从左上往右下"划"过一段距离即可，不用按住鼠标
-    let lastX = 0;
-    let lastY = 0;
-    let has = false;
-    let travelled = 0;
+    /**
+     * 触发：从左上往右下划过一段距离。
+     *
+     * 用「起点 → 当前点」在对角线方向上的投影来判断，而不是逐帧累加：
+     * 逐帧累加时只要有一帧指针抖动（dx 变负）就会把累计值扣掉，
+     * 正常往右下划反而可能永远到不了阈值 —— 手感上就像方向反了。
+     * 投影法对抖动免疫：只要整体确实往右下走够了，就触发。
+     */
+    const AXIS = Math.SQRT1_2; // 单位方向 (1,1)/√2，即左上 → 右下
+    let startX = 0;
+    let startY = 0;
+    let tracking = false;
+
     const onMove = (e: PointerEvent) => {
-      if (!has) {
-        lastX = e.clientX;
-        lastY = e.clientY;
-        has = true;
+      if (!tracking) {
+        startX = e.clientX;
+        startY = e.clientY;
+        tracking = true;
         return;
       }
-      const dx = e.clientX - lastX;
-      const dy = e.clientY - lastY;
-      lastX = e.clientX;
-      lastY = e.clientY;
-      // 只累计朝右下（x 增、y 增）的位移；反向或横移会抵扣
-      if (dx > 0 && dy > 0) {
-        travelled += Math.hypot(dx, dy);
-      } else {
-        travelled = Math.max(0, travelled - Math.hypot(dx, dy) * 0.8);
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+      // 投影长度：只有整体往右下才有正值
+      const progress = (dx + dy) * AXIS;
+      // 起点太远说明是随机乱晃，重置起点（避免从别处慢慢挪过来也算）
+      if (Math.abs(dx) + Math.abs(dy) > 900) {
+        startX = e.clientX;
+        startY = e.clientY;
+        return;
       }
-      if (travelled > 170) setExpanded(true);
+      if (progress > 120) setExpanded(true);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
