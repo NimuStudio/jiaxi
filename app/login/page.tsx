@@ -288,7 +288,7 @@ export default function LoginPage() {
           {/* 虚线双环 + 一段游离弧线（作者偏好这一版），外加四枚对位角标 */}
           <circle className="orbit-ring" cx="320" cy="320" r="238" />
           <circle className="orbit-ring orbit-ring-slow" cx="320" cy="320" r="288" />
-          <path className="orbit-arc" d="M320 22 A298 298 0 0 1 616 236" />
+          <path className="orbit-arc" d="M74 230 A262 262 0 0 1 410 74" />
           <g className="orbit-cross">
             <path d="M150 150 h13 M156.5 143.5 v13" />
             <path d="M477 150 h13 M483.5 143.5 v13" />

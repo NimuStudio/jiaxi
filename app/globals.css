@@ -5486,3 +5486,17 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .orbit-ring { animation: none; }
 }
+
+/* 装饰环按螺旋的视觉中心重新对中，并放大到完整包住（不与粒子相交） */
+.dna-orbit {
+  left: 55%;
+  top: 56.5%;
+  width: min(52vw, 780px);
+}
+
+/* 按粒子实际包围盒（约 x 420-810 / y 150-560 @1280）重新对中 */
+.dna-orbit {
+  left: 48%;
+  top: 44.5%;
+  width: min(50vw, 740px);
+}
