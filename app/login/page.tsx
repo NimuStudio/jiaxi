@@ -83,11 +83,29 @@ export default function LoginPage() {
       return;
     }
     if (expanded) return; // 已展开就不再监听，避免无意义的重复 setState
-    // 指针靠近屏幕中心就展开（不需要瞄准按钮）
+    // 触发：从左上往右下"划"过一段距离即可，不用按住鼠标
+    let lastX = 0;
+    let lastY = 0;
+    let has = false;
+    let travelled = 0;
     const onMove = (e: PointerEvent) => {
-      const dx = e.clientX - window.innerWidth / 2;
-      const dy = e.clientY - window.innerHeight / 2;
-      if (Math.hypot(dx, dy) < 110) setExpanded(true);
+      if (!has) {
+        lastX = e.clientX;
+        lastY = e.clientY;
+        has = true;
+        return;
+      }
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      // 只累计朝右下（x 增、y 增）的位移；反向或横移会抵扣
+      if (dx > 0 && dy > 0) {
+        travelled += Math.hypot(dx, dy);
+      } else {
+        travelled = Math.max(0, travelled - Math.hypot(dx, dy) * 0.8);
+      }
+      if (travelled > 170) setExpanded(true);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
@@ -137,21 +155,39 @@ export default function LoginPage() {
       >
         <defs>
           <filter id="seamBlur" x="-20%" y="-200%" width="140%" height="500%">
-            <feGaussianBlur stdDeviation="7" />
+            <feGaussianBlur stdDeviation="8" />
           </filter>
+          <filter id="seamBlurSoft" x="-20%" y="-200%" width="140%" height="500%">
+            <feGaussianBlur stdDeviation="2.5" />
+          </filter>
+          {/* 两端渐隐：缝不该是一根从头亮到尾的硬线 */}
+          <linearGradient id="seamFade" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#000" stopOpacity="0" />
+            <stop offset="18%" stopColor="#000" stopOpacity="0.85" />
+            <stop offset="50%" stopColor="#000" stopOpacity="1" />
+            <stop offset="82%" stopColor="#000" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#000" stopOpacity="0" />
+          </linearGradient>
+          <mask id="seamMask">
+            <rect x="0" y="0" width="100" height="100" fill="url(#seamFade)" />
+          </mask>
         </defs>
-        {/* 辉光带：让整条缝都发亮，而不是只有中间一小段 */}
-        <line
-          className="login-seam-glow"
-          x1="0"
-          y1="12"
-          x2="100"
-          y2="100"
-          stroke="rgba(96, 176, 235, 0.85)"
-          strokeWidth="14"
-          strokeLinecap="round"
-          filter="url(#seamBlur)"
-        />
+        {/* 缝的四层：外辉光 / 内光晕 / 高光芯 / 针脚，整体两端渐隐 */}
+        <g className="login-seam-glow" mask="url(#seamMask)">
+          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(88, 170, 232, 0.34)" strokeWidth="22" filter="url(#seamBlur)" />
+          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(126, 196, 244, 0.55)" strokeWidth="7" filter="url(#seamBlurSoft)" />
+          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(255, 255, 255, 0.92)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+          <line
+            x1="0"
+            y1="12"
+            x2="100"
+            y2="100"
+            stroke="rgba(26, 111, 181, 0.38)"
+            strokeWidth="1.1"
+            strokeDasharray="0.55 1.15"
+            vectorEffect="non-scaling-stroke"
+          />
+        </g>
         <line
           x1="0"
           y1="12"
@@ -206,7 +242,7 @@ export default function LoginPage() {
         </button>
         <p className="login-seam-hint">
           <span className="login-seam-dot" aria-hidden="true" />
-          靠近，或点击任意处
+          顺着缝划一下，或点击任意处
         </p>
       </div>
 
