@@ -35,7 +35,9 @@ export function RequireLogin({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!ready) return;
     if (!user && !demo) {
-      router.replace("/login");
+      // 带上原目标：从别人分享的链接进来，登录后应该回到那一页，而不是一律 /chat
+      const here = window.location.pathname + window.location.search;
+      router.replace(here.startsWith("/login") ? "/login" : `/login?next=${encodeURIComponent(here)}`);
       return;
     }
     setChecked(true);

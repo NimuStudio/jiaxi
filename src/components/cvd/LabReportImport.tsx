@@ -49,12 +49,27 @@ export function LabReportImport({ onApply }: Props) {
 
   if (!ready) return null;
 
+  const MAX_BYTES = 8 * 1024 * 1024;
+  const OK_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
   async function onFile(file: File) {
-    setBusy(true);
     setError("");
     setItems([]);
     setFields({});
     setPicked(new Set());
+
+    // 前端先挡一道：12MB 原图会被拼成 ~16MB base64 才发出去，
+    // 网关多半先以 HTML 413 挡掉，用户看到的会是英文报错。
+    if (file.size > MAX_BYTES) {
+      setError("图片超过 8 MB，请压缩后再上传。");
+      return;
+    }
+    if (file.type && !OK_TYPES.includes(file.type)) {
+      setError("只支持 JPG / PNG / WebP。iPhone 的 HEIC 请先在相册里导出为 JPG。");
+      return;
+    }
+
+    setBusy(true);
     try {
       const buf = await file.arrayBuffer();
       const bytes = new Uint8Array(buf);
@@ -67,6 +82,8 @@ export function LabReportImport({ onApply }: Props) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image, mime: file.type || "image/png" }),
+        // 视觉模型偶尔会挂住：加超时，避免按钮一直转圈只能刷新页面
+        signal: AbortSignal.timeout(120_000),
       });
       const data = (await res.json()) as {
         items?: LabItem[];
@@ -82,7 +99,13 @@ export function LabReportImport({ onApply }: Props) {
       // 默认全选已映射字段，用户取消不需要的那几项再确认
       setPicked(new Set(Object.keys(data.fields ?? {})));
     } catch (e) {
-      setError((e as Error).message || "识别失败");
+      // 不把技术性异常原文丢给用户（"Unexpected token '<'" 这类）
+      const name = (e as Error)?.name;
+      setError(
+        name === "TimeoutError" || name === "AbortError"
+          ? "识别超时了，请换一张更清晰的图片重试。"
+          : "识别失败，请稍后重试或手动填写。",
+      );
     } finally {
       setBusy(false);
     }

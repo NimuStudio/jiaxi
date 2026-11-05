@@ -81,18 +81,45 @@ export function GlassModal({
     onCloseRef.current = onClose;
   }, [onClose]);
 
+  // 键盘与焦点：Esc 关闭、Tab 在对话框内回环、关闭后把焦点还给触发元素
   useEffect(() => {
     if (!open) return;
 
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onCloseRef.current();
+    const prevFocus = document.activeElement as HTMLElement | null;
+
+    function focusables(): HTMLElement[] {
+      const root = dialogRef.current;
+      if (!root) return [];
+      return Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.offsetParent !== null);
     }
+
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onCloseRef.current();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      // 焦点陷阱：不让 Tab 跑到背后被锁住的页面上
+      const items = focusables();
+      if (items.length === 0) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!e.shiftKey && active === last) {
+        e.preventDefault();
+        first?.focus();
+      } else if (e.shiftKey && (active === first || active === dialogRef.current)) {
+        e.preventDefault();
+        last?.focus();
+      }
+    }
+
     document.addEventListener("keydown", onKey);
 
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    // 打开后把焦点移进对话框，键盘用户不用再 Tab 一路找
     const raf = requestAnimationFrame(() => {
       dialogRef.current?.focus();
     });
@@ -100,9 +127,21 @@ export function GlassModal({
     return () => {
       cancelAnimationFrame(raf);
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
+      // 关闭后把焦点还给触发按钮，键盘用户不用重新 Tab 一路找
+      prevFocus?.focus?.();
     };
   }, [open]);
+
+  // 滚动锁跟随「在场」而不是「open」：open 一翻 false 就开始播 240ms 退场动画，
+  // 若这时就解锁，滚轮会滚到背后内容上。
+  useEffect(() => {
+    if (!visible) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [visible]);
 
   if (!visible) return null;
 

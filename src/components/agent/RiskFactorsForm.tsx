@@ -121,6 +121,35 @@ function GlassSelect({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  // 打开后把焦点送进第一项，键盘用户可以直接上下选
+  useEffect(() => {
+    if (!open) return;
+    const first = popRef.current?.querySelector<HTMLElement>('[role="option"]');
+    first?.focus();
+  }, [open]);
+
+  /** 选项间移动：↑/↓/Home/End */
+  function moveFocus(e: React.KeyboardEvent<HTMLDivElement>) {
+    const key = e.key;
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(key)) return;
+    e.preventDefault();
+    const items = Array.from(
+      popRef.current?.querySelectorAll<HTMLElement>('[role="option"]') ?? [],
+    );
+    if (items.length === 0) return;
+    const idx = items.indexOf(document.activeElement as HTMLElement);
+    const next =
+      key === "Home"
+        ? 0
+        : key === "End"
+          ? items.length - 1
+          : key === "ArrowDown"
+            ? (idx + 1) % items.length
+            : (idx - 1 + items.length) % items.length;
+    items[next]?.focus();
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -128,7 +157,11 @@ function GlassSelect({
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key !== "Escape") return;
+      // 只关下拉：不 stopPropagation 的话，GlassModal 的 document 监听会一起响应，
+      // 用户想收起下拉却把整个「体检数字」弹层关掉了。
+      e.stopPropagation();
+      setOpen(false);
     }
     document.addEventListener("mousedown", onDocClick);
     document.addEventListener("keydown", onKey);
@@ -155,7 +188,7 @@ function GlassSelect({
         </span>
       </button>
       {open && (
-        <div className="gselect-pop" role="listbox">
+        <div className="gselect-pop" role="listbox" ref={popRef} onKeyDown={moveFocus}>
           {options.map((o, i) => (
             <button
               key={o.value}
@@ -164,6 +197,7 @@ function GlassSelect({
               aria-selected={o.value === value}
               className={`gselect-opt${o.value === value ? " is-active" : ""}`}
               style={{ animationDelay: `${i * 40}ms` }}
+              tabIndex={-1}
               onClick={() => {
                 onChange(o.value);
                 setOpen(false);

@@ -87,6 +87,8 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
     const content = text.trim();
     if (content.length === 0 || loading) return;
 
+    // 发送时停掉识别：否则后面说的话会追加进已清空的输入框，看着像自己冒出来一句
+    if (speech.listening) speech.stop();
     setMessages((m) => [...m, { role: "user", text: content }]);
     // 先滚一次：抽取要 3~9 秒且输入框在此期间是禁用的，不滚就看不见自己刚说的话
     requestAnimationFrame(() => {

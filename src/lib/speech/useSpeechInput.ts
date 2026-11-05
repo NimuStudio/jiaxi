@@ -68,6 +68,8 @@ export function useSpeechInput(onFinal: (text: string) => void): UseSpeechInputR
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recRef = useRef<SpeechRecognitionLike | null>(null);
+  /** 是否是用户主动停止：只有主动停止才不自动重启（静音超时由服务端断开则要重启） */
+  const stoppedByUser = useRef(false);
   // onFinal 存进 ref：识别回调触发时用的总是最新闭包
   const finalRef = useRef(onFinal);
   finalRef.current = onFinal;
@@ -86,6 +88,16 @@ export function useSpeechInput(onFinal: (text: string) => void): UseSpeechInputR
       return;
     }
     setError(null);
+
+    // 先彻底断掉旧实例：否则 onerror / start 抛错 / 静音 end 之后再点开始，
+    // 会有两个 recognizer 同时录音（麦克风没关 + 同一句话被追加两遍）。
+    try {
+      recRef.current?.abort();
+    } catch {
+      /* 已结束的实例 abort 会抛，忽略 */
+    }
+    recRef.current = null;
+    stoppedByUser.current = false;
 
     const rec = new Ctor();
     rec.lang = "zh-CN";
@@ -111,10 +123,26 @@ export function useSpeechInput(onFinal: (text: string) => void): UseSpeechInputR
       };
       setError(map[e.error] ?? `语音识别出错（${e.error}）。`);
       setListening(false);
+      stoppedByUser.current = true;
+      try {
+        rec.abort();
+      } catch {
+        /* 已结束，忽略 */
+      }
     };
     rec.onend = () => {
-      // 连续模式下服务端可能自动断开（静音超时）；用户没主动停就重启
-      setListening(false);
+      // 连续模式下服务端会在静音超时后自动断开。用户没主动停就重启，
+      // 否则后面说的话会被静默丢弃（老年用户不会盯着按钮看）。
+      if (stoppedByUser.current) {
+        setListening(false);
+        return;
+      }
+      try {
+        rec.start();
+        setListening(true);
+      } catch {
+        setListening(false);
+      }
     };
 
     recRef.current = rec;
@@ -122,15 +150,21 @@ export function useSpeechInput(onFinal: (text: string) => void): UseSpeechInputR
       rec.start();
       setListening(true);
     } catch {
-      // start() 在已启动状态下会抛 InvalidStateError——忽略即可
+      // start() 在已启动状态下会抛 InvalidStateError——说明正在录，保持 listening
+      setListening(true);
     }
   }, []);
 
   const stop = useCallback(() => {
     const rec = recRef.current;
+    stoppedByUser.current = true;
     if (rec) {
       rec.onend = null; // 主动停止时不需要自动重启
-      rec.stop();
+      try {
+        rec.stop();
+      } catch {
+        /* 已结束的实例 stop 会抛 InvalidStateError，忽略 */
+      }
     }
     setListening(false);
   }, []);

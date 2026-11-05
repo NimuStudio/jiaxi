@@ -74,8 +74,20 @@ export default function LoginPage() {
     };
   }, []);
 
+  /** 登录后的落点：只接受站内相对路径（以单个 / 开头），其余一律回 /chat */
+  function nextTarget(): string {
+    try {
+      const raw = new URLSearchParams(window.location.search).get("next");
+      if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
+    } catch {
+      /* 读不到就用默认值 */
+    }
+    return "/chat";
+  }
+
   useEffect(() => {
-    if (ready && user) router.replace("/chat");
+    if (ready && user) router.replace(nextTarget());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, ready, router]);
 
   useEffect(() => {
@@ -142,7 +154,7 @@ export default function LoginPage() {
     try {
       if (mode === "login") await login(username.trim(), password);
       else await register(username.trim(), password);
-      router.replace("/chat");
+      router.replace(nextTarget());
     } catch (err) {
       setError((err as Error).message || "操作失败");
     } finally {

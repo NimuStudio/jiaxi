@@ -5732,3 +5732,30 @@ input[type="range"]::-moz-range-thumb {
 
 /* 展开后按钮只是 opacity:0 + pointer-events:none，仍能被 Shift+Tab 聚焦到看不见的位置 */
 .login-page.is-expanded .login-seam-entry { visibility: hidden; }
+
+/* ===== 顶栏窄屏（≤720px）：收起装饰、让导航可滚，避免互相压 ===== */
+@media (max-width: 720px) {
+  .topbar {
+    height: auto;
+    min-height: 54px;
+    padding: 8px 10px;
+    gap: 10px;
+  }
+
+  .topbar-left { flex: 0 0 auto; }
+  .topbar-tagline, .topbar-nav-step, .topbar-nav-icon, .topbar-engines { display: none; }
+
+  .topbar-nav {
+    flex: 1 1 auto;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .topbar-nav::-webkit-scrollbar { display: none; }
+
+  .topbar-nav-btn { padding: 6px 10px; font-size: 12.5px; white-space: nowrap; }
+
+  .topbar-right { flex: 0 0 auto; gap: 6px; }
+  .demo-badge { display: none; }
+  .topbar-status { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
