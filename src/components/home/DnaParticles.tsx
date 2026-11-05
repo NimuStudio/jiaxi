@@ -38,8 +38,11 @@ export function DnaParticles() {
       const g = c.getContext("2d");
       if (g) {
         const grad = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+        // 边缘收硬：从 0.62 开始快速衰减，避免大范围柔光把相邻粒子连成一片
         grad.addColorStop(0, `rgba(${rgb}, 1)`);
-        grad.addColorStop(0.4, `rgba(${rgb}, 0.5)`);
+        grad.addColorStop(0.42, `rgba(${rgb}, 0.95)`);
+        grad.addColorStop(0.62, `rgba(${rgb}, 0.5)`);
+        grad.addColorStop(0.82, `rgba(${rgb}, 0.12)`);
         grad.addColorStop(1, `rgba(${rgb}, 0)`);
         g.fillStyle = grad;
         g.fillRect(0, 0, size, size);
@@ -68,7 +71,7 @@ export function DnaParticles() {
     const build = () => {
       const out: P[] = [];
       const small = w < 760;
-      const strandN = small ? 760 : 2000;
+      const strandN = small ? 620 : 1600;
       const rungN = small ? 90 : 260;
       const turns = 2.9;
 
@@ -205,20 +208,31 @@ export function DnaParticles() {
         py = homeY + p.oy;
 
         const depth = Math.min(1, Math.max(0, (z3 + 1) / 2));
-        const alpha = 0.04 + Math.pow(depth, 1.7) * 0.8;
-        const s = p.size * k * (0.55 + depth * 0.9) * 2.3;
+        const s = p.size * k * (0.5 + depth * 0.8) * 1.5;
         if (s <= 0.15) continue;
 
         const img = p.tint === 0 ? SPR.blue : p.tint === 1 ? SPR.cyan : SPR.white;
-        ctx.globalAlpha = Math.min(1, alpha);
-        ctx.drawImage(img, px - s / 2, py - s / 2, s, s);
+        const core = Math.max(0.6, s * 0.42);
 
-        // 前侧粒子加一圈光晕 → 发光核心
-        if (depth > 0.72) {
-          const halo = s * 2.6;
-          ctx.globalAlpha = Math.min(0.16, (depth - 0.72) * 0.8);
-          ctx.drawImage(img, px - halo / 2, py - halo / 2, halo, halo);
-        }
+        // ① 均匀的淡辉光：所有粒子都有，但很淡——既让链的走势读得出来，
+        //    又不会把相邻粒子糊成一片（这是"颗粒分明"和"看得出是螺旋"的平衡点）
+        const halo = core * (2.4 + depth * 0.9);
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = 0.06 + depth * 0.14;
+        ctx.drawImage(img, px - halo / 2, py - halo / 2, halo, halo);
+
+        // ② 实心核心点（普通混合 + 不透明填充）→ 这一步决定"颗粒感"
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(px, py, core, 0, Math.PI * 2);
+        ctx.fillStyle =
+          p.tint === 0
+            ? `rgba(70, 140, 216, ${(0.55 + depth * 0.45).toFixed(3)})`
+            : p.tint === 1
+              ? `rgba(30, 182, 192, ${(0.55 + depth * 0.45).toFixed(3)})`
+              : `rgba(214, 236, 252, ${(0.5 + depth * 0.5).toFixed(3)})`;
+        ctx.fill();
       }
 
       ctx.globalAlpha = 1;
