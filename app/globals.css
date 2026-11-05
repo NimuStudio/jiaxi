@@ -4534,3 +4534,10 @@ input[type="range"]::-moz-range-thumb {
 
 /* 去掉箭头后，左右内边距对称 */
 .login-seam-hint { padding: 7px 16px; gap: 0; }
+
+/* 展开后不再显示划动提示 */
+.login-page.is-expanded .login-seam-hint {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s ease;
+}

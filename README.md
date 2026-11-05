@@ -6,6 +6,21 @@
 
 ---
 
+## 界面
+
+| 登录（划开即进入） | 家系梳理 |
+| --- | --- |
+| ![登录页](docs/screenshots/01-login.png) | ![家系梳理](docs/screenshots/02-chat.png) |
+
+| 可回收风险（FINDRISC） | 心血管风险（China-PAR） |
+| --- | --- |
+| ![可回收风险](docs/screenshots/03-risk.png) | ![心血管风险](docs/screenshots/04-cvd.png) |
+
+> 截图取自 demo 账号的真实运行界面，未做后期处理；数字滚动动画在「减少动态效果」下直接显示终值。
+
+---
+
+
 ## 先看这个（3 分钟，不用读代码）
 
 | | |

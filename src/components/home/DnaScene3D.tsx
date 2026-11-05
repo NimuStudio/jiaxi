@@ -269,8 +269,18 @@ export function DnaScene3D() {
       raf = window.requestAnimationFrame(frame);
     };
 
-    if (reduce) composer.render();
-    else raf = window.requestAnimationFrame(frame);
+    if (reduce) {
+      // 减少动态效果：只画静态帧。挂载瞬间 canvas 尺寸可能还是 0，
+      // 所以稍后再补画一次，否则会出现"DNA 不见了"。
+      const paint = () => {
+        resize();
+        composer.render();
+      };
+      paint();
+      window.setTimeout(paint, 260);
+    } else {
+      raf = window.requestAnimationFrame(frame);
+    }
 
     const onVis = () => {
       if (reduce) return;

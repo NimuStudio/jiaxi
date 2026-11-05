@@ -101,7 +101,9 @@ export default function LoginPage() {
     if (typeof window === "undefined") return;
     const noHover = window.matchMedia("(hover: none)").matches;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (noHover || reduce) {
+    // 截图 / 录演示视频用：?enter=1 直接进入展开态
+    const forceEnter = new URLSearchParams(window.location.search).get("enter") === "1";
+    if (noHover || reduce || forceEnter) {
       setExpanded(true);
       return;
     }
