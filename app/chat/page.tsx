@@ -196,6 +196,13 @@ export default function ChatPage() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("demo") === "1") {
       setDemoMode(true);
+      // 记住演示态：从这一页点导航去 / 或 /cvd 时不再带 ?demo=1，
+      // 不记住就会立刻被登录墙送回登录页（评审会踩的坑）。关标签页即失效。
+      try {
+        sessionStorage.setItem("pedigree-demo", "1");
+      } catch {
+        /* 隐私模式不可用，忽略 */
+      }
       setPersons(DEMO);
       setLastAdded(null);
       // 演示时默认选中一位，便于直接展示「依据」面板
