@@ -265,6 +265,8 @@ export default function ChatPage() {
   factorsRef.current = factors;
   const personsRef = useRef(persons);
   personsRef.current = persons;
+  const accountRef = useRef(account);
+  accountRef.current = account;
 
   /**
    * 对账完成标记。登录后必须先拉云端对账，之后的人员变更（**包括删空**）
@@ -284,6 +286,9 @@ export default function ChatPage() {
     return keys.length > 0 && keys.every((k) => x[k] === y[k]);
   }
 
+  // 对账失败的重试计数：一次网络抖动不该让本会话永久停止备份
+  const syncRetryRef = useRef(0);
+
   function syncFromCloud() {
     void (async () => {
       try {
@@ -295,6 +300,7 @@ export default function ChatPage() {
         // 否则紧接着的回写会用本地副本覆盖云端，医学数据无痕丢失。
         if (!pedHttp.ok || !facHttp.ok) {
           console.warn("[sync] 云端读取失败，本次跳过对账", pedHttp.status, facHttp.status);
+          scheduleSyncRetry();
           return;
         }
         const pedRes = (await pedHttp.json()) as { persons?: ExtractedPerson[] };
@@ -340,10 +346,27 @@ export default function ChatPage() {
         }
         // 对账完成：此后 persons/factors 的任何变更（含删空）自动备份
         cloudSyncedRef.current = true;
+        syncRetryRef.current = 0;
       } catch {
-        /* 网络抖动：本地功能不受影响，下次登录再对账 */
+        /* 网络抖动：本地功能不受影响，退避重试 */
+        scheduleSyncRetry();
       }
     })();
+  }
+
+  /**
+   * 对账失败的重试：5s → 15s → 45s，最多 3 次。
+   * 没有它的话，一次读失败就会让 cloudSyncedRef 一直是 false，
+   * 本会话后续的增删都不再备份，下次登录的并集合并会把已删节点复活。
+   */
+  function scheduleSyncRetry() {
+    const attempt = syncRetryRef.current;
+    if (attempt >= 3) return;
+    syncRetryRef.current = attempt + 1;
+    const delay = 5000 * Math.pow(3, attempt);
+    window.setTimeout(() => {
+      if (accountRef.current) syncFromCloud();
+    }, delay);
   }
 
   // 已登录的会话（cookie 还有效）打开页面时也要对账一次

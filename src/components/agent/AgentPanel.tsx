@@ -22,6 +22,8 @@ import type { ExtractedPerson } from "@/lib/extract/client";
  */
 
 interface Turn {
+  /** 稳定 id：并发/连点时按 id 回填，不再依赖"最后一个 turn" */
+  id: number;
   question: string;
   result?: AgentResult;
   error?: string;
@@ -151,11 +153,19 @@ export function AgentPanel({ persons, factors, onRequestFactors }: AgentPanelPro
     });
   }, [turns, loading]);
 
+  // 同步的在途锁：loading 是异步 state，同一帧内连点两次都会看到 false，
+  // 于是发出两个请求，而回填用的是「最后一个 turn」，第一条提问永远空白。
+  const inFlight = useRef(false);
+  // 每条提问一个稳定 id，回填时按 id 定位，不再依赖"最后一个"
+  const nextId = useRef(1);
+
   async function ask(text: string) {
     const question = text.trim();
-    if (question.length === 0 || loading) return;
+    if (question.length === 0 || inFlight.current) return;
 
-    setTurns((t) => [...t, { question }]);
+    const id = nextId.current++;
+    inFlight.current = true;
+    setTurns((t) => [...t, { id, question }]);
     setInput("");
     setLoading(true);
 
@@ -164,25 +174,30 @@ export function AgentPanel({ persons, factors, onRequestFactors }: AgentPanelPro
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, persons, factors }),
+        // 本地推理偶尔会挂住：没有超时的话输入框会永久禁用
+        signal: AbortSignal.timeout(120_000),
       });
       const data = (await res.json()) as AgentResult & { error?: string };
-
       setTurns((t) =>
-        t.map((turn, i) =>
-          i === t.length - 1
+        t.map((turn) =>
+          turn.id === id
             ? res.ok && !data.error
               ? { ...turn, result: data }
               : { ...turn, error: data.error ?? `服务返回 ${res.status}` }
             : turn,
         ),
       );
-    } catch {
+    } catch (e) {
+      const aborted = (e as Error)?.name === "TimeoutError" || (e as Error)?.name === "AbortError";
       setTurns((t) =>
-        t.map((turn, i) =>
-          i === t.length - 1 ? { ...turn, error: "连不上问答服务。" } : turn,
+        t.map((turn) =>
+          turn.id === id
+            ? { ...turn, error: aborted ? "问答超时了，请稍后重试。" : "连不上问答服务。" }
+            : turn,
         ),
       );
     } finally {
+      inFlight.current = false;
       setLoading(false);
     }
   }
