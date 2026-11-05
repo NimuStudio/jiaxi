@@ -111,6 +111,30 @@ export default function CvdPage() {
     }
   }, []);
 
+  const FIELD_LABEL: Record<string, string> = {
+    age: "年龄",
+    sbp: "收缩压",
+    totalCholesterolMmol: "总胆固醇",
+    hdlMmol: "HDL 胆固醇",
+    waistCm: "腰围",
+  };
+
+  /** 逐字段越界提示：只说「先把数字填全」会让用户不知道改哪一个 */
+  function fieldError(key: keyof typeof form): string | null {
+    const v = form[key];
+    if (typeof v !== "number" || !Number.isFinite(v)) return "请填一个数字";
+    const ranges: Partial<Record<keyof typeof form, [number, number]>> = {
+      age: [20, 90],
+      sbp: [80, 250],
+      totalCholesterolMmol: [1, 15],
+      hdlMmol: [0.2, 5],
+      waistCm: [50, 180],
+    };
+    const r = ranges[key];
+    if (!r) return null;
+    return v >= r[0] && v <= r[1] ? null : "应在 " + r[0] + "–" + r[1] + " 之间";
+  }
+
   const valid = isValidInput(form);
   const result = useMemo(
     () => (valid ? evaluateChinapar(form) : null),
@@ -180,7 +204,22 @@ export default function CvdPage() {
         ) : (
           <div className="risk-headline">
             <span className="risk-big">—</span>
-            <span className="risk-caption">先把上面的数字填全，风险会实时重算</span>
+            <span className="risk-caption">
+              {(() => {
+                const keys = [
+                  "age",
+                  "sbp",
+                  "totalCholesterolMmol",
+                  "hdlMmol",
+                  "waistCm",
+                ] as const;
+                const bad = keys.filter((k) => fieldError(k) !== null);
+                // 区分「没填」与「填了但超范围」：原来两种情况都说「先填全」，用户不知道改哪个
+                return bad.length === 0
+                  ? "选好性别与地区后，风险会实时重算"
+                  : "这几项需要修正：" + bad.map((k) => FIELD_LABEL[k]).join("、");
+              })()}
+            </span>
           </div>
         )}
 
@@ -221,6 +260,7 @@ export default function CvdPage() {
             value={form.age}
             min={20}
             max={90}
+            error={fieldError("age")}
             onChange={(age) => update({ age })}
           />
           <label className="factors-field">
@@ -238,6 +278,7 @@ export default function CvdPage() {
             value={form.sbp}
             min={80}
             max={250}
+            error={fieldError("sbp")}
             onChange={(sbp) => update({ sbp })}
           />
           <NumberField
@@ -245,6 +286,7 @@ export default function CvdPage() {
             value={form.totalCholesterolMmol}
             min={1}
             max={15}
+            error={fieldError("totalCholesterolMmol")}
             step={0.1}
             onChange={(v) => update({ totalCholesterolMmol: v })}
           />
@@ -253,6 +295,7 @@ export default function CvdPage() {
             value={form.hdlMmol}
             min={0.2}
             max={5}
+            error={fieldError("hdlMmol")}
             step={0.1}
             onChange={(v) => update({ hdlMmol: v })}
           />
@@ -261,6 +304,7 @@ export default function CvdPage() {
             value={form.waistCm}
             min={50}
             max={180}
+            error={fieldError("waistCm")}
             onChange={(waistCm) => update({ waistCm })}
           />
           <label className="factors-field">

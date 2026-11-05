@@ -5550,58 +5550,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ================= 进入主界面的开屏过渡（与登录页同一套语言） ================= */
-.enter-curtain {
-  position: fixed;
-  inset: 0;
-  z-index: 9000;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.enter-half {
-  position: absolute;
-  inset: -4px;
-  background: linear-gradient(200deg, #f4f9fe 0%, #eaf2fb 46%, #f7fbff 100%);
-  opacity: 0.97;
-  transition:
-    transform 1.05s cubic-bezier(0.35, 0.02, 0.2, 1),
-    opacity 0.75s ease 0.2s;
-  will-change: transform, opacity;
-}
-
 /* 与 .login-tear-upper / -lower 完全相同的切分与位移 */
-.enter-upper { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 12%); }
-.enter-lower { clip-path: polygon(0 12%, 100% 100%, 0 100%); }
-
-.enter-curtain.is-open .enter-upper {
-  transform: translate3d(46%, -46%, 0);
-  opacity: 0;
-}
-
-.enter-curtain.is-open .enter-lower {
-  transform: translate3d(-46%, 46%, 0);
-  opacity: 0;
-}
-
 /* 缝：开场先亮一下，随即随幕布一起退去 */
-.enter-seam {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.9;
-  transition: opacity 0.45s ease;
-}
-
-.enter-seam line {
-  stroke: rgba(26, 111, 181, 0.4);
-  stroke-width: 1.5;
-  stroke-dasharray: 4 8;
-  vector-effect: non-scaling-stroke;
-}
-
-.enter-curtain.is-open .enter-seam { opacity: 0; }
-
 /* 主内容随后轻微上浮，避免幕布揭开时是「硬切」 */
 .app-main {
   animation: app-enter 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.32s both;
@@ -5611,24 +5561,14 @@ input[type="range"]::-moz-range-thumb {
   animation: app-enter-soft 0.9s ease 0.2s both;
 }
 
-@keyframes app-enter {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
-@keyframes app-enter-soft {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
 
 @media (prefers-reduced-motion: reduce) {
-  .enter-curtain { display: none; }
   .app-main, .topbar { animation: none; }
 }
 
 /* ===== 进入主界面：斜向扫光（替代此前那块不透明的幕布） ===== */
 /* 旧幕布的规则作废，避免残留不生效的样式 */
-.enter-curtain { display: none; }
 
 .enter-sweep {
   position: fixed;
@@ -5758,4 +5698,17 @@ input[type="range"]::-moz-range-thumb {
   .topbar-right { flex: 0 0 auto; gap: 6px; }
   .demo-badge { display: none; }
   .topbar-status { max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/* 字段级越界提示 */
+.factors-field input.is-invalid {
+  border-color: rgba(214, 69, 69, 0.55);
+  background: rgba(214, 69, 69, 0.04);
+}
+
+.field-error {
+  display: block;
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: #c0392b;
 }

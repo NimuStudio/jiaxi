@@ -8,6 +8,8 @@ interface Props {
   min: number;
   max: number;
   step?: number;
+  /** 越界提示：有值就标红并显示在字段下方 */
+  error?: string | null;
   onChange: (v: number) => void;
 }
 
@@ -20,7 +22,7 @@ interface Props {
  * 所以内部用字符串草稿：输入过程中原样保留，只把「可解析的值」向上报告；
  * 失焦后再按真实值归位。
  */
-export function NumberField({ label, value, min, max, step = 1, onChange }: Props) {
+export function NumberField({ label, value, min, max, step = 1, error, onChange }: Props) {
   const [draft, setDraft] = useState(String(value));
   const [focused, setFocused] = useState(false);
 
@@ -48,7 +50,10 @@ export function NumberField({ label, value, min, max, step = 1, onChange }: Prop
           const n = Number(text);
           if (text.trim() !== "" && Number.isFinite(n)) onChange(n);
         }}
+        aria-invalid={error ? true : undefined}
+        className={error ? "is-invalid" : undefined}
       />
+      {error && <span className="field-error">{error}</span>}
     </label>
   );
 }
