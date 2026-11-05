@@ -48,6 +48,23 @@ Lindström J, Tuomilehto J. **The diabetes risk score: a practical tool to predi
 3. CTFPHC 官方工具页（15–20 分 33%、21+ 分 50%）
    https://canadiantaskforce.ca/tools-resources/type-2-diabetes-2/type-2-diabetes-clinician-findrisc/
 
+### 3.5 肺癌家族史的相对风险（ILCCO 汇总分析，2026-11-06 补齐）
+
+Coté ML, Liu M, Bonassi S, et al. **Increased risk of lung cancer in individuals with a family
+history of the disease: a pooled analysis from the International Lung Cancer Consortium.**
+*Eur J Cancer*. 2012;48(13):1957-1968. DOI: 10.1016/j.ejca.2012.01.038
+PMID **22436981** / PMC **PMC3445438**
+
+- 核实方式：Europe PMC REST 接口取原文摘要（含数字），非二手转述
+- 规模：24 项病例对照研究，24,380 例 / 23,305 对照
+- 采用数字（均校正吸烟等混杂）：
+  - 一级亲属有肺癌：**OR 1.51（95% CI 1.39–1.63）**
+  - 同胞患病：OR 1.82（1.62–2.05）
+  - 从不吸烟者：OR 1.25（1.03–1.52）；从不吸烟且同胞患病 1.44（1.07–1.93）
+- **口径限制**：这是**相对风险（OR）**，不是个人绝对风险；本项目的两个方程都不含该项，
+  因此只作提示、不进任何评分。
+- 实现位置：`src/lib/risk/exposure.ts` 的 `family-lung-history` 与 `lung-family-smoker`
+
 ### 4. 既往肺部疾病与肺癌的相对风险（用于「相对风险表述」）
 
 Forey BA, et al. **Previous Lung Diseases and Lung Cancer Risk: A Systematic Review and Meta-Analysis.**

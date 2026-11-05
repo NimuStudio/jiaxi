@@ -68,15 +68,39 @@ export function exposureHints(
     });
   }
 
+  // 家族史：现在有可引用的相对风险（ILCCO 汇总 24 项病例对照研究），所以给数字。
+  // 但仍然只说"相对风险"，不给个人绝对概率。
+  if (familyLung) {
+    const sibling = persons.some(
+      (p) =>
+        (p.relation === "brother" || p.relation === "sister") &&
+        (p.conditions ?? []).some((c) => LUNG_CODES.has(c.code)),
+    );
+    hints.push({
+      id: "family-lung-history",
+      level: "attention",
+      title: sibling ? "同胞有肺癌" : "一级亲属有肺癌",
+      body:
+        "国际肺癌联盟汇总 24 项病例对照研究（24,380 例 / 23,305 对照）：" +
+        "一级亲属有肺癌者，肺癌相对风险约为 1.51 倍（95% CI 1.39–1.63，已校正吸烟等因素）；" +
+        (sibling ? "其中同胞患病者为 1.82 倍（1.62–2.05）。" : "") +
+        (factors.smoker
+          ? "你同时吸烟，两个因素叠加时风险通常更高，建议与医生讨论是否适合做肺部影像筛查。"
+          : "不吸烟者的关联较弱（约 1.25 倍，1.03–1.52），但家族聚集性依然存在。") +
+        "这是相对风险，不是你个人的绝对概率。",
+    });
+  }
+
   if (factors.smoker && familyLung) {
     hints.push({
       id: "lung-family-smoker",
       level: "attention",
-      title: "一级亲属有肺部疾病，而你在吸烟",
+      title: "两条路都指向同一件事：值得评估肺功能",
       body:
-        "这类组合通常被认为值得更积极地评估，建议与医生讨论是否适合做肺部影像筛查。" +
-        "本项目不给出具体概率：现有的 FINDRISC 与 China-PAR 都不含这一项，" +
-        "而「家族史 × 吸烟」的中国人群交互模型我们找不到可引用的来源，宁可不给数字。",
+        "家族里有肺癌、你自己又吸烟 —— 建议把这两点一起告诉医生，" +
+        "讨论是否适合做肺功能检查与肺部影像筛查。" +
+        "本项目对「本人既往肺病」给出的是相对风险（见下一条），对家族史给出 1.51 倍，" +
+        "两者都不换算成个人概率。",
     });
   }
 
