@@ -5529,3 +5529,22 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 50%;
   background: #d98324;
 }
+
+/* 顶栏加宽 + 防挤压：加了「演示模式」徽标后原 1120px 上限会溢出，右侧组压到导航上 */
+.topbar {
+  width: min(1240px, calc(100% - 32px));
+  gap: 16px;
+}
+
+.topbar-right { flex: 0 0 auto; }
+.topbar-left { overflow: hidden; }
+.demo-badge { flex: 0 0 auto; }
+
+/* 空间不足时先舍弃装饰性文字，而不是让它们互相压 */
+@media (max-width: 1240px) {
+  .topbar-engines { display: none; }
+}
+
+@media (max-width: 1120px) {
+  .topbar-tagline { display: none; }
+}
