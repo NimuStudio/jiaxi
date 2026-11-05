@@ -32,7 +32,7 @@ export function DnaScene3D() {
     camera.lookAt(0, 0, 0);
     // 用「滚动相机」实现斜置：几何一点不变，只是把画面整体旋转，
     // 比旋转物体更能保住螺旋的清晰度（旋转物体会让圈与圈在斜视下叠在一起）。
-    camera.rotateZ(-0.78);
+    camera.rotateZ(0.78);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
