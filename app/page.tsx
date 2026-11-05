@@ -1,9 +1,12 @@
-import { DnaHelix } from "@/components/home/DnaHelix";
+import { Suspense } from "react";
+import { RequireLogin } from "@/components/auth/RequireLogin";
 import { EvidencePanel } from "@/components/rag/EvidencePanel";
 import { ReclaimSimulator } from "@/components/simulator/ReclaimSimulator";
 
 export default function Home() {
   return (
+    <Suspense fallback={null}>
+    <RequireLogin>
     <main className="page">
       <div className="page-head">
         <h1 className="page-title">你的风险里，有多少能拿回来</h1>
@@ -11,8 +14,6 @@ export default function Home() {
           FINDRISC 把 10 年糖尿病风险拆成「改不了的」和「能拿回来的」——拖动滑块，看后一部分值多少分。
         </p>
       </div>
-
-      <DnaHelix />
 
       <ReclaimSimulator />
       <EvidencePanel />
@@ -23,5 +24,7 @@ export default function Home() {
         <code>docs/references.md</code>。本页面为演示，不构成医疗建议。
       </p>
     </main>
+    </RequireLogin>
+    </Suspense>
   );
 }

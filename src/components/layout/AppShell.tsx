@@ -65,6 +65,8 @@ const NAV = [
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [llmReady, setLlmReady] = useState<boolean | null>(null);
+  /** 登录页是独立入口，不套全站导航（否则一进门就看见仪表盘式顶栏，很怪） */
+  const barePage = pathname === "/login";
 
   // 探测一次本地推理服务状态，顶栏右侧显示在线状态。
   // 顶栏不依赖这个状态渲染，探测失败只显示「离线」，不阻塞页面。
@@ -82,6 +84,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       alive = false;
     };
   }, []);
+
+  // 登录页：不套光斑背景、不套顶栏，整屏交给登录页自己
+  if (barePage) return <>{children}</>;
 
   return (
     <>
