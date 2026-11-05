@@ -213,20 +213,24 @@ export default function LoginPage() {
           <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(140, 205, 248, 0.72)" strokeWidth="9" filter="url(#seamBlurSoft)" />
           <line x1="0" y1="12" x2="100" y2="100" stroke="url(#seamTone)" strokeWidth="1.9" vectorEffect="non-scaling-stroke" />
           {/* 流动的光脉冲：让缝有"正在裂开"的动势 */}
-          <line
-            className="login-seam-pulse"
-            x1="0"
-            y1="12"
-            x2="100"
-            y2="100"
-            pathLength="100"
-            stroke="rgba(255, 255, 255, 0.95)"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeDasharray="6 94"
-            filter="url(#seamBlurSoft)"
-            vectorEffect="non-scaling-stroke"
-          />
+          {[0, 0.5].map((offset, i) => (
+            <line
+              key={i}
+              className="login-seam-pulse"
+              x1="0"
+              y1="12"
+              x2="100"
+              y2="100"
+              pathLength="100"
+              stroke="rgba(255, 255, 255, 0.98)"
+              strokeWidth="3.4"
+              strokeLinecap="round"
+              strokeDasharray="16 84"
+              filter="url(#seamBlurSoft)"
+              vectorEffect="non-scaling-stroke"
+              style={{ animationDelay: `${-offset * 4.5}s` }}
+            />
+          ))}
           <line
             x1="0"
             y1="12"
@@ -244,7 +248,7 @@ export default function LoginPage() {
               className="login-seam-spark"
               cx={s.t * 100}
               cy={12 + s.t * 88}
-              r={s.r * 1.7}
+              r={s.r * 2.6}
               fill="#ffffff"
               style={{ animationDelay: `${s.delay}s` }}
             />

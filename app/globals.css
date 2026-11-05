@@ -4195,3 +4195,17 @@ input[type="range"]::-moz-range-thumb {
   .login-seam-spark { animation: none; }
   .login-seam-pulse { opacity: 0.5; }
 }
+
+/* 缝拉开得更明显：缝隙变宽，光带就露出来 */
+.login-page.is-collapsed .login-tear-upper { transform: translate3d(24px, -24px, 0); }
+.login-page.is-collapsed .login-tear-lower { transform: translate3d(-24px, 24px, 0); }
+
+/* 幕布靠近缝的一侧压暗一点，缝才「亮得起来」 */
+.login-tear-half::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 20% 20%, rgba(26, 111, 181, 0.06) 0%, rgba(26, 111, 181, 0) 60%);
+}
+
+.login-seam-pulse { animation-duration: 4.5s; }
