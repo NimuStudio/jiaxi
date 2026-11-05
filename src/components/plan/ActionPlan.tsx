@@ -43,7 +43,7 @@ function buildActions(
   if (breakdown.waist > 0) {
     list.push({
       key: "waist",
-      title: `把腰围从 ${currentWaist} cm 降到 90 cm 以下`,
+      title: `把腰围从 ${currentWaist} cm 降到 94 cm 以下`,
       step: "饭后走 15 分钟，比节食更容易坚持",
       points: breakdown.waist,
       difficulty: 2,

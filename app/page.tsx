@@ -1,20 +1,15 @@
-import Link from "next/link";
 import { EvidencePanel } from "@/components/rag/EvidencePanel";
 import { ReclaimSimulator } from "@/components/simulator/ReclaimSimulator";
 
 export default function Home() {
   return (
     <main className="page">
-      <header className="head">
-        <span className="brand">
-          <span className="brand-mark" />
-          家系
-        </span>
-        <span className="tagline">你的风险里，有多少能拿回来</span>
-        <Link className="head-link" href="/chat">
-          先梳理家系 →
-        </Link>
-      </header>
+      <div className="page-head">
+        <h1 className="page-title">你的风险里，有多少能拿回来</h1>
+        <p className="page-sub">
+          FINDRISC 把 10 年糖尿病风险拆成「改不了的」和「能拿回来的」——拖动滑块，看后一部分值多少分。
+        </p>
+      </div>
 
       <ReclaimSimulator />
       <EvidencePanel />

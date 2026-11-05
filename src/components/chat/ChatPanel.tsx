@@ -7,11 +7,21 @@ import {
   RELATION_LABEL,
 } from "@/lib/pedigree/viz";
 import type { RelationType } from "@/lib/pedigree/types";
+import { useSpeechInput } from "@/lib/speech/useSpeechInput";
+import { MicButton } from "@/components/ui/MicButton";
+import { DiseaseCheatSheet } from "@/components/chat/DiseaseCheatSheet";
 
 interface Message {
   role: "user" | "system";
   text: string;
   tone?: "normal" | "error";
+}
+
+/** 流式抽取的可观察阶段（与后端 ExtractStage 事件对应）。 */
+interface StageState {
+  splitTotal: number;
+  currentIndex: number;
+  currentSegment: string;
 }
 
 export interface ChatPanelProps {
@@ -61,8 +71,18 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState<StageState | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  // 语音输入：老人念叨病史更愿意说而不是打字，说完落在输入框里再确认
+  const speech = useSpeechInput((text) =>
+    setInput((cur) => (cur.trim().length > 0 ? `${cur}${text}` : text)),
+  );
+
+  /**
+   * 读取 SSE 流：按空行切事件，逐条解析 JSON。
+   * 用 fetch 而不是 EventSource，因为要 POST 请求体。
+   */
   async function send(text: string) {
     const content = text.trim();
     if (content.length === 0 || loading) return;
@@ -70,35 +90,93 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
     setMessages((m) => [...m, { role: "user", text: content }]);
     setInput("");
     setLoading(true);
+    setStage(null);
 
     try {
-      const res = await fetch("/api/extract", {
+      const res = await fetch("/api/extract/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: content }),
       });
-      const data = (await res.json()) as {
-        persons?: ExtractedPerson[];
-        error?: string;
-      };
 
-      if (!res.ok || data.error) {
+      if (!res.ok) {
+        // 503 时 body 是普通 JSON（服务不在线），不走了流式协议
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
         setMessages((m) => [
           ...m,
           {
             role: "system",
-            text: data.error ?? "抽取服务返回了错误。",
+            text: data?.error ?? `抽取服务返回 ${res.status}。`,
             tone: "error",
           },
         ]);
         return;
       }
 
-      const persons = data.persons ?? [];
-      if (persons.length > 0) onExtracted(persons, content);
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("浏览器不支持流式读取");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let persons: ExtractedPerson[] | null = null;
+      let errorMsg: string | null = null;
+
+      // 流式解析 SSE
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+        for (const ev of events) {
+          const line = ev.trim();
+          if (!line.startsWith("data:")) continue;
+          try {
+            const payload = JSON.parse(line.slice(5)) as {
+              type: string;
+              persons?: ExtractedPerson[];
+              error?: string;
+              total?: number;
+              index?: number;
+              segment?: string;
+            };
+            if (payload.type === "split") {
+              setStage({
+                splitTotal: payload.total ?? 0,
+                currentIndex: 0,
+                currentSegment: "",
+              });
+            } else if (payload.type === "segment") {
+              setStage((s) => ({
+                splitTotal: s?.splitTotal ?? 0,
+                currentIndex: payload.index ?? 0,
+                currentSegment: payload.segment ?? "",
+              }));
+            } else if (payload.type === "done") {
+              persons = payload.persons ?? [];
+            } else if (payload.type === "error") {
+              errorMsg = payload.error ?? "抽取失败。";
+            }
+          } catch {
+            /* 半条事件被 TCP 切开了，留在 buffer 等下一段 */
+          }
+        }
+      }
+
+      if (errorMsg) {
+        setMessages((m) => [
+          ...m,
+          { role: "system", text: errorMsg, tone: "error" },
+        ]);
+        return;
+      }
+
+      const result = persons ?? [];
+      if (result.length > 0) onExtracted(result, content);
       setMessages((m) => [
         ...m,
-        { role: "system", text: describe(persons) },
+        { role: "system", text: describe(result) },
       ]);
     } catch {
       setMessages((m) => [
@@ -111,6 +189,7 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
       ]);
     } finally {
       setLoading(false);
+      setStage(null);
       requestAnimationFrame(() => {
         listRef.current?.scrollTo({
           top: listRef.current.scrollHeight,
@@ -134,11 +213,31 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
           </div>
         ))}
         {loading && (
-          <div className="bubble bubble-system is-thinking">
-            <span className="dot" />
-            <span className="dot" />
-            <span className="dot" />
-            正在读这段话
+          <div className="bubble bubble-system is-thinking extract-stage">
+            {stage ? (
+              <>
+                <div className="stage-progress">
+                  <span className="stage-kicker">
+                    <span className="dot" />
+                    <span className="dot" />
+                    <span className="dot" />
+                    {stage.splitTotal > 1
+                      ? `逐句抽取 ${stage.currentIndex}/${stage.splitTotal}`
+                      : stage.splitTotal === 1
+                        ? "正在抽取"
+                        : "正在分句"}
+                  </span>
+                  <p className="stage-segment">「{stage.currentSegment}」</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="dot" />
+                <span className="dot" />
+                <span className="dot" />
+                正在读这段话
+              </>
+            )}
           </div>
         )}
       </div>
@@ -158,20 +257,25 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
         </div>
       )}
 
+      {/* 疾病清单入口：让用户知道哪些说法能被听懂，减少词表外的漏网表述 */}
+      <div className="cheat-entry">
+        <DiseaseCheatSheet />
+      </div>
+
       <form
         className="chat-input-row"
         onSubmit={(e) => {
           e.preventDefault();
           void send(input);
         }}
-      >
-        <input
+      >        <input
           className="chat-input"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="例如：我爸前年放了支架，那时候五十五"
+          placeholder={speech.listening ? "正在听你说……" : "例如：我爸前年放了支架，那时候五十五"}
           disabled={loading}
         />
+        <MicButton speech={speech} />
         <button
           className="chat-send"
           type="submit"
@@ -180,6 +284,7 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
           记下
         </button>
       </form>
+      {speech.error && <p className="mic-error">{speech.error}</p>}
     </div>
   );
 }

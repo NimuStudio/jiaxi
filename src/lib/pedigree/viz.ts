@@ -75,7 +75,11 @@ export const EDGES: ReadonlyArray<readonly [RelationType, RelationType]> = [
 
   ["father", "self"],
   ["mother", "self"],
+  // 同胞对父母各有一条连线（与 self 一致）：只记录单亲时，
+  // 「母亲 + 兄弟」里的兄弟不会悬空（之前只连 father，会画不出边）。
   ["father", "brother"],
+  ["mother", "brother"],
+  ["father", "sister"],
   ["mother", "sister"],
   ["self", "son"],
   ["self", "daughter"],

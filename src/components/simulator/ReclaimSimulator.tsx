@@ -5,6 +5,7 @@ import { evaluateFindrisc, type RiskBand } from "@/lib/risk/findrisc";
 import { ActionPlan } from "@/components/plan/ActionPlan";
 import { RiskScale } from "./RiskScale";
 import { FactorControls, type Factors } from "./FactorControls";
+import { useCountUp } from "@/components/ui/useCountUp";
 
 const BAND_LABEL: Record<RiskBand, string> = {
   low: "低",
@@ -47,6 +48,9 @@ export function ReclaimSimulator() {
 
   const now = result.current.tenYearRiskPercent;
   const goal = result.best.tenYearRiskPercent;
+  // 关键数字滚动：拖滑块时看得见风险在动，而不是瞬间跳变
+  const nowAnim = useCountUp(now, 500);
+  const goalAnim = useCountUp(goal, 500);
   const reclaimable = result.reclaimablePoints;
   const isLow =
     result.current.band === "low" || result.current.band === "slightly-elevated";
@@ -58,7 +62,7 @@ export function ReclaimSimulator() {
 
         <div className="risk-headline">
           <span className={`risk-big${isLow ? " is-low" : ""}`}>
-            {fmtPct(now)}
+            {fmtPct(nowAnim)}
             <span className="risk-unit">%</span>
           </span>
           <span className={`band-chip${isLow ? " is-low" : ""}`}>
@@ -77,7 +81,7 @@ export function ReclaimSimulator() {
 
         <div className="compare">
           <div className="compare-item now">
-            <div className="value">{fmtPct(now)}%</div>
+            <div className="value">{fmtPct(nowAnim)}%</div>
             <div className="label">现在</div>
           </div>
           <div className="compare-arrow">
@@ -85,7 +89,7 @@ export function ReclaimSimulator() {
             可回收
           </div>
           <div className="compare-item goal">
-            <div className="value">{fmtPct(goal)}%</div>
+            <div className="value">{fmtPct(goalAnim)}%</div>
             <div className="label">全部达标后</div>
           </div>
         </div>
