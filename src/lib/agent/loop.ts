@@ -145,7 +145,7 @@ function guardNumbers(answer: string, observations: string[]): string {
   // 说清「没把握」，把判断留给界面上的结构化事实。
   return out.length > 0
     ? out
-    : "这个问题的数字我没法可靠地组织成一句话，下面是从你的数据里直接算出来的结果。";
+    : "这个问题的具体数字我没有可靠出处，就不写了——不编数字。你的个人风险可以看下面由规则引擎算出的结果。";
 }
 
 /** 观察结果截断，避免上下文被长文本挤爆（本地服务只有 4096）。 */
@@ -253,6 +253,26 @@ export function isFactualQuestion(question: string): boolean {
   );
 }
 
+/**
+ * 药物与治疗类问题：可以解释风险，但不提供用药/治疗方案。
+ *
+ * 实测「吃二甲双胍能把风险降到多少」时，模型既没给药建议（安全），
+ * 也没说"请咨询医生"，而是转向生活方式——用户读不出"这里不提供用药建议"。
+ * 这是一句确定性护栏，不依赖模型自觉。
+ */
+export function withMedicalGuardrail(question: string, answer: string): string {
+  const asksTreatment =
+    /(药物|吃药|用药|服药|二甲双胍|胰岛素|他汀|剂量|处方|手术|治疗方案|怎么治|吃什么药)/.test(
+      question,
+    );
+  if (!asksTreatment) return answer;
+  if (/(医生|就医|专业|门诊)/.test(answer)) return answer;
+  return (
+    answer +
+    "\n\n（用药与治疗方案需要医生结合你的具体情况判断，这里不提供用药建议。）"
+  );
+}
+
 const MAX_STEPS = 4;
 
 /**
@@ -321,9 +341,12 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
   }
 
   const finish = (raw: string): AgentResult => ({
-    answer: attachCitationSources(
-      guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
-      titleToSource,
+    answer: withMedicalGuardrail(
+      question,
+      attachCitationSources(
+        guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+        titleToSource,
+      ),
     ),
     // 最终步的 input 是模型原始输出，可能带着编造的引用和数字；界面会把 steps
     // 渲染成"它怎么想的"，所以必须清空，不能让它绕过前面两道守卫。
