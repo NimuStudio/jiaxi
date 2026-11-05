@@ -222,6 +222,23 @@ async function decide(
   }
 }
 
+/**
+ * 把回答里的「依据：《标题》」补成带真实出处的形式。
+ *
+ * 为什么要补：知识库条目的标题（如《0–20 分和 0–26 分是两个版本》）看着像文献名，
+ * 用户问「给我一篇论文」时只看到这个标题，等于拿到一个编造的出处。
+ * 条目本身带 source 字段，这里把出处接上去，让每个"依据"都能核到真实来源。
+ */
+export function attachCitationSources(
+  text: string,
+  sources: Map<string, string>,
+): string {
+  return text.replace(/依据[：:]\s*《([^》]+)》/g, (whole, title: string) => {
+    const src = sources.get(title);
+    return src === undefined ? whole : `依据：《${title}》（出处：${src}）`;
+  });
+}
+
 const MAX_STEPS = 4;
 
 /**
@@ -256,11 +273,18 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
 
   const facts: AgentFacts = { risk: null, pedigree: [], citations: [] };
   const allowedTitles = new Set<string>();
+  /** 条目标题 → 出处；回答里的「依据：《标题》」会补上它 */
+  const titleToSource = new Map<string, string>();
   let repeats = 0;
 
   const finish = (raw: string): AgentResult => ({
-    answer: guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
-    steps,
+    answer: attachCitationSources(
+      guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+      titleToSource,
+    ),
+    // 最终步的 input 是模型原始输出，可能带着编造的引用和数字；界面会把 steps
+    // 渲染成"它怎么想的"，所以必须清空，不能让它绕过前面两道守卫。
+    steps: steps.map((s) => (s.action === "final_answer" ? { ...s, input: "" } : s)),
     facts,
   });
 
@@ -305,6 +329,8 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
     if (r.citations) {
       for (const c of r.citations) {
         allowedTitles.add(c);
+        const src = r.citationSources?.[c];
+        if (src) titleToSource.set(c, src);
         if (!facts.citations.includes(c)) facts.citations.push(c);
       }
     }

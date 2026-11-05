@@ -101,6 +101,8 @@ export interface ToolResult {
   observation: string;
   /** 本次真实检索到的条目标题，用于校验回答里的「依据」。 */
   citations?: string[];
+  /** 条目标题 → 出处（把「依据」补成可核对的引用，而不是只给一个标题） */
+  citationSources?: Record<string, string>;
   /** 结构化的家族史摘要，界面直接展示。 */
   pedigree?: string[];
   /** 结构化的风险结果，界面直接展示。 */
@@ -198,6 +200,7 @@ export function runTool(name: ToolName, input: string, ctx: ToolContext): ToolRe
         hits.map((h) => `《${h.title}》${h.text}（出处：${h.source}）`).join("\n") +
         "\n（已检索到内容，请直接据此作答，不要换措辞重复检索。）",
       citations: hits.map((h) => h.title),
+      citationSources: Object.fromEntries(hits.map((h) => [h.title, h.source])),
     };
   }
 
