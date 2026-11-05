@@ -245,15 +245,15 @@ export default function LoginPage() {
 
       {/* 折叠态：入口是那道「光缝」本身，而不是一个按钮 */}
       <div className="login-seam-entry">
+        {/* 只保留一个可聚焦的语义按钮（视觉上不可见）：键盘用户 Tab 一次即可展开。
+            真正的视觉入口是那条贯穿全屏的光缝本身。 */}
         <button
           type="button"
           className="login-seam-btn"
           onClick={() => setExpanded(true)}
           onFocus={() => setExpanded(true)}
           aria-label="展开登录界面"
-        >
-          <span className="login-seam-line" aria-hidden="true" />
-        </button>
+        />
         <p className="login-seam-hint">
           <span className="login-seam-dot" aria-hidden="true" />
           从右上往左下划，或点击任意处
