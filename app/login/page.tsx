@@ -273,7 +273,10 @@ export default function LoginPage() {
           onFocus={() => setExpanded(true)}
           aria-label="展开登录界面"
         />
-        <p className="login-seam-hint">从右上往左下划，或点击任意处</p>
+        <p className="login-seam-hint">
+          <span className="login-seam-arrow" aria-hidden="true">↙</span>
+          从右上往左下划，或点击任意处
+        </p>
       </div>
 
       <section className="login-hero">

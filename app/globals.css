@@ -4477,3 +4477,43 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 900px) {
   .login-seam-hint { font-size: 11px; letter-spacing: 0.1em; }
 }
+
+/* ---------- 提示词改为水平胶囊（不再旋转） ---------- */
+.login-seam-hint {
+  position: absolute;
+  left: 50%;
+  top: 57%;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 15px 7px 12px;
+  white-space: nowrap;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(26, 111, 181, 0.16);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px -8px rgba(16, 42, 68, 0.28);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.login-seam-arrow {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--primary);
+  animation: seam-arrow-nudge 2.4s ease-in-out infinite;
+}
+
+@keyframes seam-arrow-nudge {
+  0%, 100% { transform: translate(0, 0); opacity: 0.65; }
+  50% { transform: translate(-2px, 2px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-seam-arrow { animation: none; }
+}
