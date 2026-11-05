@@ -4517,3 +4517,32 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .login-seam-arrow { animation: none; }
 }
+
+/* 提示词移到底部居中 */
+.login-seam-hint {
+  left: 50%;
+  top: auto;
+  bottom: 44px;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 900px) {
+  .login-seam-hint { bottom: 84px; font-size: 11.5px; }
+}
+
+/* 提示词改为 fixed 锚定视口底部（原来挂在居中容器里，bottom 无效） */
+.login-seam-hint {
+  position: fixed;
+  left: 50%;
+  top: auto;
+  bottom: 46px;
+  transform: translateX(-50%);
+  z-index: 40;
+}
+
+@media (max-width: 900px) {
+  .login-seam-hint { bottom: 96px; }
+}
+
+/* 抬一点，避免与左下角的步骤行挤在同一条水平线上 */
+.login-seam-hint { bottom: 104px; }
