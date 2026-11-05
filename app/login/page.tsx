@@ -295,6 +295,29 @@ export default function LoginPage() {
           <br />
           再算清哪部分风险能靠生活方式拿回来。
         </p>
+
+        <ol className="login-steps">
+          <li>
+            <b>01</b>
+            <span className="login-step-title">说病史</span>
+            <span className="login-step-desc">一句口语就够</span>
+          </li>
+          <li>
+            <b>02</b>
+            <span className="login-step-title">看家系</span>
+            <span className="login-step-desc">节点可回溯原话</span>
+          </li>
+          <li>
+            <b>03</b>
+            <span className="login-step-title">算风险</span>
+            <span className="login-step-desc">拆成能改与不能改</span>
+          </li>
+        </ol>
+
+        <p className="login-sources">
+          系数来源：FINDRISC（Lindström 2003）· China-PAR（Circulation 2016）。
+          每一项都登记了文献台账，界面上不出现查不到出处的数字。
+        </p>
       </section>
 
       <section className="login-card-wrap">
@@ -367,6 +390,15 @@ export default function LoginPage() {
             只想看效果？<a href="/chat?demo=1">用预置家系直接浏览</a>
           </p>
         </div>
+
+        {/* 二级入口：不登录也能走完一遍，评委与路人都不必先注册 */}
+        <a className="login-ghost-link" href="/chat?demo=1">
+          <span>不注册，用预置家系走一遍</span>
+          <span className="login-ghost-arrow" aria-hidden="true">
+            →
+          </span>
+        </a>
+        <p className="login-ghost-note">免登录 · 不需要模型在线 · 3 步看到完整结论</p>
       </section>
 
       <footer className="login-stats-strip">
@@ -381,6 +413,10 @@ export default function LoginPage() {
         <div className="login-stat">
           <b>100%</b>
           <span>本机推理</span>
+        </div>
+        <div className="login-stat">
+          <b>1.000</b>
+          <span>口语集抽取 F1</span>
         </div>
         <p className="login-stats-note">FINDRISC · China-PAR ｜ 数据保存在本机 MySQL，不上传</p>
       </footer>

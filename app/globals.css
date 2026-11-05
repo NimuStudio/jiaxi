@@ -5133,3 +5133,113 @@ input[type="range"]::-moz-range-thumb {
 .login-page.is-expanded .login-topbar {
   top: 30px;
 }
+
+/* ===== 展开态左栏：流程步骤 + 系数出处 ===== */
+.login-steps {
+  display: flex;
+  gap: 0;
+  margin: 34px 0 0;
+  padding: 20px 0 0;
+  list-style: none;
+  border-top: 1px solid rgba(26, 111, 181, 0.16);
+  max-width: 30em;
+}
+
+.login-steps li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 22px;
+}
+
+.login-steps li + li {
+  padding-left: 22px;
+  border-left: 1px solid rgba(26, 111, 181, 0.14);
+}
+
+.login-steps b {
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.login-step-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #14385a;
+}
+
+.login-step-desc {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.login-sources {
+  margin: 22px 0 0;
+  max-width: 34em;
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: rgba(43, 71, 99, 0.55);
+}
+
+/* 折叠态不显示这两块（折叠态有自己的排版） */
+.login-page.is-collapsed .login-steps,
+.login-page.is-collapsed .login-sources { display: none; }
+
+/* ===== 右栏卡片下方：二级入口 ===== */
+.login-ghost-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 13px 18px;
+  border: 1px solid rgba(26, 111, 181, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #14385a;
+  font-size: 13px;
+  text-decoration: none;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.login-ghost-link:hover {
+  border-color: rgba(26, 111, 181, 0.42);
+  background: #fff;
+  transform: translateY(-1px);
+}
+
+.login-ghost-arrow {
+  color: var(--primary);
+  transition: transform 0.2s ease;
+}
+
+.login-ghost-link:hover .login-ghost-arrow { transform: translateX(3px); }
+
+.login-ghost-note {
+  margin: 9px 0 0;
+  font-size: 11px;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+.login-page.is-collapsed .login-ghost-link,
+.login-page.is-collapsed .login-ghost-note { display: none; }
+
+/* 步骤带：三列等宽，说明文字不再挤成两行 */
+.login-steps {
+  width: min(34em, 100%);
+  align-items: flex-start;
+}
+
+.login-steps li {
+  flex: 0 0 auto;
+  min-width: 8.6em;
+}
+
+.login-sources { max-width: 32em; }
+
+/* 统计条从三格变四格后收一点间距，避免挤在一起 */
+.login-stats-strip { gap: clamp(18px, 3vw, 44px); }
