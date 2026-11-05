@@ -4163,3 +4163,35 @@ input[type="range"]::-moz-range-thumb {
 @media (prefers-reduced-motion: reduce) {
   .login-seam-glow { animation: none; opacity: 0.85; }
 }
+
+/* ---------- 缝的动效：脉冲 + 微粒 ---------- */
+.login-seam-pulse {
+  animation: seam-pulse 6.5s linear infinite;
+}
+
+@keyframes seam-pulse {
+  0% { stroke-dashoffset: 100; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.login-seam-spark {
+  animation: seam-spark 3.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 3px rgba(180, 220, 250, 0.9));
+}
+
+@keyframes seam-spark {
+  0%, 100% { opacity: 0.12; }
+  45% { opacity: 0.95; }
+  60% { opacity: 0.35; }
+}
+
+.login-page.is-expanded .login-seam-pulse,
+.login-page.is-expanded .login-seam-spark {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-seam-pulse,
+  .login-seam-spark { animation: none; }
+  .login-seam-pulse { opacity: 0.5; }
+}

@@ -20,6 +20,20 @@ const DnaScene3D = dynamic(() => import("@/components/home/DnaScene3D").then((m)
  *  - 底部一条贯穿全宽的指标带，把价值量化成三个数字。
  * 窄屏自动退化为单列（标题 → 卡片 → 指标）。
  */
+/** 缝上闪烁微粒的位置（沿对角线比例 t），写死保证每次刷新一致 */
+const SEAM_SPARKS = [
+  { t: 0.1, r: 0.42, delay: 0 },
+  { t: 0.18, r: 0.3, delay: 1.4 },
+  { t: 0.29, r: 0.5, delay: 2.6 },
+  { t: 0.37, r: 0.28, delay: 0.8 },
+  { t: 0.46, r: 0.36, delay: 3.4 },
+  { t: 0.55, r: 0.52, delay: 1.9 },
+  { t: 0.63, r: 0.3, delay: 4.2 },
+  { t: 0.71, r: 0.44, delay: 2.1 },
+  { t: 0.8, r: 0.3, delay: 3.1 },
+  { t: 0.89, r: 0.46, delay: 0.4 },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const { user, ready, login, register } = useAccount();
@@ -185,12 +199,34 @@ export default function LoginPage() {
           <mask id="seamMask">
             <rect x="0" y="0" width="100" height="100" fill="url(#seamFade)" />
           </mask>
+          {/* 沿缝的色温渐变：不是一根均匀的蓝线 */}
+          <linearGradient id="seamTone" x1="0" y1="12" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#6ab0e4" />
+            <stop offset="38%" stopColor="#a8d8f5" />
+            <stop offset="62%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#41c6cf" />
+          </linearGradient>
         </defs>
         {/* 缝的四层：外辉光 / 内光晕 / 高光芯 / 针脚，整体两端渐隐 */}
         <g className="login-seam-glow" mask="url(#seamMask)">
-          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(88, 170, 232, 0.34)" strokeWidth="22" filter="url(#seamBlur)" />
-          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(126, 196, 244, 0.55)" strokeWidth="7" filter="url(#seamBlurSoft)" />
-          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(255, 255, 255, 0.92)" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(88, 170, 232, 0.52)" strokeWidth="26" filter="url(#seamBlur)" />
+          <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(140, 205, 248, 0.72)" strokeWidth="9" filter="url(#seamBlurSoft)" />
+          <line x1="0" y1="12" x2="100" y2="100" stroke="url(#seamTone)" strokeWidth="1.9" vectorEffect="non-scaling-stroke" />
+          {/* 流动的光脉冲：让缝有"正在裂开"的动势 */}
+          <line
+            className="login-seam-pulse"
+            x1="0"
+            y1="12"
+            x2="100"
+            y2="100"
+            pathLength="100"
+            stroke="rgba(255, 255, 255, 0.95)"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeDasharray="6 94"
+            filter="url(#seamBlurSoft)"
+            vectorEffect="non-scaling-stroke"
+          />
           <line
             x1="0"
             y1="12"
@@ -201,6 +237,18 @@ export default function LoginPage() {
             strokeDasharray="0.55 1.15"
             vectorEffect="non-scaling-stroke"
           />
+          {/* 缝上闪烁的微粒：让这条线有颗粒与呼吸，不是一根均匀的直线 */}
+          {SEAM_SPARKS.map((s, i) => (
+            <circle
+              key={i}
+              className="login-seam-spark"
+              cx={s.t * 100}
+              cy={12 + s.t * 88}
+              r={s.r * 1.7}
+              fill="#ffffff"
+              style={{ animationDelay: `${s.delay}s` }}
+            />
+          ))}
         </g>
         <line
           x1="0"
