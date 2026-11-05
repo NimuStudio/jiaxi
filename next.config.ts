@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
 
   // 关掉开发期的浮层指示器，截图 / 演示时画面干净
   devIndicators: false,
+
+  // 保持 Next 自带的压缩（默认开）。注意：用 HEAD 看响应头看不到 Content-Encoding，
+  // 但真实 GET 带 gzip 时 229 KB 的 chunk 只会下载 71.8 KB——不要被 HEAD 误导。
+  compress: true,
 };
 
 export default nextConfig;
