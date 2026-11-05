@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DnaScene } from "@/components/home/DnaScene";
+import { DnaArtwork } from "@/components/home/DnaArtwork";
 import { useAccount } from "@/lib/auth/account-client";
 
 /**
@@ -49,7 +49,7 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-visual">
-        <DnaScene />
+        <DnaArtwork />
         <div className="login-visual-copy">
           <p className="login-kicker">家系 · 遗传健康的家族史梳理</p>
           <h1 className="login-title">
