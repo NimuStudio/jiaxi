@@ -3885,3 +3885,107 @@ input[type="range"]::-moz-range-thumb {
     transition: none;
   }
 }
+
+/* ---------- 沿对角线展开 + 空间纵深 ---------- */
+.login-page { perspective: 1400px; perspective-origin: 44% 52%; }
+
+.login-hero,
+.login-card-wrap,
+.login-stats-strip,
+.login-stage,
+.login-diagonal,
+.login-diagonal-line {
+  transform-style: preserve-3d;
+  will-change: transform, opacity, clip-path;
+}
+
+/* 折叠态：内容退到 Z 轴深处，并沿对角线方向错位 */
+.login-page.is-collapsed .login-hero {
+  opacity: 0;
+  transform: translate3d(-46px, 46px, -220px) scale(0.95);
+}
+
+.login-page.is-collapsed .login-stage {
+  opacity: 0;
+  transform: translate3d(-110px, 110px, -420px) scale(1.12);
+}
+
+.login-page.is-collapsed .login-card-wrap {
+  opacity: 0;
+  transform: translate3d(52px, -52px, -150px) scale(0.92);
+}
+
+.login-page.is-collapsed .login-stats-strip {
+  opacity: 0;
+  transform: translate3d(0, 52px, -80px);
+}
+
+/* 蓝面板从切割线翻开：clip-path 三个顶点插值，起始是贴着对角线的极窄三角 */
+.login-page.is-collapsed .login-diagonal {
+  opacity: 0;
+  clip-path: polygon(0 12%, 0 13.5%, 100% 100%);
+}
+
+.login-page.is-expanded .login-diagonal {
+  opacity: 1;
+  clip-path: polygon(0 12%, 0 100%, 100% 100%);
+  transition: clip-path 1s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.5s ease;
+}
+
+/* 展开后归位：越深的元素到位越慢，形成纵深 */
+.login-page.is-expanded .login-hero,
+.login-page.is-expanded .login-card-wrap,
+.login-page.is-expanded .login-stats-strip,
+.login-page.is-expanded .login-stage {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.login-page.is-expanded .login-hero {
+  transition: transform 0.9s cubic-bezier(0.16, 0.7, 0.3, 1) 0.05s, opacity 0.6s ease 0.05s;
+}
+.login-page.is-expanded .login-stage {
+  transition: transform 1.15s cubic-bezier(0.16, 0.7, 0.3, 1) 0.1s, opacity 0.8s ease 0.1s;
+}
+.login-page.is-expanded .login-card-wrap {
+  transition: transform 0.9s cubic-bezier(0.16, 0.7, 0.3, 1) 0.18s, opacity 0.6s ease 0.18s;
+}
+.login-page.is-expanded .login-stats-strip {
+  transition: transform 0.85s cubic-bezier(0.16, 0.7, 0.3, 1) 0.26s, opacity 0.6s ease 0.26s;
+}
+
+/* 展开瞬间沿对角线扫过的一道高光 */
+.login-sweep {
+  position: absolute;
+  inset: -20% -40%;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0) 42%,
+    rgba(255, 255, 255, 0.75) 50%,
+    rgba(255, 255, 255, 0) 58%
+  );
+}
+
+.login-page.is-expanded .login-sweep {
+  animation: sweep-along-diagonal 1.15s cubic-bezier(0.3, 0.7, 0.3, 1) 0.05s 1 both;
+}
+
+@keyframes sweep-along-diagonal {
+  0% { opacity: 0; transform: translate3d(-38%, 38%, 0); }
+  18% { opacity: 0.9; }
+  100% { opacity: 0; transform: translate3d(38%, -38%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page.is-expanded .login-sweep { animation: none; }
+  .login-page.is-expanded .login-diagonal { transition: none; }
+  .login-page.is-expanded .login-hero,
+  .login-page.is-expanded .login-card-wrap,
+  .login-page.is-expanded .login-stats-strip,
+  .login-page.is-expanded .login-stage {
+    transition: none;
+  }
+}

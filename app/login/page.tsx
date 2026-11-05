@@ -100,6 +100,8 @@ export default function LoginPage() {
         <span className="login-blob login-blob-3" />
       </div>
       <div className="login-grid" aria-hidden="true" />
+      {/* 展开瞬间沿对角线扫过的一道高光 */}
+      <div className="login-sweep" aria-hidden="true" />
       <svg
         className="login-diagonal-line"
         viewBox="0 0 100 100"
