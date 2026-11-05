@@ -20,19 +20,7 @@ const DnaScene3D = dynamic(() => import("@/components/home/DnaScene3D").then((m)
  *  - 底部一条贯穿全宽的指标带，把价值量化成三个数字。
  * 窄屏自动退化为单列（标题 → 卡片 → 指标）。
  */
-/** 缝上闪烁微粒的位置（沿对角线比例 t），写死保证每次刷新一致 */
-const SEAM_SPARKS = [
-  { t: 0.1, r: 0.42, delay: 0 },
-  { t: 0.18, r: 0.3, delay: 1.4 },
-  { t: 0.29, r: 0.5, delay: 2.6 },
-  { t: 0.37, r: 0.28, delay: 0.8 },
-  { t: 0.46, r: 0.36, delay: 3.4 },
-  { t: 0.55, r: 0.52, delay: 1.9 },
-  { t: 0.63, r: 0.3, delay: 4.2 },
-  { t: 0.71, r: 0.44, delay: 2.1 },
-  { t: 0.8, r: 0.3, delay: 3.1 },
-  { t: 0.89, r: 0.46, delay: 0.4 },
-];
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -72,12 +60,7 @@ export default function LoginPage() {
       el.style.setProperty("--px", nx.toFixed(3));
       el.style.setProperty("--py", ny.toFixed(3));
     };
-    // 对角线的实际倾角随视口比例变化：算出来写进 --seam-angle，提示词才能贴着线写
-    const setAngle = () => {
-      const deg = (Math.atan2(0.88 * window.innerHeight, window.innerWidth) * 180) / Math.PI;
-      el.style.setProperty("--seam-angle", deg.toFixed(2) + "deg");
-    };
-    setAngle();
+
 
     const onMove = (e: PointerEvent) => {
       nx = (e.clientX / window.innerWidth - 0.5) * 2;
@@ -85,10 +68,8 @@ export default function LoginPage() {
       if (!raf) raf = window.requestAnimationFrame(apply);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("resize", setAngle);
     return () => {
       window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("resize", setAngle);
       if (raf) window.cancelAnimationFrame(raf);
     };
   }, []);

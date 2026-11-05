@@ -36,11 +36,12 @@ describe("China-PAR：论文 Table 2 全部 8 个验证点", () => {
   for (const [age, menPct, womenPct] of AGES) {
     it(`男性 ${age} 岁示例 ≈ ${menPct}%`, () => {
       const r = evaluateChinapar({ ...EXAMPLE, age, sex: "male" });
-      expect(r.risk * 100).toBeCloseTo(menPct, 0);
+      // 论文给到 1 位小数，本实现系数取 4 位有效数字，允许 0.35 个百分点偏差
+      expect(Math.abs(r.risk * 100 - menPct)).toBeLessThanOrEqual(0.35);
     });
     it(`女性 ${age} 岁示例 ≈ ${womenPct}%`, () => {
       const r = evaluateChinapar({ ...EXAMPLE, age, sex: "female" });
-      expect(r.risk * 100).toBeCloseTo(womenPct, 0);
+      expect(Math.abs(r.risk * 100 - womenPct)).toBeLessThanOrEqual(0.35);
     });
   }
 });
