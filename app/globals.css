@@ -5070,3 +5070,26 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 900px) {
   .login-colophon { display: none; }
 }
+
+/* ===== 光缝去噪：一条实线 + 缓慢呼吸 + 一段流光，砍掉虚线纹理与小光点 ===== */
+.login-seam-breathe {
+  stroke-dasharray: none;   /* 覆盖 SVG 上的 2.4 3.2 虚线 */
+  stroke-width: 2.2;
+}
+
+.login-seam-sparkline { display: none; }
+
+/* 流光慢一点、短一点，作为唯一的动效焦点 */
+.login-seam-flow {
+  animation-duration: 7s;
+  stroke-width: 1.6;
+}
+
+/* ===== 说明行挪到右上，作为顶栏的第二行，避开被光缝穿过的右下角 ===== */
+.login-colophon {
+  right: 64px;
+  top: 76px;
+  bottom: auto;
+  font-size: 11px;
+  color: rgba(43, 71, 99, 0.42);
+}
