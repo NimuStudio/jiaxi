@@ -22,6 +22,9 @@ title pedigree-demo
 set "PED=D:\develop\chuanzhibei\pedigree"
 set "LLAMA=D:\develop\llama\llama-b11852-bin-win-cuda-13.4-x64\llama-server.exe"
 set "MODEL=D:\develop\chuanzhibei\ml\out\qwen3-base-Q4_K_M.gguf"
+set "VLM=D:\develop\llama\llama-b11852-bin-win-cuda-13.4-x64\llama-server.exe"
+set "VLM_MODEL=D:\develop\chuanzhibei\ml\vlm\model.gguf"
+set "VLM_MMPROJ=D:\develop\chuanzhibei\ml\vlm\mmproj.gguf"
 
 echo [1/4] MySQL ...
 sc query MySQL80 | findstr /i "RUNNING" >nul
@@ -32,7 +35,7 @@ if errorlevel 1 (
     echo   已在运行
 )
 
-echo [2/4] 本地推理 llama-server（8080）...
+echo [2/5] 本地推理 llama-server（8080）...
 netstat -ano | findstr ":8080 " | findstr "LISTENING" >nul
 if errorlevel 1 (
     echo   启动中：Qwen3-1.7B Q4_K_M
@@ -42,7 +45,24 @@ if errorlevel 1 (
     echo   已在运行
 )
 
-echo [3/4] 站点 Next.js（5173）...
+echo [3/5] 视觉模型 llama-server（8082，化验单识别，可选）...
+if not exist "%VLM%" goto skip_vlm
+if not exist "%VLM_MODEL%" goto skip_vlm
+if not exist "%VLM_MMPROJ%" goto skip_vlm
+netstat -ano | findstr ":8082 " | findstr "LISTENING" >nul
+if errorlevel 1 (
+    echo   启动中：Qwen2.5-VL-3B Q4 + mmproj
+    start "llama-vl" /min "%VLM%" -m "%VLM_MODEL%" --mmproj "%VLM_MMPROJ%" -ngl 99 -c 4096 --port 8082 --host 127.0.0.1
+    ping -n 9 127.0.0.1 >nul
+) else (
+    echo   已在运行
+)
+goto after_vlm
+:skip_vlm
+echo   跳过：未找到视觉模型，化验单入口会自动隐藏，其余功能不受影响
+:after_vlm
+
+echo [4/5] 站点 Next.js（5173）...
 netstat -ano | findstr ":5173 " | findstr "LISTENING" >nul
 if errorlevel 1 (
     cd /d "%PED%"
@@ -53,7 +73,7 @@ if errorlevel 1 (
     echo   已在运行
 )
 
-echo [4/4] 反向隧道（clear.ysti.com.cn 转发到本机）...
+echo [5/5] 反向隧道（clear.ysti.com.cn 转发到本机）...
 powershell -NoProfile -Command "if (Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -ne $PID -and $_.CommandLine -like '*-R 18001*' }) { exit 0 } else { exit 1 }"
 if errorlevel 1 (
     start "pedigree-tunnel" /min cmd /c "D:\develop\chuanzhibei\infra\tunnel\tunnel-loop.cmd 18001 5173"

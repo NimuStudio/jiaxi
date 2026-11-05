@@ -2,6 +2,8 @@
 
 > 目的：判断「拍照上传化验单 → 自动填体检数字」这条路能不能做，用实测数据决定，而不是凭感觉。
 
+> **状态：已实现**（2026-11-05）。实现见下方「落地形态」一节。
+
 ## 结论
 
 | 方案 | 干净图 | 退化图（旋转 3.5°+缩放 72%+JPEG） | 耗时 | 可用性 |
@@ -58,6 +60,23 @@ node _ocr_verify/vlm-test.mjs _ocr_verify/report.png            # 干净图
 node _ocr_verify/vlm-test.mjs _ocr_verify/report-photo.jpg      # 退化图
 node _ocr_verify/tess/run.cjs _ocr_verify/report.png            # tesseract 对照
 ```
+
+## 落地形态（已实现）
+
+| 部分 | 位置 | 说明 |
+| --- | --- | --- |
+| 纯函数层 | `src/lib/ocr/parse.ts` | 解析模型输出、清洗数值、映射到 China-PAR 字段、mg/dL→mmol/L 换算。规则与模型分离：数值映射错了会算错风险，这一步不交给模型 |
+| 接口 | `app/api/ocr/route.ts` | GET 探可用性；POST 收 base64 图片 → 本机视觉模型 → 返回 `{items, fields, unused}`。图片不落盘不入库，8 MB 上限，90 秒超时 |
+| 界面 | `src/components/cvd/LabReportImport.tsx` | 视觉模型不在线时**整个入口不渲染**；识别结果逐项勾选 + 「确认填入」后才写表单 |
+| 演示脚本 | `scripts/start-demo.cmd` 第 3/5 步 | 有模型文件才启动 8082；缺文件则跳过并提示「化验单入口会自动隐藏」 |
+| 环境变量 | `.env.example` 的 `VLM_SERVER_URL` | 默认 http://127.0.0.1:8082 |
+
+**只映射化验单上真能读到的字段**：年龄、收缩压、总胆固醇、高密度脂蛋白。
+血糖/糖化血红蛋白**不**映射成「已诊断糖尿病」——「血糖偏高」不等于「糖尿病」，
+错用会改变 China-PAR 结果。识别到但本页用不上的项目会以 `unused` 返回，界面如实说明。
+
+实测（端到端，经站点）：上传 900×420 化验单 → 9.5 秒返回，映射出总胆固醇 5.72、高密度脂蛋白 1.02，
+甘油三酯 2.15 正确落到 `unused` 而不是硬塞进别的字段；停掉 8082 后入口消失、接口返回 503。
 
 ## 建议
 

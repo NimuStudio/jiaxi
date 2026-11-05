@@ -3166,3 +3166,71 @@ input[type="range"]::-moz-range-thumb {
     animation: none;
   }
 }
+
+/* ---------- 化验单导入（vlm 可选入口） ---------- */
+.lab-import {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px dashed rgba(0, 0, 0, 0.14);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.5);
+}
+.lab-import-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.lab-import-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+.lab-import-btn,
+.lab-import-apply {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 10px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lab-import-btn:disabled,
+.lab-import-apply:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.lab-import-apply {
+  margin-top: 10px;
+}
+.lab-import-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.6;
+}
+.lab-import-error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #b42318;
+}
+.lab-import-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.lab-import-list label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.lab-import-name {
+  min-width: 160px;
+  color: #374151;
+}
+.lab-import-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}

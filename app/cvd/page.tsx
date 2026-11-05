@@ -11,6 +11,7 @@ import type { ExtractedPerson } from "@/lib/extract/client";
 import { RELATION_LABEL, DISEASE_LABEL } from "@/lib/pedigree/viz";
 import type { RelationType } from "@/lib/pedigree/types";
 import { useCountUp } from "@/components/ui/useCountUp";
+import { LabReportImport } from "@/components/cvd/LabReportImport";
 
 /**
  * China-PAR 心血管风险页。
@@ -182,6 +183,10 @@ export default function CvdPage() {
             女性方程不含家族史项——但家族史同样提示你需要关注，建议结合血脂血压定期检查。
           </p>
         )}
+
+        <LabReportImport
+          onApply={(patch) => setForm((f) => ({ ...f, ...patch }))}
+        />
 
         <div className="factors-grid cvd-grid">
           <label className="factors-field">

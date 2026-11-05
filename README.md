@@ -194,6 +194,18 @@ llama-server -m /path/to/qwen3-1.7b-q4_k_m.gguf -ngl 99 -c 4096 --port 8080
 pnpm build && pnpm start   # 同样在 5173
 ```
 
+### 3.5 可选：化验单识别（视觉模型）
+
+`/cvd` 页可以把化验单拍照导入，自动填年龄、收缩压、总胆固醇、高密度脂蛋白：
+
+```bash
+# 需要带 --mmproj 的视觉模型；不启动时该入口自动隐藏，其余功能不受影响
+llama-server -m ml/vlm/model.gguf --mmproj ml/vlm/mmproj.gguf -ngl 99 -c 4096 --port 8082
+```
+
+模型文件在 `ml/vlm/`（Qwen2.5-VL-3B Q4 + mmproj，共 2.6 GB，不入版本库）。
+识别结果**逐项确认后才填入**，图片不落盘、不入库。方案对比与实测数字见 `docs/lab-ocr-verification.md`。
+
 ### 4. 数据库（账户功能）
 
 ```sql
