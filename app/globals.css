@@ -5093,3 +5093,31 @@ input[type="range"]::-moz-range-thumb {
   font-size: 11px;
   color: rgba(43, 71, 99, 0.42);
 }
+
+/* 顶部右侧改成一列：两行靠 flex 堆叠，浏览器缩放/窄屏都不会重叠 */
+.login-topmeta-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  text-align: right;
+}
+
+/* 说明行回到文档流里（取消之前的绝对定位与固定 top） */
+.login-page.is-collapsed .login-colophon {
+  position: static;
+  top: auto;
+  right: auto;
+  bottom: auto;
+  font-size: 11px;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: rgba(43, 71, 99, 0.42);
+}
+
+.login-page.is-expanded .login-colophon { opacity: 0; }
+
+/* 两行在窄屏允许换行，绝不重叠 */
+@media (max-width: 900px) {
+  .login-topmeta-col { max-width: 46vw; }
+}

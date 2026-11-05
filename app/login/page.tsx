@@ -237,11 +237,6 @@ export default function LoginPage() {
         </ol>
       </div>
 
-      {/* 页脚一行：与底部提示同一基线，读作版权说明而不是规格表 */}
-      <p className="login-colophon" aria-hidden="true">
-        25 种疾病 · 2 套指南方程 · 100% 本机推理
-      </p>
-
       {/* 海报式细边框：给整屏一个版面边界，避免大字与画布边缘直接相撞 */}
       <div className="login-frame" aria-hidden="true" />
 
@@ -254,7 +249,10 @@ export default function LoginPage() {
           <span className="login-brand-dot" aria-hidden="true" />
           家系 ClearMind
         </span>
-        <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
+        <span className="login-topmeta-col">
+          <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
+          <span className="login-colophon">25 种疾病 · 2 套指南方程 · 100% 本机推理</span>
+        </span>
       </header>
 
       {/* 撕裂幕布：上下两块共享同一条对角线边缘，展开时分别朝右上 / 左下推开 */}
