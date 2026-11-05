@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthPanel } from "@/components/auth/AuthPanel";
+import { DemoBadge } from "@/components/layout/DemoBadge";
 
 /**
  * 全局应用壳：一条悬浮的圆角玻璃导航条 + 流动光斑背景。
@@ -123,6 +124,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="topbar-right">
+          <DemoBadge />
           <span className="topbar-engines">FINDRISC · China-PAR</span>
           <span
             className={`topbar-status${llmReady ? " is-on" : ""}`}
