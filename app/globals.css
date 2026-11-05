@@ -4816,3 +4816,100 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 900px) {
   .login-page.is-collapsed .login-seam-hint { left: 50%; right: auto; bottom: 22px; }
 }
+
+/* ================= 家系谱骨架（折叠态中间的内容填充） ================= */
+.login-scaffold {
+  position: absolute;
+  left: 58%;
+  top: 47%;
+  width: min(42vw, 560px);
+  height: auto;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.7s ease;
+}
+
+.login-page.is-collapsed .login-scaffold {
+  opacity: 0.62;
+  animation: scaffold-breathe 9s ease-in-out infinite;
+}
+
+@keyframes scaffold-breathe {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.68; }
+}
+
+.login-scaffold .scaffold-edges path {
+  fill: none;
+  stroke: rgba(26, 111, 181, 0.34);
+  stroke-width: 1.1;
+  stroke-linecap: round;
+}
+
+.login-scaffold .scaffold-nodes rect,
+.login-scaffold .scaffold-nodes circle {
+  fill: rgba(255, 255, 255, 0.55);
+  stroke: rgba(26, 111, 181, 0.5);
+  stroke-width: 1.2;
+}
+
+.login-scaffold .scaffold-nodes .is-self {
+  fill: rgba(26, 111, 181, 0.5);
+  stroke: rgba(26, 111, 181, 0.75);
+}
+
+.login-scaffold .scaffold-halo {
+  fill: none;
+  stroke: rgba(26, 111, 181, 0.22);
+  stroke-width: 1;
+  stroke-dasharray: 3 5;
+}
+
+.login-scaffold .scaffold-labels text {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  fill: rgba(43, 71, 99, 0.42);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-page.is-collapsed .login-scaffold { animation: none; }
+}
+
+@media (max-width: 900px) {
+  .login-scaffold { display: none; }
+}
+
+/* 幕布（.login-tear，z-index 7 且不透明）会盖住中间层，骨架必须画在它上面、缝之下 */
+.login-scaffold { z-index: 8; }
+
+/* 骨架尺寸收敛：之前过大且偏右，现在按 36vw 上限贴着留白中心 */
+.login-scaffold {
+  left: 60%;
+  top: 46%;
+  width: min(36vw, 470px);
+}
+
+.login-scaffold .scaffold-edges path { stroke: rgba(26, 111, 181, 0.42); }
+.login-scaffold .scaffold-nodes rect,
+.login-scaffold .scaffold-nodes circle {
+  fill: rgba(255, 255, 255, 0.72);
+  stroke: rgba(26, 111, 181, 0.58);
+}
+
+/* 骨架再放大一点、透明度略提，让它成为留白里的视觉锚点 */
+.login-scaffold {
+  left: 58%;
+  width: min(40vw, 520px);
+}
+
+.login-page.is-collapsed .login-scaffold { opacity: 0.7; }
+
+@keyframes scaffold-breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.76; }
+}
+
+/* 骨架躲开缝的交叉点：右下挪一点，缝从「父辈」上方掠过，不压住标签 */
+.login-scaffold { left: 60%; top: 47.5%; }

@@ -230,7 +230,46 @@ export default function LoginPage() {
         </ol>
       </div>
 
-      {/* 海报式细边框：给整屏一个"版面边界"，避免大字与画布边缘直接相撞 */}
+      {/* 家系谱骨架：给中间留白一个有含义的填充物（不是装饰性文字）。
+          方形=男、圆形=女、横线=配偶、竖线=子代，与本产品的家系图同一套图形语言。 */}
+      <svg className="login-scaffold" viewBox="0 0 470 340" aria-hidden="true">
+        <g className="scaffold-labels">
+          <text x="62" y="40">祖辈</text>
+          <text x="62" y="124">父辈</text>
+          <text x="62" y="214">本人</text>
+          <text x="62" y="304">子辈</text>
+        </g>
+
+        <g className="scaffold-edges">
+          {/* 祖辈：配偶横线 + 向下引线 */}
+          <path d="M191 36 H214" />
+          <path d="M202.5 36 V78" />
+          {/* 父辈：兄弟姐妹横线、各自下引，配偶横线，向下引到本人 */}
+          <path d="M124 78 H202.5" />
+          <path d="M124 78 V109" />
+          <path d="M202.5 78 V109" />
+          <path d="M219 120 H242" />
+          <path d="M236.5 120 V199" />
+          {/* 本人：配偶横线 + 向下引到子辈 */}
+          <path d="M253 210 H276" />
+          <path d="M270 221 V288" />
+        </g>
+
+        <g className="scaffold-nodes">
+          <rect x="174" y="25" width="34" height="22" rx="3" />
+          <circle cx="226" cy="36" r="11" />
+          <rect x="107" y="109" width="34" height="22" rx="3" />
+          <rect x="185" y="109" width="34" height="22" rx="3" />
+          <circle cx="254" cy="120" r="11" />
+          <rect x="219" y="199" width="34" height="22" rx="3" className="is-self" />
+          <circle cx="288" cy="210" r="11" />
+          <circle cx="270" cy="300" r="11" />
+        </g>
+
+        <circle className="scaffold-halo" cx="236" cy="210" r="27" />
+      </svg>
+
+      {/* 海报式细边框：给整屏一个版面边界，避免大字与画布边缘直接相撞 */}
       <div className="login-frame" aria-hidden="true" />
 
       <div className="login-stage">
