@@ -48,6 +48,21 @@ Lindström J, Tuomilehto J. **The diabetes risk score: a practical tool to predi
 3. CTFPHC 官方工具页（15–20 分 33%、21+ 分 50%）
    https://canadiantaskforce.ca/tools-resources/type-2-diabetes-2/type-2-diabetes-clinician-findrisc/
 
+### 4. 既往肺部疾病与肺癌的相对风险（用于「相对风险表述」）
+
+Forey BA, et al. **Previous Lung Diseases and Lung Cancer Risk: A Systematic Review and Meta-Analysis.**
+*PLoS ONE*. 2011;6(3):e17479. DOI: 10.1371/journal.pone.0017479
+
+- 核实方式：OpenAlex 元数据 + 开放摘要（摘要中直接给出以下数字）
+- 采用数字（39 项研究，随机效应模型）：
+  - 既往肺部疾病合并：**RR 1.80（95% CI 1.60–2.11）**
+  - 慢阻肺 COPD：RR 2.22（1.66–2.97，16 项）
+  - 肺气肿：RR 2.04（1.72–2.41，20 项）
+  - 慢性支气管炎：RR 1.52（1.25–1.84，23 项）
+- **口径限制（必须随数字一起说）**：这是**相对风险**，不是个人绝对风险；且针对的是**本人的既往疾病**，
+  不是家族史。界面文案已写明这两点。
+- 实现位置：`src/lib/risk/exposure.ts` 的 `lung-disease-rr` 提示；不进任何评分方程。
+
 ## 二、已修正（曾经写错，留档避免再犯）
 
 ### 2026-11-04 修正：FINDRISC 分层阈值与风险值

@@ -74,6 +74,7 @@ function parseFactors(v: unknown): RiskFactors | null {
     historyOfHighGlucose: Boolean(f.historyOfHighGlucose),
     smoker: Boolean(f.smoker),
     drinker: Boolean(f.drinker),
+    lungDisease: Boolean(f.lungDisease),
   };
 }
 

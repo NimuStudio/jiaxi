@@ -29,6 +29,7 @@ type Draft = {
   historyOfHighGlucose: boolean;
   smoker: boolean;
   drinker: boolean;
+  lungDisease: boolean;
 };
 
 const EMPTY: Draft = {
@@ -42,6 +43,7 @@ const EMPTY: Draft = {
   historyOfHighGlucose: false,
   smoker: false,
   drinker: false,
+  lungDisease: false,
 };
 
 function loadDraft(): Draft {
@@ -74,6 +76,7 @@ function toFactors(d: Draft): RiskFactors | null {
     historyOfHighGlucose: d.historyOfHighGlucose,
     smoker: d.smoker,
     drinker: d.drinker,
+    lungDisease: d.lungDisease,
   };
 }
 
@@ -88,6 +91,7 @@ export interface RiskFactorsFormProps {
 const EXPOSURE_CHECKS: Array<{ key: keyof Draft; label: string; hint: string }> = [
   { key: "smoker", label: "现在吸烟", hint: "已计入 China-PAR 方程" },
   { key: "drinker", label: "经常饮酒", hint: "两个方程都不含此项，仅作记录" },
+  { key: "lungDisease", label: "有慢支 / 肺气肿 / 慢阻肺史", hint: "会给相对风险提示，不改分数" },
 ];
 
 const CHECKS: Array<{ key: keyof Draft; label: string; hint: string }> = [

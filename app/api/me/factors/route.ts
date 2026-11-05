@@ -25,6 +25,7 @@ interface FactorsShape {
   historyOfHighGlucose: boolean;
   smoker: boolean;
   drinker: boolean;
+  lungDisease: boolean;
 }
 
 function posNum(v: unknown): boolean {
@@ -57,6 +58,7 @@ function sanitizeFactors(input: unknown): FactorsShape | null {
     historyOfHighGlucose: f.historyOfHighGlucose as boolean,
     smoker: exposure(f.smoker),
     drinker: exposure(f.drinker),
+    lungDisease: exposure(f.lungDisease),
   };
 }
 

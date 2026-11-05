@@ -43,6 +43,7 @@ const FACTORS: RiskFactors = {
   onAntihypertensive: true,
   smoker: false,
   drinker: false,
+  lungDisease: false,
   historyOfHighGlucose: false,
 };
 

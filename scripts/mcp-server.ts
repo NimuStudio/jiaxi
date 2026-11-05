@@ -72,6 +72,7 @@ const FactorsSchema = z.object({
   // 生活方式暴露：可选，缺省 false（老客户端不传也能算）
   smoker: z.boolean().optional().default(false),
   drinker: z.boolean().optional().default(false),
+  lungDisease: z.boolean().optional().default(false),
 });
 
 async function main() {

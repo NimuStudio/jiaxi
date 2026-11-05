@@ -13,6 +13,8 @@ import type { ExtractedPerson } from "@/lib/extract/client";
 export interface ExposureFactorInput {
   smoker: boolean;
   drinker: boolean;
+  /** 既往被诊断过慢性支气管炎 / 肺气肿 / 慢阻肺 */
+  lungDisease: boolean;
 }
 
 export interface ExposureHint {
@@ -48,6 +50,23 @@ export function exposureHints(
 ): ExposureHint[] {
   const hints: ExposureHint[] = [];
   const familyLung = hasFirstDegreeLung(persons);
+
+  // 唯一给数字的一条：既往肺部疾病 → 肺癌的相对风险，来自已发表的 meta 分析。
+  // 注意口径：这是「相对风险」，不是「你未来得肺癌的概率」；而且针对的是本人的既往疾病，
+  // 不是家族史。界面上必须把这层区分写清楚。
+  if (factors.lungDisease) {
+    hints.push({
+      id: "lung-disease-rr",
+      level: "attention",
+      title: "有慢性支气管炎 / 肺气肿 / 慢阻肺史",
+      body:
+        "已发表的 meta 分析（PLoS ONE 2011）汇总 39 项研究：有既往肺部疾病者的肺癌相对风险约为 " +
+        "1.80 倍（95% CI 1.60–2.11）；其中慢阻肺 2.22 倍（1.66–2.97）、肺气肿 2.04 倍（1.72–2.41）、" +
+        "慢性支气管炎 1.52 倍（1.25–1.84）。" +
+        "这是相对风险，不是你的个人概率——绝对风险还取决于年龄、吸烟量与暴露年限。" +
+        "结合吸烟时通常更高，建议与医生讨论是否适合做肺部筛查。",
+    });
+  }
 
   if (factors.smoker && familyLung) {
     hints.push({

@@ -47,6 +47,8 @@ export interface RiskFactors {
   /** 生活方式暴露：吸烟已计入 China-PAR 方程；饮酒不在任何方程里，仅作记录 */
   smoker: boolean;
   drinker: boolean;
+  /** 既往被诊断过慢性支气管炎 / 肺气肿 / 慢阻肺 */
+  lungDisease: boolean;
 }
 
 export interface ToolContext {

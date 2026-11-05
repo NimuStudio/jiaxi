@@ -20,24 +20,32 @@ describe("hasFirstDegreeLung", () => {
 
 describe("exposureHints", () => {
   it("家族肺癌 + 吸烟给出 attention 级提示", () => {
-    const hints = exposureHints(fatherLung, { smoker: true, drinker: false });
+    const hints = exposureHints(fatherLung, { smoker: true, drinker: false, lungDisease: false });
     const hit = hints.find((h) => h.id === "lung-family-smoker");
     expect(hit?.level).toBe("attention");
     expect(hit?.body).toContain("不给出具体概率");
   });
 
   it("吸烟单独出现时说明它已进方程", () => {
-    const hints = exposureHints([], { smoker: true, drinker: false });
+    const hints = exposureHints([], { smoker: true, drinker: false, lungDisease: false });
     expect(hints.some((h) => h.id === "smoker-chinapar")).toBe(true);
   });
 
   it("饮酒要明确说明不改变分数", () => {
-    const hints = exposureHints([], { smoker: false, drinker: true });
+    const hints = exposureHints([], { smoker: false, drinker: true, lungDisease: false });
     const hit = hints.find((h) => h.id === "drinker-not-in-model");
     expect(hit?.body).toContain("不会改变上面的分数");
   });
 
+  it("既往肺部疾病给出相对风险数字，并说明不是个人概率", () => {
+    const hints = exposureHints([], { smoker: false, drinker: false, lungDisease: true });
+    const hit = hints.find((h) => h.id === "lung-disease-rr");
+    expect(hit?.body).toContain("1.80");
+    expect(hit?.body).toContain("95% CI 1.60–2.11");
+    expect(hit?.body).toContain("不是你的个人概率");
+  });
+
   it("都不存在时不产生提示", () => {
-    expect(exposureHints([], { smoker: false, drinker: false })).toHaveLength(0);
+    expect(exposureHints([], { smoker: false, drinker: false, lungDisease: false })).toHaveLength(0);
   });
 });

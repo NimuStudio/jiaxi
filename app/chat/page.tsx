@@ -594,12 +594,14 @@ export default function ChatPage() {
           {exposureHints(persons, {
             smoker: factors?.smoker ?? false,
             drinker: factors?.drinker ?? false,
+            lungDisease: factors?.lungDisease ?? false,
           }).length > 0 && (
             <div className="exposure-hints">
               <div className="next-step-label">家系 × 生活方式</div>
               {exposureHints(persons, {
                 smoker: factors?.smoker ?? false,
                 drinker: factors?.drinker ?? false,
+                lungDisease: factors?.lungDisease ?? false,
               }).map((h) => (
                 <div
                   key={h.id}
