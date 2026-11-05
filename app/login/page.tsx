@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DnaParticles } from "@/components/home/DnaParticles";
+import dynamic from "next/dynamic";
+
+// three.js 只在浏览器跑：动态加载，避免进服务端渲染，也不拖慢首屏 HTML。
+const DnaScene3D = dynamic(() => import("@/components/home/DnaScene3D").then((m) => m.DnaScene3D), {
+  ssr: false,
+});
 import { useAccount } from "@/lib/auth/account-client";
 
 /**
@@ -49,7 +54,7 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <section className="login-visual">
-        <DnaParticles />
+        <DnaScene3D />
         <div className="login-visual-copy">
           <p className="login-kicker">家系 · 遗传健康的家族史梳理</p>
           <h1 className="login-title">
