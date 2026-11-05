@@ -5548,3 +5548,80 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 1120px) {
   .topbar-tagline { display: none; }
 }
+
+/* ================= 进入主界面的开屏过渡（与登录页同一套语言） ================= */
+.enter-curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.enter-half {
+  position: absolute;
+  inset: -4px;
+  background: linear-gradient(200deg, #f4f9fe 0%, #eaf2fb 46%, #f7fbff 100%);
+  opacity: 0.97;
+  transition:
+    transform 1.05s cubic-bezier(0.35, 0.02, 0.2, 1),
+    opacity 0.75s ease 0.2s;
+  will-change: transform, opacity;
+}
+
+/* 与 .login-tear-upper / -lower 完全相同的切分与位移 */
+.enter-upper { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 12%); }
+.enter-lower { clip-path: polygon(0 12%, 100% 100%, 0 100%); }
+
+.enter-curtain.is-open .enter-upper {
+  transform: translate3d(46%, -46%, 0);
+  opacity: 0;
+}
+
+.enter-curtain.is-open .enter-lower {
+  transform: translate3d(-46%, 46%, 0);
+  opacity: 0;
+}
+
+/* 缝：开场先亮一下，随即随幕布一起退去 */
+.enter-seam {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.9;
+  transition: opacity 0.45s ease;
+}
+
+.enter-seam line {
+  stroke: rgba(26, 111, 181, 0.4);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 8;
+  vector-effect: non-scaling-stroke;
+}
+
+.enter-curtain.is-open .enter-seam { opacity: 0; }
+
+/* 主内容随后轻微上浮，避免幕布揭开时是「硬切」 */
+.app-main {
+  animation: app-enter 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.32s both;
+}
+
+.topbar {
+  animation: app-enter-soft 0.9s ease 0.2s both;
+}
+
+@keyframes app-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes app-enter-soft {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter-curtain { display: none; }
+  .app-main, .topbar { animation: none; }
+}
