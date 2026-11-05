@@ -199,6 +199,14 @@ export default function LoginPage() {
           <mask id="seamMask">
             <rect x="0" y="0" width="100" height="100" fill="url(#seamFade)" />
           </mask>
+          {/* 梭形亮带用的填充 */}
+          <linearGradient id="seamLensFill" x1="0" y1="12" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
+            <stop offset="30%" stopColor="#eaf6ff" stopOpacity="0.85" />
+            <stop offset="52%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="74%" stopColor="#eaf9ff" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#ffffff" stopOpacity="0.14" />
+          </linearGradient>
           {/* 沿缝的色温渐变：不是一根均匀的蓝线 */}
           <linearGradient id="seamTone" x1="0" y1="12" x2="100" y2="100" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#6ab0e4" />
@@ -209,6 +217,24 @@ export default function LoginPage() {
         </defs>
         {/* 缝的四层：外辉光 / 内光晕 / 高光芯 / 针脚，整体两端渐隐 */}
         <g className="login-seam-glow" mask="url(#seamMask)">
+          {/* 梭形：宽度按 sin 曲线在两端收成一点、中间最宽 */}
+          <path
+            d={(() => {
+              const N = 24;
+              const top: string[] = [];
+              const bottom: string[] = [];
+              for (let i = 0; i <= N; i++) {
+                const t = i / N;
+                const x = 100 * t;
+                const y = 12 + 88 * t;
+                const w = Math.pow(Math.sin(Math.PI * t), 0.6) * 7;
+                top.push(x.toFixed(2) + "," + (y - w).toFixed(2));
+                bottom.push(x.toFixed(2) + "," + (y + w).toFixed(2));
+              }
+              return "M" + top.join(" L") + " L" + bottom.reverse().join(" L") + " Z";
+            })()}
+            fill="url(#seamLensFill)"
+          />
           <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(88, 170, 232, 0.52)" strokeWidth="26" filter="url(#seamBlur)" />
           <line x1="0" y1="12" x2="100" y2="100" stroke="rgba(140, 205, 248, 0.72)" strokeWidth="9" filter="url(#seamBlurSoft)" />
           <line x1="0" y1="12" x2="100" y2="100" stroke="url(#seamTone)" strokeWidth="1.9" vectorEffect="non-scaling-stroke" />
@@ -293,6 +319,11 @@ export default function LoginPage() {
       <div className="login-tear" aria-hidden="true">
         <div className="login-tear-half login-tear-upper" />
         <div className="login-tear-half login-tear-lower" />
+      </div>
+
+      {/* 折叠态底衬：一个几乎看不见的大字水印，避免整屏太空 */}
+      <div className="login-watermark" aria-hidden="true">
+        家系
       </div>
 
       {/* 折叠态：入口是那道「光缝」本身，而不是一个按钮 */}

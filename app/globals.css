@@ -4085,8 +4085,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* 折叠态：两片幕布微微分开一点，透出一条缝的光 */
-.login-page.is-collapsed .login-tear-upper { transform: translate3d(5px, -5px, 0); }
-.login-page.is-collapsed .login-tear-lower { transform: translate3d(-5px, 5px, 0); }
+.login-page.is-collapsed .login-tear-upper { transform: none; }
+.login-page.is-collapsed .login-tear-lower { transform: none; }
 
 /* ---------- 空间感加强：更强透视 + 视差 ---------- */
 .login-page { perspective: 1050px; }
@@ -4126,8 +4126,8 @@ input[type="range"]::-moz-range-thumb {
 /* ---------- 光缝：更明显的分离与辉光 ---------- */
 
 /* 两片幕布分得更开一点，缝隙才看得见光 */
-.login-page.is-collapsed .login-tear-upper { transform: translate3d(11px, -11px, 0); }
-.login-page.is-collapsed .login-tear-lower { transform: translate3d(-11px, 11px, 0); }
+.login-page.is-collapsed .login-tear-upper { transform: none; }
+.login-page.is-collapsed .login-tear-lower { transform: none; }
 
 /* 幕布给一点冷色，缝隙的亮光才有对比 */
 .login-tear-half {
@@ -4197,8 +4197,8 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* 缝拉开得更明显：缝隙变宽，光带就露出来 */
-.login-page.is-collapsed .login-tear-upper { transform: translate3d(24px, -24px, 0); }
-.login-page.is-collapsed .login-tear-lower { transform: translate3d(-24px, 24px, 0); }
+.login-page.is-collapsed .login-tear-upper { transform: none; }
+.login-page.is-collapsed .login-tear-lower { transform: none; }
 
 /* 幕布靠近缝的一侧压暗一点，缝才「亮得起来」 */
 .login-tear-half::after {
@@ -4209,3 +4209,54 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .login-seam-pulse { animation-duration: 4.5s; }
+
+/* ---------- 折叠态水印 ---------- */
+.login-watermark {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 1;
+  transform: translate(-50%, -50%);
+  font-size: clamp(180px, 26vw, 420px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: rgba(26, 111, 181, 0.05);
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.5s ease;
+}
+
+.login-page.is-expanded .login-watermark {
+  opacity: 0;
+}
+
+/* 缝要画在幕布之上：幕布不再分离，靠这道梭形亮带表示「缝」 */
+.login-diagonal-line { z-index: 8; }
+
+/* ---------- 修正：折叠态要看得见缝本体 ---------- */
+/* 之前 is-collapsed 的隐藏列表里包含了 .login-diagonal-line，
+   导致缝的 SVG 一直不可见，看到的只是幕布间隙。这里显式恢复。 */
+.login-page.is-collapsed .login-diagonal-line {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+}
+
+.login-page.is-expanded .login-diagonal-line {
+  opacity: 0;
+  visibility: visible;
+  transition: opacity 0.5s ease;
+}
+
+/* 水印要压在幕布之上才看得见 */
+.login-watermark { z-index: 9; }
+
+/* 幕布压深一档：白梭形缝才有对比 */
+.login-tear-half {
+  background: linear-gradient(200deg, #e2eefb 0%, #d3e5f7 48%, #e8f2fd 100%);
+}
+
+.login-watermark {
+  color: rgba(26, 111, 181, 0.045);
+  font-size: clamp(160px, 22vw, 360px);
+}
