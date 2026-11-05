@@ -306,7 +306,7 @@ MYSQL_*                                  # 账户数据库（见上节）
 
 ```
 浏览器
-  → nginx (VPS 47.101.223.117, Let's Encrypt TLS)
+  → nginx（云服务器，Let's Encrypt TLS）
   → ssh 反向隧道 127.0.0.1:18001 ——断线自动重连
   → 演示机 5173 Next.js（站点）
         ├→ 127.0.0.1:8080  llama-server（Qwen3-1.7B，GPU 推理）
