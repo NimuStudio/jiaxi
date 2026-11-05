@@ -5712,3 +5712,13 @@ input[type="range"]::-moz-range-thumb {
   font-size: 11.5px;
   color: #c0392b;
 }
+
+/* 家系图的「本人」锚点：只用于布局，不可点不可删 */
+.pedigree-node.is-anchor { pointer-events: none; }
+.pedigree-node.is-anchor rect,
+.pedigree-node.is-anchor circle {
+  fill: rgba(255, 255, 255, 0.9);
+  stroke: rgba(26, 111, 181, 0.45);
+  stroke-dasharray: 3 3;
+}
+.pedigree-node.is-anchor text { fill: rgba(43, 71, 99, 0.55); }

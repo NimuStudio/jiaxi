@@ -154,6 +154,17 @@ export default function LoginPage() {
     try {
       if (mode === "login") await login(username.trim(), password);
       else await register(username.trim(), password);
+      try {
+        // 换账号登录时不要沿用上一位用户的本地缓存
+        const last = localStorage.getItem("pedigree-last-user");
+        if (last && last !== username.trim()) {
+          localStorage.removeItem("pedigree-persons");
+          localStorage.removeItem("pedigree-risk-factors");
+        }
+        localStorage.setItem("pedigree-last-user", username.trim());
+      } catch {
+        /* 隐私模式不可用 */
+      }
       router.replace(nextTarget());
     } catch (err) {
       setError((err as Error).message || "操作失败");

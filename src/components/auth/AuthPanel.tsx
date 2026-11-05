@@ -75,6 +75,12 @@ export function AuthPanel() {
             try {
               sessionStorage.removeItem("pedigree-demo");
               sessionStorage.removeItem("pedigree-persons-demo");
+              // 也要清本地缓存：否则下一个在这台机器登录的账号会继承上一个人的
+              // 家系与体检数字（实测新账号一登录就显示上一位用户的 45 岁 / BMI 27），
+              // 还会被当作"本地较新"上传覆盖新账号的云端档案。
+              localStorage.removeItem("pedigree-persons");
+              localStorage.removeItem("pedigree-risk-factors");
+              localStorage.removeItem("pedigree-last-user");
             } catch {
               /* 隐私模式不可用 */
             }

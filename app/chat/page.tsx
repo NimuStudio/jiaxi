@@ -369,6 +369,44 @@ export default function ChatPage() {
     }, delay);
   }
 
+  /**
+   * 登出时清本地缓存。
+   *
+   * 光在按钮上清没用：本页的持久化 effect 会因为 account 变化再渲染一次，
+   * 把内存里的 persons/factors 又写回 localStorage，下一位在这台机器登录的人
+   * 就继承了上一个人的家系与体检数字（实测新账号一登录就显示 45 岁 / BMI 27）。
+   * 所以在这里同时清缓存 + 清内存状态。
+   */
+  const prevAccountRef = useRef<AccountUser | null>(null);
+  useEffect(() => {
+    if (prevAccountRef.current !== null && account === null) {
+      // 顺序很关键：必须先把缓存删掉，再清内存状态。
+      // 反过来做的话，setFactorsEpoch 会立刻重挂载体检表单，
+      // 它从 localStorage 读到的仍是上一位用户的数据（实测会原样复活并再次上传）。
+      try {
+        localStorage.removeItem("pedigree-persons");
+        localStorage.removeItem(FACTORS_KEY);
+      } catch {
+        /* 隐私模式 */
+      }
+      cloudSyncedRef.current = false;
+      setPersons([]);
+      setFactors(null);
+      setSources({});
+      setSelected(null);
+      setFactorsEpoch((n) => n + 1);
+      // 家系的持久化 effect 会因 persons=[] 再写一次 "[]"，删掉它，避免下一位用户看到空数组
+      window.setTimeout(() => {
+        try {
+          localStorage.removeItem("pedigree-persons");
+        } catch {
+          /* 隐私模式 */
+        }
+      }, 0);
+    }
+    prevAccountRef.current = account;
+  }, [account]);
+
   // 已登录的会话（cookie 还有效）打开页面时也要对账一次
   useEffect(() => {
     fetch("/api/auth/me")

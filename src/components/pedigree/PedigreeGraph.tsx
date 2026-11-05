@@ -73,6 +73,23 @@ export function PedigreeGraph({
   const byRelation = new Map<string, ExtractedPerson>();
   for (const p of persons) byRelation.set(p.relation, p);
 
+  /**
+   * 「本人」锚点。
+   *
+   * 抽取只会得到亲属，用户的真实家系里通常没有 self，
+   * 于是父亲/母亲画出来是两个悬空的方块，没有任何连线，看起来像图没画完。
+   * 这里补一个仅用于布局的锚点：不可点、不可删，画成空心小方块。
+   */
+  const selfPerson = byRelation.get("self");
+  if (!selfPerson) {
+    byRelation.set("self", {
+      relation: "self",
+      sex: "male",
+      conditions: [],
+      __anchor: true,
+    } as ExtractedPerson & { __anchor: boolean });
+  }
+
   const has = (r: RelationType) => byRelation.has(r);
   const hasFather = has("father");
   const hasMother = has("mother");
@@ -180,6 +197,7 @@ export function PedigreeGraph({
         const slot = SLOTS[person.relation as RelationType];
         if (!slot) return null;
 
+        const isAnchor = Boolean((person as ExtractedPerson & { __anchor?: boolean }).__anchor);
         const affected = person.conditions.length > 0;
         const male = isMale(person.sex);
         const isNew = highlight === person.relation;
@@ -189,11 +207,11 @@ export function PedigreeGraph({
             key={person.relation}
             className={`pedigree-node${isNew ? " is-new" : ""}${
               selected === person.relation ? " is-selected" : ""
-            }`}
-            onClick={() => onSelect?.(person.relation)}
-            style={{ cursor: onSelect ? "pointer" : "default" }}
-            role="button"
-            tabIndex={0}
+            }${isAnchor ? " is-anchor" : ""}`}
+            onClick={() => !isAnchor && onSelect?.(person.relation)}
+            style={{ cursor: !isAnchor && onSelect ? "pointer" : "default" }}
+            role={isAnchor ? undefined : "button"}
+            tabIndex={isAnchor ? undefined : 0}
             aria-label={`${RELATION_LABEL[person.relation as RelationType] ?? person.relation}：${
               person.conditions.length > 0
                 ? person.conditions.map((c) => DISEASE_LABEL[c.code] ?? c.code).join("、")
