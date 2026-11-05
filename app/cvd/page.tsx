@@ -133,11 +133,11 @@ export default function CvdPage() {
         {result ? (
           <>
             <div className="risk-headline">
-              <span className={`risk-big${isLow ? " is-low" : ""}`}>
+              <span className={`risk-big ${result.band === "low" ? "is-low" : result.band === "medium" ? "is-mid" : "is-high"}`}>
                 {fmtPct(riskAnim)}
                 <span className="risk-unit">%</span>
               </span>
-              <span className={`band-chip${isLow ? " is-low" : ""}`}>
+              <span className={`band-chip ${result.band === "low" ? "is-low" : result.band === "medium" ? "is-mid" : "is-high"}`}>
                 {ASCVD_BAND_LABEL[result.band]}
               </span>
               <span className="risk-caption">

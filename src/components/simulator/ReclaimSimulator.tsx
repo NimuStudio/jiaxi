@@ -52,8 +52,13 @@ export function ReclaimSimulator() {
   const nowAnim = useCountUp(now, 500);
   const goalAnim = useCountUp(goal, 500);
   const reclaimable = result.reclaimablePoints;
-  const isLow =
-    result.current.band === "low" || result.current.band === "slightly-elevated";
+  // 颜色承载语义：低危 / 中危 / 高危 三档分开，避免高危与中危共用同一个颜色
+  const bandTone =
+    result.current.band === "low"
+      ? "is-low"
+      : result.current.band === "slightly-elevated" || result.current.band === "moderate"
+        ? "is-mid"
+        : "is-high";
 
   return (
     <>
@@ -61,11 +66,11 @@ export function ReclaimSimulator() {
         <p className="section-label">未来 10 年 2 型糖尿病风险</p>
 
         <div className="risk-headline">
-          <span className={`risk-big${isLow ? " is-low" : ""}`}>
+          <span className={`risk-big ${bandTone}`}>
             {fmtPct(nowAnim)}
             <span className="risk-unit">%</span>
           </span>
-          <span className={`band-chip${isLow ? " is-low" : ""}`}>
+          <span className={`band-chip ${bandTone}`}>
             {BAND_LABEL[result.current.band]}
           </span>
           {/*

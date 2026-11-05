@@ -1,36 +1,43 @@
 /* ============================================
-   家系 · 设计系统
-   浅色底 / 医疗沉稳绿 / 可回收橙
+   家系 · 设计系统 v2（临床蓝）
+
+   改版依据：这是医疗遗传健康产品，界面语言要向"诊室 / 检验报告"靠，
+   而不是消费品式的玻璃拟态 + 红紫光晕。
+   · 主色改为信任蓝（#1a6fb5），背景是极浅的临床蓝（#f2f7fc）
+   · 去掉毛玻璃与彩色光斑：卡片实心、1px 冷灰蓝描边、极轻阴影
+   · 红只留给"高危 / 警示"，不再作为装饰色
+   · 「可回收」从橙改青蓝（#0f7c8c）—— 语义是"能改善"，不是警报
    ============================================ */
 
 :root {
-  --bg: #f5f7f5;
+  --bg: #f2f7fc;
   --surface: #ffffff;
-  --text: #14181a;
-  --text-muted: #66706e;
-  --text-faint: #98a09d;
-  --line: #e2e6e2;
-  --line-strong: #cfd5d0;
-  --primary: #0f5f4c;
-  --primary-soft: #e9f2ee;
-  --reclaim: #c2610f;
-  --reclaim-soft: #fbeedf;
-  --reclaim-line: #e9a765;
-  --danger: #a3271f;
+  --text: #0f2a44;
+  --text-muted: #4a6b8a;
+  --text-faint: #8aa3bb;
+  --line: #dbe7f3;
+  --line-strong: #c2d6e9;
+  --primary: #1a6fb5;
+  --primary-soft: #eaf3fb;
+  --reclaim: #0f7c8c;
+  --reclaim-soft: #e6f4f6;
+  --reclaim-line: #7fc3cb;
+  --danger: #b42318;
   --radius-sm: 8px;
   --radius: 14px;
   --radius-lg: 20px;
-  --shadow: 0 1px 2px rgba(20, 24, 26, 0.04), 0 8px 24px rgba(20, 24, 26, 0.05);
+  --shadow: 0 1px 2px rgba(16, 42, 68, 0.05), 0 10px 28px rgba(16, 42, 68, 0.06);
 
-  /* —— 玻璃拟态 token（参考 Nimu Glass UI）—— */
-  --glass-bg: rgba(255, 255, 255, 0.55);
-  --glass-bg-soft: rgba(255, 255, 255, 0.28);
-  --glass-border: rgba(255, 255, 255, 0.75);
-  --glass-blur: blur(24px) saturate(1.5);
-  --glass-blur-strong: blur(44px) saturate(1.6);
-  --glass-bg-strong: rgba(255, 255, 255, 0.82);
-  --glass-shadow: 0 8px 40px rgba(31, 45, 80, 0.08);
-  --glass-shadow-hover: 0 16px 56px rgba(31, 45, 80, 0.14);
+  /* —— 原「玻璃拟态」token 保留名字，全部改为实心表面 ——
+     （改这里等于一次性去掉全站 24 处毛玻璃，不必逐条改 3000 行） */
+  --glass-bg: #ffffff;
+  --glass-bg-soft: #f8fbfe;
+  --glass-border: #dbe7f3;
+  --glass-blur: none;
+  --glass-blur-strong: none;
+  --glass-bg-strong: #ffffff;
+  --glass-shadow: 0 1px 2px rgba(16, 42, 68, 0.04), 0 8px 24px rgba(16, 42, 68, 0.06);
+  --glass-shadow-hover: 0 2px 4px rgba(16, 42, 68, 0.05), 0 14px 36px rgba(16, 42, 68, 0.09);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -46,7 +53,7 @@ body {
 }
 
 body {
-  background: #e6ebf3;
+  background: #eef4fa;
   color: var(--text);
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui,
     -apple-system, sans-serif;
@@ -73,21 +80,21 @@ body {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: linear-gradient(180deg, #eef1f7 0%, #e2eaf3 55%, #e8eef6 100%);
+  background: linear-gradient(180deg, #f7fbff 0%, #eef4fa 58%, #f4f9fd 100%);
 }
 
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(72px);
+  filter: blur(120px);
   will-change: transform;
 }
 
 .blob-1 {
   width: 620px;
   height: 620px;
-  background: #7a9eeb;
-  opacity: 0.5;
+  background: #9dc4e8;
+  opacity: 0.28;
   top: -180px;
   left: -140px;
   animation: blob-drift-1 34s ease-in-out infinite alternate;
@@ -96,8 +103,8 @@ body {
 .blob-2 {
   width: 540px;
   height: 540px;
-  background: #6bbfb3;
-  opacity: 0.45;
+  background: #a9d6e5;
+  opacity: 0.24;
   bottom: -160px;
   left: 28%;
   animation: blob-drift-2 40s ease-in-out infinite alternate;
@@ -106,8 +113,8 @@ body {
 .blob-3 {
   width: 480px;
   height: 480px;
-  background: #cc8fd4;
-  opacity: 0.32;
+  background: #bcd8ef;
+  opacity: 0.22;
   top: 12%;
   right: -120px;
   animation: blob-drift-3 30s ease-in-out infinite alternate;
@@ -116,8 +123,8 @@ body {
 .blob-4 {
   width: 400px;
   height: 400px;
-  background: #e08c7a;
-  opacity: 0.22;
+  background: #cfe3f5;
+  opacity: 0.20;
   bottom: -80px;
   right: 18%;
   animation: blob-drift-1 46s ease-in-out infinite alternate-reverse;
@@ -545,6 +552,16 @@ body {
   color: var(--primary);
 }
 
+/* 颜色承载语义：低危=主蓝，中危=琥珀，高危=警示红。
+   原来只有「低 / 其它」两档，导致高危和中危共用同一个颜色。 */
+.risk-big.is-mid {
+  color: #a86413;
+}
+
+.risk-big.is-high {
+  color: var(--danger);
+}
+
 .risk-unit {
   font-size: 20px;
   font-weight: 500;
@@ -572,6 +589,16 @@ body {
 .band-chip.is-low {
   background: var(--primary-soft);
   color: var(--primary);
+}
+
+.band-chip.is-mid {
+  background: #fdf3e2;
+  color: #8a5a12;
+}
+
+.band-chip.is-high {
+  background: #fdeceb;
+  color: var(--danger);
 }
 
 /* ---------- 对比区 ---------- */
@@ -638,7 +665,8 @@ body {
   top: 26px;
   height: 6px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #d8ebe3 0%, #f5e3cd 62%, #f0cfc9 100%);
+  /* 刻度从"低→高"过渡：淡蓝 → 中性 → 淡琥珀 → 淡红，替代原来的绿/奶油/珊瑚 */
+  background: linear-gradient(90deg, #dbe9f6 0%, #e9eff7 46%, #f6e6cf 74%, #f5dedb 100%);
 }
 
 .scale-tick {
@@ -1348,13 +1376,15 @@ input[type="range"]::-moz-range-thumb {
 
 .node-shape {
   fill: #ffffff;
-  stroke: #c9d0cb;
+  stroke: var(--line-strong);
   stroke-width: 1.5;
 }
 
+/* 有患病记录：实心表示"已记录"，颜色用主蓝而不是警示红——
+   家系图上"有病"是常态信息，红色应该留给风险等级和危险操作。 */
 .node-shape.affected {
-  fill: #a3271f;
-  stroke: #7d1c17;
+  fill: var(--primary);
+  stroke: #12558c;
 }
 
 .node-label {

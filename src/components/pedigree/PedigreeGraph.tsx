@@ -122,7 +122,7 @@ export function PedigreeGraph({
               key={`${fromRel}-${toRel}`}
               d={orthPath(from, to)}
               fill="none"
-              stroke="#A9B5AD"
+              stroke="#B9CFE0"
               strokeWidth={1.4}
             />
           );
@@ -135,7 +135,7 @@ export function PedigreeGraph({
             y1={SLOTS.father.y}
             x2={SLOTS.mother.x - HALF}
             y2={SLOTS.mother.y}
-            stroke="#A9B5AD"
+            stroke="#B9CFE0"
             strokeWidth={1.4}
           />
         )}
@@ -152,7 +152,7 @@ export function PedigreeGraph({
               y1={from.y}
               x2={to.x - HALF}
               y2={to.y}
-              stroke="#A9B5AD"
+              stroke="#B9CFE0"
               strokeWidth={1.4}
             />
           );
@@ -168,7 +168,7 @@ export function PedigreeGraph({
               key={`sib-${a}-${b}`}
               d={siblingPath(from, to)}
               fill="none"
-              stroke="#A9B5AD"
+              stroke="#B9CFE0"
               strokeWidth={1.4}
               strokeDasharray="4 3"
             />
