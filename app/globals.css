@@ -5121,3 +5121,15 @@ input[type="range"]::-moz-range-thumb {
 @media (max-width: 900px) {
   .login-topmeta-col { max-width: 46vw; }
 }
+
+/* 展开态：右上角整块被登录卡占据，说明文字退场，避免被卡片压住 */
+.login-page.is-expanded .login-topmeta-col {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s;
+}
+
+/* 展开态顶栏只保留品牌，且贴到卡片上沿之外 */
+.login-page.is-expanded .login-topbar {
+  top: 30px;
+}
