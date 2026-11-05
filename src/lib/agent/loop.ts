@@ -107,6 +107,12 @@ function cleanCitations(answer: string, allowed: Set<string>): string {
     /依据[：:]\s*《?([^》\n。！？；]+?)》?(?=[。！？；\n]|$)/g,
     (whole, title: string) => (allowed.has(title.trim()) ? whole : ""),
   );
+  // 带书名号但后面直接接正文（没有标点）的形式：上面那条因为前瞻要求标点会漏掉。
+  // 实测模型把《0–20 分和 0–26 分是两个版本》改写成《0–26 分和 0–26 分是两个版本》，
+  // 后面紧跟正文，于是这条假依据原样漏给了用户。
+  s = s.replace(/依据[：:]\s*《([^》]+)》/g, (whole, title: string) =>
+    allowed.has(title.trim()) ? whole : "",
+  );
   return s
     // 被删掉一整句后，回答可能从「2.」这种编号断头开始——把前导编号去掉
     .replace(/^(?:\s*\d+[.、]\s*)+/, "")
@@ -283,6 +289,23 @@ export function withMedicalGuardrail(question: string, answer: string): string {
  * 文案必须中性：有时候答案是对的（如 FINDRISC 满分是 26），只是模型没写依据；
  * 所以说"这段没有引用知识库条目"，而不是"查不到"。
  */
+/**
+ * 去掉混进回答里的"内部指令"。
+ *
+ * 工具返回的观察值里带有给模型看的提示（如「（已检索到内容，请直接据此作答，不要换措辞重复检索。）」），
+ * 1.7B 会把它连同条目正文一起抄进答案——实测公网问「FINDRISC 的满分是多少」就把它漏给了用户。
+ * 这类字符串对用户没有意义，一律删掉。
+ */
+export function stripInternalHints(text: string): string {
+  return text
+    .replace(/（已检索到内容[^）]*）/g, "")
+    .replace(/（这一步与之前完全相同[^）]*）/g, "")
+    .replace(/（[a-z_]+ 本轮已调用[^）]*）/g, "")
+    .replace(/[ \t]+$/gm, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 export function withNoSourceNotice(
   question: string,
   answer: string,
@@ -401,7 +424,9 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
       attachCitationSources(
         withNoSourceNotice(
           question,
-          guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+          stripInternalHints(
+            guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+          ),
           onlyCited(raw),
         ),
         titleToSource,
