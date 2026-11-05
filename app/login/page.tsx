@@ -276,10 +276,7 @@ export default function LoginPage() {
       </div>
 
       {/* 提示词挂在 main 下：父级有 transform 时 position:fixed 会失效 */}
-      <p className="login-seam-hint">
-        <span className="login-seam-arrow" aria-hidden="true">↙</span>
-        从右上往左下划，或点击任意处
-      </p>
+      <p className="login-seam-hint">从右上往左下划，或点击任意处</p>
 
       <section className="login-hero">
         <p className="login-kicker">遗传健康的家族史梳理</p>
