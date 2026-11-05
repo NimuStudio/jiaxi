@@ -40,7 +40,35 @@ export default function LoginPage() {
    *  - 展开后不回缩：来回开关会闪，且没有功能价值。
    */
   const [expanded, setExpanded] = useState(false);
-  const ctaRef = useRef<HTMLDivElement | null>(null);
+  const pageRef = useRef<HTMLElement | null>(null);
+
+  /**
+   * 视差：把指针的相对位置写进 CSS 变量，各层用不同系数取用。
+   * 背景光斑动得少、DNA 动得多、卡片只微微倾斜 —— 这是最强的纵深线索。
+   */
+  useEffect(() => {
+    const el = pageRef.current;
+    if (!el) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let raf = 0;
+    let nx = 0;
+    let ny = 0;
+    const apply = () => {
+      raf = 0;
+      el.style.setProperty("--px", nx.toFixed(3));
+      el.style.setProperty("--py", ny.toFixed(3));
+    };
+    const onMove = (e: PointerEvent) => {
+      nx = (e.clientX / window.innerWidth - 0.5) * 2;
+      ny = (e.clientY / window.innerHeight - 0.5) * 2;
+      if (!raf) raf = window.requestAnimationFrame(apply);
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      if (raf) window.cancelAnimationFrame(raf);
+    };
+  }, []);
 
   useEffect(() => {
     if (ready && user) router.replace("/chat");
@@ -55,16 +83,11 @@ export default function LoginPage() {
       return;
     }
     if (expanded) return; // 已展开就不再监听，避免无意义的重复 setState
-    // 指针进入按钮周围 240px 就展开
+    // 指针靠近屏幕中心就展开（不需要瞄准按钮）
     const onMove = (e: PointerEvent) => {
-      const el = ctaRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const cx = r.left + r.width / 2;
-      const cy = r.top + r.height / 2;
-      const dx = e.clientX - cx;
-      const dy = e.clientY - cy;
-      if (Math.hypot(dx, dy) < 240) setExpanded(true);
+      const dx = e.clientX - window.innerWidth / 2;
+      const dy = e.clientY - window.innerHeight / 2;
+      if (Math.hypot(dx, dy) < 260) setExpanded(true);
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
@@ -90,7 +113,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className={`login-page ${expanded ? "is-expanded" : "is-collapsed"}`}>
+    <main
+      ref={pageRef}
+      className={`login-page ${expanded ? "is-expanded" : "is-collapsed"}`}
+      onClick={() => setExpanded(true)}
+    >
       {/* 对角切割：左下浅蓝三角 + 一条发丝线 */}
       <div className="login-diagonal" aria-hidden="true" />
       {/* 背景动效：漂移的极光 + 缓慢流动的点阵 */}
@@ -149,17 +176,21 @@ export default function LoginPage() {
         <div className="login-tear-half login-tear-lower" />
       </div>
 
-      {/* 折叠态：只有一个按钮。指针靠近或点它，整个场景展开 */}
-      <div className="login-cta" ref={ctaRef}>
+      {/* 折叠态：入口是那道「光缝」本身，而不是一个按钮 */}
+      <div className="login-seam-entry">
         <button
           type="button"
-          className="login-cta-btn"
+          className="login-seam-btn"
           onClick={() => setExpanded(true)}
           onFocus={() => setExpanded(true)}
+          aria-label="展开登录界面"
         >
-          登录
+          <span className="login-seam-line" aria-hidden="true" />
         </button>
-        <p className="login-cta-hint">鼠标靠近，或直接点开</p>
+        <p className="login-seam-hint">
+          <span className="login-seam-dot" aria-hidden="true" />
+          靠近，或点击任意处
+        </p>
       </div>
 
       <section className="login-hero">

@@ -3786,51 +3786,6 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* ---------- 登录页：渐进展开 ---------- */
-.login-cta {
-  position: absolute;
-  inset: 0;
-  z-index: 6;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.login-cta-btn {
-  min-width: 200px;
-  height: 58px;
-  padding: 0 46px;
-  border: none;
-  border-radius: 999px;
-  background: var(--primary);
-  color: #fff;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  cursor: pointer;
-  box-shadow:
-    0 12px 34px -10px rgba(26, 111, 181, 0.55),
-    0 0 0 8px rgba(26, 111, 181, 0.08);
-  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.2s ease;
-}
-
-.login-cta-btn:hover,
-.login-cta-btn:focus-visible {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    0 18px 44px -12px rgba(26, 111, 181, 0.62),
-    0 0 0 12px rgba(26, 111, 181, 0.1);
-  outline: none;
-}
-
-.login-cta-hint {
-  margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.18em;
-  color: var(--text-faint);
-}
 
 /* 折叠态：除背景与按钮外一律隐藏 */
 .login-page.is-collapsed .login-hero,
@@ -3848,12 +3803,6 @@ input[type="range"]::-moz-range-thumb {
 
 .login-page.is-collapsed .login-topmeta {
   opacity: 0;
-}
-
-.login-page.is-expanded .login-cta {
-  opacity: 0;
-  transform: scale(0.96);
-  pointer-events: none;
 }
 
 /* 展开时各元素的过渡与错峰 */
@@ -3876,7 +3825,6 @@ input[type="range"]::-moz-range-thumb {
 .login-page.is-expanded .login-stats-strip { transition-delay: 0.26s; }
 
 @media (prefers-reduced-motion: reduce) {
-  .login-cta,
   .login-hero,
   .login-card-wrap,
   .login-stats-strip,
@@ -4031,7 +3979,6 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* 按钮浮在幕布之上，折叠态才看得见 */
-.login-cta { z-index: 9; }
 
 /* 幕布盖住了背景，蓝面板直接以最终形态存在，不再单独做 clip-path 动画 */
 .login-page.is-collapsed .login-diagonal {
@@ -4070,3 +4017,129 @@ input[type="range"]::-moz-range-thumb {
 /* 顶栏浮在幕布之上：折叠态也要看得见品牌 */
 .login-topbar { z-index: 9; }
 .login-page::after { z-index: 9; }
+
+/* ---------- 光缝入口 ---------- */
+.login-seam-entry {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 9;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  transition: opacity 0.4s ease, transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.login-page.is-expanded .login-seam-entry {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.94);
+  pointer-events: none;
+}
+
+.login-seam-btn {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+/* 那道光缝本身：一条沿对角线方向的发光线 */
+.login-seam-line {
+  position: absolute;
+  width: 2px;
+  height: 128px;
+  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    rgba(26, 111, 181, 0) 0%,
+    rgba(26, 111, 181, 0.85) 42%,
+    rgba(96, 186, 240, 0.95) 52%,
+    rgba(26, 111, 181, 0.85) 62%,
+    rgba(26, 111, 181, 0) 100%
+  );
+  transform: rotate(29deg);
+  filter: drop-shadow(0 0 10px rgba(58, 150, 214, 0.85));
+  animation: seam-breathe 3.4s ease-in-out infinite;
+  transition: opacity 0.4s ease;
+}
+
+@keyframes seam-breathe {
+  0%, 100% { opacity: 0.55; transform: rotate(29deg) scaleY(0.88); }
+  50% { opacity: 1; transform: rotate(29deg) scaleY(1.04); }
+}
+
+.login-seam-btn:hover .login-seam-line,
+.login-seam-btn:focus-visible .login-seam-line {
+  opacity: 1;
+  filter: drop-shadow(0 0 18px rgba(58, 150, 214, 1));
+}
+
+.login-seam-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 11.5px;
+  letter-spacing: 0.2em;
+  color: var(--text-faint);
+}
+
+.login-seam-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: seam-dot 2.4s ease-in-out infinite;
+}
+
+@keyframes seam-dot {
+  0%, 100% { opacity: 0.35; box-shadow: 0 0 0 0 rgba(26, 111, 181, 0.35); }
+  50% { opacity: 1; box-shadow: 0 0 0 5px rgba(26, 111, 181, 0); }
+}
+
+/* 折叠态：两片幕布微微分开一点，透出一条缝的光 */
+.login-page.is-collapsed .login-tear-upper { transform: translate3d(5px, -5px, 0); }
+.login-page.is-collapsed .login-tear-lower { transform: translate3d(-5px, 5px, 0); }
+
+/* ---------- 空间感加强：更强透视 + 视差 ---------- */
+.login-page { perspective: 1050px; }
+
+.login-aurora {
+  transform: translate3d(calc(var(--px, 0) * -16px), calc(var(--py, 0) * -12px), 0);
+  transition: transform 0.5s ease-out;
+}
+
+.login-grid {
+  transform: translate3d(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 9px), 0);
+}
+
+.login-card {
+  transform: perspective(900px)
+    rotateY(calc(var(--px, 0) * 2.4deg))
+    rotateX(calc(var(--py, 0) * -2deg));
+  transition: transform 0.45s ease-out;
+}
+
+/* 纵深再拉开一档 */
+.login-page.is-collapsed .login-hero {
+  transform: translate3d(-58px, 58px, -320px) scale(0.94);
+}
+
+.login-page.is-collapsed .login-stage {
+  transform: scale(0.82) translateZ(-180px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-seam-line,
+  .login-seam-dot { animation: none; }
+  .login-aurora,
+  .login-grid,
+  .login-card { transform: none; transition: none; }
+}
