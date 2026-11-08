@@ -149,7 +149,9 @@ export default function LungRiskPage() {
   /** 从不吸烟者不在模型人群内：给数字就是误用，这里直接不给 */
   const notEverSmoker = !isEverSmoker(form);
   const noRace = racePicked === null;
-  const blocked = invalid || notEverSmoker || noRace;
+  /** 引擎层清洗过输入（脏数据来自缓存/导入）→ 不给数字，避免"用一个兜底值算出来的风险" */
+  const dirtyInput = result.sanitized.length > 0;
+  const blocked = invalid || notEverSmoker || noRace || dirtyInput;
   const reachedProgram = result.risk >= THRESHOLD_PROGRAM;
   const reachedNlst = result.risk >= THRESHOLD_NLST;
   const outsideValidatedAge =
@@ -198,6 +200,7 @@ export default function LungRiskPage() {
             <span className="risk-caption">
               {[
                 noRace ? "先选一下种族 / 族裔（模型按人种分层，没法从家系推断）" : null,
+                dirtyInput ? "有几项数值不合法（可能来自旧缓存），请重新填一下" : null,
                 invalid ? `这几项需要修正：${errorNames}` : null,
                 notEverSmoker ? "模型只对曾经吸烟者建模：把吸烟年限填上（≥1 年）才出数" : null,
               ]

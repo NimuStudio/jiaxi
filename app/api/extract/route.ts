@@ -32,6 +32,11 @@ export async function POST(request: Request) {
   if (typeof text !== "string" || text.trim().length === 0) {
     return NextResponse.json({ error: "缺少 text 字段" }, { status: 400 });
   }
+  // 长度上限：本机 1.7B 模型跑 2000 字要几十秒，不设上限就是给匿名调用方
+  // 一把把 GPU 占满的钥匙（实测 800 句直接把请求拖到超时）。
+  if (text.length > 2000) {
+    return NextResponse.json({ error: "一次最多 2000 字，请分段说" }, { status: 400 });
+  }
 
   const ready = await isLlmReady();
   if (!ready) {

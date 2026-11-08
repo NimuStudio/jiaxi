@@ -124,7 +124,18 @@ export interface ChinaparResult {
   familyHistoryDelta: number | null;
 }
 
-export function evaluateChinapar(input: ChinaparInput): ChinaparResult {
+/**
+ * 脏数据守卫：这些值用户点不出来，但会从云端同步、旧缓存、导入的化验单进来。
+ * 一旦进到 Math.log()，整条方程都变成 NaN，界面上就会显示「NaN%」。
+ * 所以这里直接判定为「算不了」，交给页面显示「—」。
+ */
+function chinaparInputsUsable(input: ChinaparInput): boolean {
+  const nums = [input.age, input.sbp, input.totalCholesterolMmol, input.hdlMmol, input.waistCm];
+  return nums.every((v) => Number.isFinite(v) && v > 0);
+}
+
+export function evaluateChinapar(input: ChinaparInput): ChinaparResult | null {
+  if (!chinaparInputsUsable(input)) return null;
   const c = input.sex === "male" ? MALE : FEMALE;
   const lnAge = Math.log(input.age);
   const lnSbp = Math.log(input.sbp);

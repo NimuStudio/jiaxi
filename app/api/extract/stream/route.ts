@@ -36,6 +36,10 @@ export async function POST(request: Request) {
   if (typeof text !== "string" || text.trim().length === 0) {
     return new Response("缺少 text 字段", { status: 400 });
   }
+  // 同上：本机模型处理超长输入会把请求拖到超时，必须设上限
+  if (text.length > 2000) {
+    return new Response("一次最多 2000 字，请分段说", { status: 400 });
+  }
 
   const ready = await isLlmReady();
   if (!ready) {

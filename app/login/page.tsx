@@ -182,6 +182,10 @@ export default function LoginPage() {
       router.replace(nextTarget());
     } catch (err) {
       setError((err as Error).message || "操作失败");
+      // 失败后清空密码：不清的话用户重试时会在旧密码后面继续输入，
+      // 越试越长、越试越不对（我自己就踩过：密码框攒了 15 个字符还在想「为什么 401」）。
+      setPassword("");
+      setConfirm("");
     } finally {
       setBusy(false);
     }

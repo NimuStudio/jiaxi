@@ -102,6 +102,12 @@ export interface PlcoResult {
   terms: Record<string, number>;
   /** 是否超出模型验证人群 */
   outOfRange: boolean;
+  /**
+   * 被清洗过的字段名。空数组表示输入干净。
+   * 出现任何一项时，界面应当当作「算不了」处理（显示「—」），
+   * 而不是把一个用兜底值算出来的数字当成用户的风险。
+   */
+  sanitized: string[];
 }
 
 export const PLCO_RANGE = { minAge: 40, maxAge: 85, validatedAge: [55, 74] as const };
@@ -129,7 +135,53 @@ export function formatRiskPercent(risk: number): string {
   return pct.toFixed(1);
 }
 
-export function evaluatePlco(input: PlcoInput): PlcoResult {
+/**
+ * 把脏输入夹回模型范围，并记下动过哪些字段。
+ *
+ * 夹值不是为了"算出一个数"，而是为了**不产生 NaN**：
+ * NaN 一旦进了 logit，界面会显示「NaN%」——比显示「—」糟糕得多。
+ * 调用方（页面）看到 sanitized 非空就该停止展示风险。
+ */
+function sanitize(input: PlcoInput): { v: PlcoInput; sanitized: string[] } {
+  const sanitized: string[] = [];
+  const num = (raw: number, min: number, max: number, name: string): number => {
+    if (!Number.isFinite(raw)) {
+      sanitized.push(name);
+      return (min + max) / 2;
+    }
+    if (raw < min) {
+      sanitized.push(name);
+      return min;
+    }
+    if (raw > max) {
+      sanitized.push(name);
+      return max;
+    }
+    return raw;
+  };
+
+  const race = input.race in PLCO_COEF.race ? input.race : "white";
+  if (race !== input.race) sanitized.push("race");
+
+  const education = num(input.education, 1, 6, "education") as PlcoInput["education"];
+
+  return {
+    v: {
+      ...input,
+      race,
+      education,
+      age: num(input.age, PLCO_RANGE.minAge, PLCO_RANGE.maxAge, "age"),
+      bmi: num(input.bmi, 10, 60, "bmi"),
+      cigarettesPerDay: num(input.cigarettesPerDay, 0, 80, "cigarettesPerDay"),
+      smokingYears: num(input.smokingYears, 0, 70, "smokingYears"),
+      quitYears: num(input.quitYears, 0, 60, "quitYears"),
+    },
+    sanitized,
+  };
+}
+
+export function evaluatePlco(rawInput: PlcoInput): PlcoResult {
+  const { v: input, sanitized } = sanitize(rawInput);
   const c = PLCO_COEF;
   const terms: Record<string, number> = {
     constant: c.constant,
@@ -153,7 +205,8 @@ export function evaluatePlco(input: PlcoInput): PlcoResult {
     risk,
     logit,
     terms,
-    outOfRange: input.age < PLCO_RANGE.minAge || input.age > PLCO_RANGE.maxAge,
+    outOfRange: rawInput.age < PLCO_RANGE.minAge || rawInput.age > PLCO_RANGE.maxAge,
+    sanitized,
   };
 }
 
