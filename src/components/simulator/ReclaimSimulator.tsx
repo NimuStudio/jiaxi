@@ -63,7 +63,12 @@ export function ReclaimSimulator() {
   return (
     <>
       <section className="card">
-        <p className="section-label">2 型糖尿病风险（该分档对应的人群参考值）</p>
+        <div className="sim-head">
+          <p className="section-label" style={{ margin: 0 }}>
+            2 型糖尿病风险（该分档对应的人群参考值）
+          </p>
+          <span className="example-chip">示例档案 · 不是你的数据</span>
+        </div>
 
         <div className="risk-headline">
           <span className={`risk-big ${bandTone}`}>

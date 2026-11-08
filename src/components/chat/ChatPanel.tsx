@@ -66,7 +66,9 @@ export function ChatPanel({ onExtracted, hasData }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "system",
-      text: "说说家里人的情况。想到谁说谁，不用有顺序，也不用说得很清楚。",
+      text:
+        "说说家里人的情况。想到谁说谁，不用有顺序，也不用说得很清楚。" +
+        "打完按回车，图上会实时长出节点；想改哪条，点节点就能看到原话并删改。",
     },
   ]);
   const [input, setInput] = useState("");
