@@ -115,6 +115,8 @@ export default function LungRiskPage() {
 
   const result = useMemo(() => evaluatePlco(form), [form]);
   const quit = useMemo(() => quitSmokingCounterfactual(form), [form]);
+  /** 包年 = 每天支数 ÷ 20 × 吸烟年限（临床通用说法，不参与计算，只是换个说法） */
+  const packYears = (form.cigarettesPerDay / 20) * form.smokingYears;
   const anim = useCountUp(result.risk, 600);
 
   const FIELD_LABEL: Record<string, string> = {
@@ -353,6 +355,14 @@ export default function LungRiskPage() {
             onChange={(quitYears) => update({ quitYears })}
           />
         </div>
+
+        {!blocked && (
+          <p className="cvd-delta">
+            折算成临床上说的「包年」：{form.cigarettesPerDay} 支/天 × {form.smokingYears} 年 ≈{" "}
+            <b>{packYears.toFixed(1)} 包年</b>
+            （包年 = 每天支数 ÷ 20 × 年数）。这个数只用来和医生沟通，模型本身按支数和年限算。
+          </p>
+        )}
 
         <div className="factors-checks" style={{ marginTop: 14 }}>
           <label className="factors-check">

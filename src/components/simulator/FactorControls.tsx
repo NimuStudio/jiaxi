@@ -19,13 +19,19 @@ export interface FactorControlsProps {
   factors: Factors;
   onChange: (patch: Partial<Factors>) => void;
   breakdown: Record<ScoreKey, number>;
+  /** 腰围阈值分男女（FINDRISC）：男 <94、女 <80 才是 0 分 */
+  sex: "male" | "female";
 }
 
 export function FactorControls({
   factors,
   onChange,
   breakdown,
+  sex,
 }: FactorControlsProps) {
+  // FINDRISC 的腰围阈值：男 <94 cm、女 <80 cm 才算 0 分（见 findrisc.ts waistScore）
+  const waistTarget = sex === "male" ? 92 : 78;
+
   const bmiScore = breakdown.bmi ?? 0;
   const waistScore = breakdown.waist ?? 0;
   const activityScore = breakdown.physicalActivity ?? 0;
@@ -36,6 +42,38 @@ export function FactorControls({
       <div>
         <h3 className="factor-group-title">可以改变的因素</h3>
         <p className="factor-group-hint">拖动看看，右边的数字会跟着变</p>
+
+        {/* 一键预设：只是想看看"如果做到会怎样"，不该逼人一个个拖滑块 */}
+        <div className="factor-presets">
+          <button
+            type="button"
+            className="preset-btn"
+            onClick={() => onChange({ bmi: 23 })}
+          >
+            减重到 BMI 23
+          </button>
+          <button
+            type="button"
+            className="preset-btn"
+            onClick={() => onChange({ waistCm: waistTarget })}
+          >
+            腰围降到 {waistTarget} cm
+          </button>
+          <button
+            type="button"
+            className="preset-btn is-primary"
+            onClick={() =>
+              onChange({
+                bmi: 23,
+                waistCm: waistTarget,
+                physicallyActive: true,
+                eatsVegetablesDaily: true,
+              })
+            }
+          >
+            四项全部达标
+          </button>
+        </div>
 
         <div className="factor">
           <div className="factor-row">

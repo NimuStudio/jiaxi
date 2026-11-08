@@ -121,6 +121,7 @@ export function ReclaimSimulator() {
         <p className="section-label">风险从哪来</p>
         <FactorControls
           factors={factors}
+          sex="male"
           breakdown={result.breakdown}
           onChange={(patch) =>
             setFactors((prev) => ({ ...prev, ...patch }))
