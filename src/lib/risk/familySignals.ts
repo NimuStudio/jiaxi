@@ -114,8 +114,8 @@ export function familySignals(persons: ExtractedPerson[]): FamilySignal[] {
       level: "info",
       title: `一级亲属中有 ${firstCancers.length} 位患恶性肿瘤`,
       body:
-        "这类信息在门诊问诊时经常被漏掉。我们不做癌症风险的概率推算——" +
-        "筛查起始年龄与方案应以医生的判断和现行指南为准。",
+        "这类信息在门诊问诊时经常被漏掉。肺癌可以用 PLCOm2012 模型算 6 年风险（见「肺癌风险」页，" +
+        "需要年龄、吸烟量与家族史）；其他癌种目前不做概率推算，筛查起始年龄与方案以医生的判断和现行指南为准。",
     });
   }
 

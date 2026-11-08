@@ -121,7 +121,7 @@ export function exposureHints(
     hints.push({
       id: "drinker-not-in-model",
       level: "info",
-      title: "饮酒不在这两个方程里",
+      title: "饮酒不在这三个模型里",
       body:
         "FINDRISC 与 China-PAR 都没有饮酒项，所以它不会改变上面的分数。" +
         "把它记录下来是为了让医生看到完整的生活方式，而不是为了让分数更好看。",

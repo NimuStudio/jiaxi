@@ -96,7 +96,7 @@ export interface RiskFactorsFormProps {
 /** 生活方式暴露：与 FINDRISC 计分项分开列，避免让人以为它们会改分数 */
 const EXPOSURE_CHECKS: Array<{ key: keyof Draft; label: string; hint: string }> = [
   { key: "smoker", label: "现在吸烟", hint: "已计入 China-PAR 方程" },
-  { key: "drinker", label: "经常饮酒", hint: "两个方程都不含此项，仅作记录" },
+  { key: "drinker", label: "经常饮酒", hint: "三个模型都不含此项，仅作记录" },
   { key: "lungDisease", label: "有慢支 / 肺气肿 / 慢阻肺史", hint: "会给相对风险提示，不改分数" },
 ];
 

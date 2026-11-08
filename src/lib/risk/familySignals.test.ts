@@ -35,7 +35,8 @@ describe("familySignals", () => {
     const s = familySignals([p("father", "lung-cancer")]);
     const hit = s.find((x) => x.id === "first-degree-cancer");
     expect(hit?.title).toContain("恶性肿瘤");
-    expect(hit?.body).toContain("不做癌症风险的概率推算");
+    expect(hit?.body).toContain("PLCOm2012");
+    expect(hit?.body).toContain("其他癌种目前不做概率推算");
   });
 
   it("没有亲属时不产生信号", () => {
