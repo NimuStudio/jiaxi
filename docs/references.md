@@ -158,6 +158,12 @@ Forey BA, et al. **Previous Lung Diseases and Lung Cancer Risk: A Systematic Rev
   `plcom2012.test.ts` 做的是**公式级复算**：用一段独立手算（Python 逐项展开）得到期望值，
   再与实现比对，保证系数抄写与中心化没有走样；另有方向性检验（年龄↑、现吸>已戒、戒烟越久越低等）。
   **它不能证明模型本身对**，只能证明我们如实实现了论文。
+- **关于「教育程度」这一项（常被问到）**：原文把它明确写成**社会经济地位的代理变量**
+  （"lower socioeconomic status (determined according to the level of education)"），
+  不是致病因素。OR 0.922（95% CI 0.874–0.972，P=0.003，β = −0.0812744），
+  即每高一个教育层级、6 年风险略低；从 1 级到 6 级累计 OR ≈ 0.67，远小于家族史（1.80）与 COPD（1.43）。
+  六级的原始定义是美式（未读完高中 → 研究生），本产品的中文标签是近似映射，
+  对中国人群属于外推，界面上已注明「代表社会经济地位，不是病因」。
 - **实现位置**：`src/lib/risk/plcom2012.ts`、`app/lung/page.tsx`、`src/lib/risk/plcom2012.test.ts`。
 - **界面口径**：显示 6 年风险并对照两个常用阈值（UKLS ≥1.51%、NLST 等价 ≥1.3455%），
   明确写「人群模型估计值，不是你的确定结局」。

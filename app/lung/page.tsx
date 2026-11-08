@@ -269,6 +269,9 @@ export default function LungRiskPage() {
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
             </select>
+            <span className="factors-check-hint">
+              原文用它代表社会经济地位，不是病因；每升一级 OR 0.92，影响很小
+            </span>
           </label>
           <NumberField
             label="BMI"
