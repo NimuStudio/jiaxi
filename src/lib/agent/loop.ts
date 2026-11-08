@@ -62,6 +62,9 @@ ${TOOL_SPEC}
 6. 信息足够时就调用 final_answer，input 填回答正文。
 7. 同一个工具最多调用一次。已经拿到结果就不要再调，直接 final_answer。
 8. 「依据：」只能放在回答的最末尾、只写一个条目标题（书名号里）；没有检索到条目就不要写「依据：」。
+10. 工具只能算 2 型糖尿病（FINDRISC）和心血管（China-PAR）两种风险。
+    被问到**肺癌**或其他癌种的概率时：不要用这两种的数字改写，也不要把病名换掉就说成肺癌风险；
+    说明需要用 PLCOm2012 到「肺癌风险」页填年龄与吸烟量，你这边只能给相对风险。
 9. compute_risk 算的是**用户本人**的风险，不是任何亲属的。回答里风险的主语永远是「你」，亲属的病只是原因，例如「因为舅舅有糖尿病（二级亲属），你的家族史记 3 分」。`;
 
 /** 一步决策的痕迹，会显示在界面上——让「Agent 在想什么」变成可见的。 */
@@ -158,6 +161,69 @@ function guardNumbers(answer: string, observations: string[]): string {
   return out.length > 0
     ? out
     : "这个问题的具体数字我没有可靠出处，就不写了——不编数字。你的个人风险可以看下面由规则引擎算出的结果。";
+}
+
+/**
+ * 疾病主语守卫：把「算出来的数字」和「说的是哪种病」对上。
+ *
+ * 实测：用户问「你们能算肺癌风险吗」，1.7B 把 FINDRISC 的糖尿病结果
+ * 直接说成「你的未来 10 年肺癌风险为 17%」——数字本身有出处，病名却是编的。
+ * 数字守卫抓不到这种错，因为每个数字都能在观察里找到。
+ * 这里按「回答提到的病」与「工具实际算的病」比对，对不上就换掉整段。
+ */
+const DISEASE_MARKERS: Array<{ disease: string; inAnswer: RegExp; inObservation: RegExp; redirect: string }> = [
+  {
+    disease: "肺癌",
+    inAnswer: /肺癌/,
+    inObservation: /肺癌|PLCO/,
+    redirect:
+      "肺癌的绝对风险要用 PLCOm2012 模型算，需要年龄、吸烟量（支/天与年限）和家族史，" +
+      "请到「肺癌风险」页填一下——我在这里不能把其他风险的数字当成肺癌风险。",
+  },
+  {
+    disease: "心血管",
+    inAnswer: /心血管|ASCVD|心梗|脑卒中/,
+    inObservation: /心血管|ASCVD|China-PAR/,
+    redirect:
+      "心血管风险要用 China-PAR 方程算，需要血压、血脂、腰围等体检数字，" +
+      "请到「心血管风险」页填一下——我在这里不能把其他风险的数字当成心血管风险。",
+  },
+  {
+    disease: "糖尿病",
+    inAnswer: /糖尿病|FINDRISC/,
+    inObservation: /糖尿病|FINDRISC/,
+    redirect:
+      "糖尿病风险要用 FINDRISC 量表算，需要年龄、BMI、腰围等，" +
+      "请到「糖尿病风险」页填一下——我在这里不能把其他风险的数字当成糖尿病风险。",
+  },
+];
+
+/**
+ * 问到肺癌、但回答完全没提肺癌时，补一句正确去处。
+ *
+ * 1.7B 被问「你们能算肺癌风险吗」时，会拿 FINDRISC 的分档表来回答——
+ * 不算错，但完全没回答问题。这句是产品文案（不是模型生成），
+ * 保证用户至少知道该去哪一页。
+ */
+export function withLungPointer(question: string, answer: string): string {
+  if (!/肺癌/.test(question)) return answer;
+  if (/肺癌/.test(answer)) return answer;
+  const pointer =
+    "肺癌的绝对风险要用 PLCOm2012 模型算（6 年风险），需要年龄、吸烟量与家族史，" +
+    "可以在「肺癌风险」页填一下；我在这里只能给相对风险与筛查建议。";
+  return answer ? `${answer.trim()}\n${pointer}` : pointer;
+}
+
+export function guardDiseaseSubject(answer: string, observations: string[]): string {
+  // 只在这段话确实给了百分比时才管：没数字的科普回答不受影响
+  if (!/%|风险为|风险是/.test(answer)) return answer;
+  const allObs = observations.join("\n");
+  for (const m of DISEASE_MARKERS) {
+    if (!m.inAnswer.test(answer)) continue;
+    if (m.inObservation.test(allObs)) continue;
+    return m.redirect;
+  }
+  return answer;
 }
 
 /** 观察结果截断，避免上下文被长文本挤爆（本地服务只有 4096）。 */
@@ -451,7 +517,13 @@ export async function runAgent(question: string, ctx: ToolContext): Promise<Agen
         withNoSourceNotice(
           question,
           stripInternalHints(
-            guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+            withLungPointer(
+              question,
+              guardDiseaseSubject(
+                guardNumbers(cleanCitations(raw.trim(), allowedTitles), observations),
+                observations,
+              ),
+            ),
           ),
           onlyCited(raw),
         ),

@@ -64,7 +64,7 @@ function RiskFactCard({ fact }: { fact: RiskFact }) {
       <div className="fact-main">
         <div className="fact-col">
           <span className="fact-value">{fmtPct(pct)}<span className="fact-unit">%</span></span>
-          <span className="fact-caption">当前 10 年风险 · {BAND_LABEL[fact.band] ?? fact.band}</span>
+          <span className="fact-caption">2 型糖尿病 · 当前 10 年风险 · {BAND_LABEL[fact.band] ?? fact.band}</span>
         </div>
         <span className="fact-arrow">→</span>
         <div className="fact-col">
@@ -84,7 +84,11 @@ function RiskFactCard({ fact }: { fact: RiskFact }) {
           ))}
         </div>
       )}
-      <p className="fact-note">FINDRISC 总分 {fact.score} 分 · 数字由工具计算，不经模型复述</p>
+      {/* 卡片没有病名时，问肺癌/心血管的人会把这个数当成自己问的那种病 */}
+      <p className="fact-note">
+        这是 2 型糖尿病的风险（FINDRISC 总分 {fact.score} 分），不是肺癌或心血管风险 ·
+        数字由工具计算，不经模型复述
+      </p>
     </div>
   );
 }

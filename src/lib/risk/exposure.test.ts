@@ -43,7 +43,7 @@ describe("exposureHints", () => {
     const hints = exposureHints(fatherLung, { smoker: true, drinker: false, lungDisease: false });
     const hit = hints.find((h) => h.id === "lung-family-smoker");
     expect(hit?.level).toBe("attention");
-    expect(hit?.body).toContain("都不换算成个人概率");
+    expect(hit?.body).toContain("PLCOm2012");
   });
 
   it("吸烟单独出现时说明它已进方程", () => {
