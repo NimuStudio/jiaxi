@@ -288,7 +288,7 @@ export default function LoginPage() {
         </span>
         <span className="login-topmeta-col">
           <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
-          <span className="login-colophon">25 种疾病 · 2 套指南方程 · 100% 本机推理</span>
+          <span className="login-colophon">25 种疾病 · 3 套指南方程 · 100% 本机推理</span>
         </span>
       </header>
 
@@ -466,7 +466,7 @@ export default function LoginPage() {
           <span>种疾病可识别</span>
         </div>
         <div className="login-stat">
-          <b>2</b>
+          <b>3</b>
           <span>套指南方程</span>
         </div>
         <div className="login-stat">

@@ -62,6 +62,19 @@ const NAV = [
       </svg>
     ),
   },
+  {
+    href: "/lung",
+    step: "04",
+    label: "肺癌风险",
+    hint: "PLCOm2012 模型",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" {...iconStroke}>
+        <path d="M12 3.5v7" />
+        <path d="M9 6.5c0 4-4 4.5-4 8.5a4 4 0 0 0 4 4c2 0 3-1 3-3.5" />
+        <path d="M15 6.5c0 4 4 4.5 4 8.5a4 4 0 0 1-4 4c-2 0-3-1-3-3.5" />
+      </svg>
+    ),
+  },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {

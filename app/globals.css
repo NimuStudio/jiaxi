@@ -227,6 +227,7 @@ body {
   align-items: center;
   gap: 2px;
   min-width: 0;
+  overflow: clip;
 }
 
 .topbar-nav-btn {
@@ -280,6 +281,20 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  /* 右侧那一簇（演示徽标 / 引擎标注 / 账号）不参与收缩，否则会被导航挤扁 */
+  flex: 0 0 auto;
+}
+
+/* 四个导航项以后，1280 这类笔记本宽度会挤到演示徽标上：
+   先收掉步骤编号，再收紧内边距，保证每个标签还能读完 */
+@media (max-width: 1440px) {
+  .topbar-nav-step {
+    display: none;
+  }
+  .topbar-nav-btn {
+    padding: 6px 11px;
+    gap: 6px;
+  }
 }
 
 /* 引擎标注：收进顶栏右侧，替代被删掉的侧栏注脚 */

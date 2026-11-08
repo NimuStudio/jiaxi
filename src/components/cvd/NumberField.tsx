@@ -10,6 +10,8 @@ interface Props {
   step?: number;
   /** 越界提示：有值就标红并显示在字段下方 */
   error?: string | null;
+  /** 只读展示（例如"现在还在吸"时戒烟年数恒为 0） */
+  disabled?: boolean;
   onChange: (v: number) => void;
 }
 
@@ -22,7 +24,16 @@ interface Props {
  * 所以内部用字符串草稿：输入过程中原样保留，只把「可解析的值」向上报告；
  * 失焦后再按真实值归位。
  */
-export function NumberField({ label, value, min, max, step = 1, error, onChange }: Props) {
+export function NumberField({
+  label,
+  value,
+  min,
+  max,
+  step = 1,
+  error,
+  disabled = false,
+  onChange,
+}: Props) {
   const [draft, setDraft] = useState(String(value));
   const [focused, setFocused] = useState(false);
 
@@ -50,6 +61,7 @@ export function NumberField({ label, value, min, max, step = 1, error, onChange 
           const n = Number(text);
           if (text.trim() !== "" && Number.isFinite(n)) onChange(n);
         }}
+        disabled={disabled}
         aria-invalid={error ? true : undefined}
         className={error ? "is-invalid" : undefined}
       />

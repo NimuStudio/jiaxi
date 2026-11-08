@@ -51,7 +51,7 @@
 | --- | --- |
 | 口述病史抽取（含否定句、手术类说法、泛称癌种兜底） | 完成，口语集 29 条 P/R/F1 = 1.000 |
 | 家系图可视化 + 节点回溯原话 | 完成 |
-| 双风险引擎（FINDRISC 0–26 / China-PAR 2016） | 完成，两套系数均有文献台账并进回归测试 |
+| 三个风险引擎（FINDRISC 0–26 / China-PAR 2016 / PLCOm2012） | 完成，三套系数均有文献台账并进回归测试 |
 | Agent 问答（工具调用 + 知识库检索 + 引用校验） | 完成，见下方 RAG 的 A/B |
 | 化验单拍照导入 | 完成（可选，需要视觉模型在线） |
 | 账户与云端同步 | 完成（含「删空也同步」这个易错点） |
@@ -111,7 +111,7 @@
 | 全本地推理（Qwen3-1.7B GGUF + llama.cpp） | 家族病史是敏感信息，不出机器，也不受 API 额度与限流影响 | `src/lib/extract/client.ts` |
 | GBNF 约束解码 | 结构化输出由语法保证，而不是靠 prompt「祈祷」模型吐 JSON | `src/lib/extract/grammar.ts` |
 | 病名必须能回查原文 | 抽出来的每一条都要在用户原话里找到依据，抽不出就宁可不抽 | `src/lib/extract/lexicon.ts` + 评测口径 |
-| 双引擎互补 | FINDRISC 覆盖糖代谢、China-PAR 覆盖心血管，两类风险分开呈现 | `src/lib/risk/findrisc.ts`、`src/lib/risk/chinapar.ts` |
+| 三引擎互补 | FINDRISC 覆盖糖代谢、China-PAR 覆盖心血管、PLCOm2012 覆盖肺癌（含吸烟量与家族史） | `src/lib/risk/findrisc.ts`、`src/lib/risk/chinapar.ts`、`src/lib/risk/plcom2012.ts` |
 | 数字可溯源 | 每个进入产品的系数都登记出处与核实状态 | `docs/references.md` |
 
 ### 3. 交互创新：口述 → 追问 → 点选回溯 → 反事实推演
@@ -130,7 +130,8 @@
   │              语音输入（Web Speech API，zh-CN）
   │              Agent 问答（模型自主调工具，事实卡直渲数字）
   ├── /         糖尿病风险量化（反事实滑块）+ 行动方案 + 依据检索
-  └── /cvd      心血管风险（China-PAR，家系图自动读出家族史）
+  ├── /cvd      心血管风险（China-PAR，家系图自动读出家族史）
+  └── /lung     肺癌风险（PLCOm2012，吸烟量与家族史一起进方程）
         │
         ▼
 Next.js 16 (App Router, TypeScript)
