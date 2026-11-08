@@ -156,3 +156,54 @@ export function evaluatePlco(input: PlcoInput): PlcoResult {
     outOfRange: input.age < PLCO_RANGE.minAge || input.age > PLCO_RANGE.maxAge,
   };
 }
+
+/**
+ * 戒烟反事实：家族史改不了，吸烟这几项能改 —— 这就是"可回收"在肺癌上的版本。
+ *
+ * 关键约束：**同一时点比较**。把"现在 6 年风险"和"5 年后的 6 年风险"直接比是错的——
+ * 那样年龄也在长（5 年 × 0.0779 的对数优势），会把戒烟的收益整个盖过去
+ * （第一版就这么写错了，测试当场抓到：戒烟 5 年后反而更高）。
+ *
+ * 所以这里回答的是「如果当初早点戒」：
+ *  - now        ：按现在的样子
+ *  - quitNow    ：现在立刻戒（年龄不变，戒烟年数 0）
+ *  - quit5yAgo  ：5 年前就戒了（年龄不变，吸烟年限 −5，戒烟年数 +5）
+ * 只动模型里真实存在的变量，不引入任何模型外因素。
+ */
+export interface QuitCounterfactual {
+  /** 当前 6 年风险 */
+  now: number;
+  /** 现在立刻戒烟、其余不变 */
+  quitNow: number;
+  /** 如果 5 年前就戒了（同一时点，吸烟年限相应少 5 年） */
+  quit5yAgo: number | null;
+}
+
+export function quitSmokingCounterfactual(input: PlcoInput): QuitCounterfactual {
+  const now = evaluatePlco(input).risk;
+
+  if (input.smokingStatus === "current") {
+    const quitNow = evaluatePlco({ ...input, smokingStatus: "former", quitYears: 0 }).risk;
+    const quit5yAgo =
+      input.smokingYears >= 5
+        ? evaluatePlco({
+            ...input,
+            smokingStatus: "former",
+            smokingYears: input.smokingYears - 5,
+            quitYears: input.quitYears + 5,
+          }).risk
+        : null;
+    return { now, quitNow, quit5yAgo };
+  }
+
+  // 已经戒烟的人：如果当初再早 5 年戒
+  const quit5yAgo =
+    input.smokingYears >= 5
+      ? evaluatePlco({
+          ...input,
+          smokingYears: input.smokingYears - 5,
+          quitYears: input.quitYears + 5,
+        }).risk
+      : null;
+  return { now, quitNow: now, quit5yAgo };
+}

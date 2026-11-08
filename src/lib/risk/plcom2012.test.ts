@@ -6,6 +6,7 @@ import {
   isEverSmoker,
   PLCO_COEF,
   PLCO_CENTER,
+  quitSmokingCounterfactual,
   type PlcoInput,
 } from "./plcom2012";
 
@@ -150,5 +151,57 @@ describe("PLCOm2012 · 展示与适用人群", () => {
   it("吸烟年限为 0 视为从不吸烟，不在模型人群内", () => {
     expect(isEverSmoker({ smokingYears: 0, cigarettesPerDay: 20 })).toBe(false);
     expect(isEverSmoker({ smokingYears: 30, cigarettesPerDay: 20 })).toBe(true);
+  });
+});
+
+describe("戒烟反事实（可回收的肺癌版本）", () => {
+  const smoker: PlcoInput = {
+    age: 62,
+    race: "white",
+    education: 3,
+    bmi: 24,
+    copd: false,
+    priorCancer: false,
+    familyLungCancer: true,
+    smokingStatus: "current",
+    cigarettesPerDay: 20,
+    smokingYears: 30,
+    quitYears: 0,
+  };
+
+  it("现吸者：现在戒烟，风险下降", () => {
+    const r = quitSmokingCounterfactual(smoker);
+    expect(r.quitNow).toBeLessThan(r.now);
+    expect(r.quitNow).toBeGreaterThan(0);
+  });
+
+  it("5 年前就戒（同一时点）比现在才戒更低", () => {
+    const r = quitSmokingCounterfactual(smoker);
+    expect(r.quit5yAgo).not.toBeNull();
+    expect(r.quit5yAgo!).toBeLessThan(r.quitNow);
+  });
+
+  it("已经戒烟的人：quitNow 与 now 相同", () => {
+    const r = quitSmokingCounterfactual({ ...smoker, smokingStatus: "former", quitYears: 8 });
+    expect(r.quitNow).toBeCloseTo(r.now, 10);
+  });
+
+  it("吸烟不足 5 年时不给「5 年前戒烟」这个反事实", () => {
+    const r = quitSmokingCounterfactual({ ...smoker, smokingYears: 3 });
+    expect(r.quit5yAgo).toBeNull();
+  });
+
+  it("反事实只动吸烟项：家族史项的对数优势完全相同", () => {
+    const a = evaluatePlco(smoker).terms.family;
+    const b = evaluatePlco({ ...smoker, smokingStatus: "former", quitYears: 0 }).terms.family;
+    const c = evaluatePlco({ ...smoker, smokingStatus: "former", smokingYears: 25, quitYears: 5 }).terms.family;
+    expect(a).toBe(b);
+    expect(a).toBe(c);
+  });
+
+  it("同一时点比较：不会出现「戒烟后反而更高」", () => {
+    // 第一版把年龄也 +5，结果戒烟 5 年后的风险更高（年龄项压过戒烟收益）
+    const r = quitSmokingCounterfactual(smoker);
+    expect(r.quit5yAgo!).toBeLessThan(r.now);
   });
 });

@@ -5,6 +5,7 @@ import {
   evaluatePlco,
   formatRiskPercent,
   isEverSmoker,
+  quitSmokingCounterfactual,
   PLCO_RANGE,
   type PlcoEducation,
   type PlcoInput,
@@ -113,6 +114,7 @@ export default function LungRiskPage() {
   }, []);
 
   const result = useMemo(() => evaluatePlco(form), [form]);
+  const quit = useMemo(() => quitSmokingCounterfactual(form), [form]);
   const anim = useCountUp(result.risk, 600);
 
   const FIELD_LABEL: Record<string, string> = {
@@ -231,6 +233,36 @@ export default function LungRiskPage() {
               .map((t) => `${t.label} ${t.value >= 0 ? "+" : "−"}${Math.abs(t.value).toFixed(2)}`)
               .join(" · ")}
             （相对模型中心值的对数优势贡献）
+          </p>
+        )}
+
+        {!blocked && (
+          <div className="reclaim-strip">
+            <div className="reclaim-cell">
+              <b>{formatRiskPercent(quit.now)}%</b>
+              <span>按你现在的情况</span>
+            </div>
+            <span className="reclaim-arrow">→</span>
+            <div className="reclaim-cell">
+              <b className="is-goal">{formatRiskPercent(quit.quitNow)}%</b>
+              <span>{form.smokingStatus === "current" ? "现在戒烟，其余不变" : "（你已戒烟）"}</span>
+            </div>
+            {quit.quit5yAgo !== null && (
+              <>
+                <span className="reclaim-arrow">→</span>
+                <div className="reclaim-cell">
+                  <b className="is-goal">{formatRiskPercent(quit.quit5yAgo)}%</b>
+                  <span>如果 5 年前就戒了</span>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        {!blocked && (
+          <p className="cvd-delta">
+            家族史那部分是改不了的（对数优势 +{(result.terms.family ?? 0).toFixed(2)}），
+            能动的只有吸烟：上面三个数字里唯一变化的就是吸烟相关的几项。
+            饮食与运动不在这个模型里，别把它们折算进这个数。
           </p>
         )}
 
