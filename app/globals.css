@@ -3537,16 +3537,6 @@ input[type="range"]::-moz-range-thumb {
   text-decoration: underline;
 }
 
-.login-demo {
-  margin: 16px 0 0;
-  padding-top: 13px;
-  border-top: 1px solid var(--line);
-  font-size: 12.2px;
-  color: var(--text-muted);
-}
-
-.login-demo a { color: var(--primary); }
-
 .login-stats-strip {
   position: relative;
   z-index: 2;

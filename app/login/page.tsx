@@ -445,9 +445,6 @@ export default function LoginPage() {
             </button>
           </div>
 
-          <p className="login-demo">
-            只想看效果？<a href="/chat?demo=1">用预置家系直接浏览</a>
-          </p>
         </div>
 
         {/* 二级入口：不登录也能走完一遍，评委与路人都不必先注册 */}
