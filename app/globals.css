@@ -174,7 +174,7 @@ body {
   top: 14px;
   z-index: 100;
   margin: 16px auto 0;
-  width: min(1120px, calc(100% - 32px));
+  width: min(1240px, calc(100% - 32px));
   height: 58px;
   display: flex;
   align-items: center;
@@ -227,7 +227,6 @@ body {
   align-items: center;
   gap: 2px;
   min-width: 0;
-  overflow: clip;
 }
 
 .topbar-nav-btn {
@@ -235,6 +234,8 @@ body {
   align-items: center;
   gap: 7px;
   padding: 7px 14px;
+  /* 标签一个字都不许被截：宁可让品牌副标题先省略 */
+  flex: 0 0 auto;
   border-radius: 100px;
   font-size: 13px;
   font-weight: 500;
@@ -287,10 +288,14 @@ body {
 
 /* 四个导航项以后，1280 这类笔记本宽度会挤到演示徽标上：
    先收掉步骤编号，再收紧内边距，保证每个标签还能读完 */
-@media (max-width: 1440px) {
+/* 步骤编号是装饰性的"顺序提示"，宽度不够时先牺牲它 */
+@media (max-width: 1799px) {
   .topbar-nav-step {
     display: none;
   }
+}
+
+@media (max-width: 1440px) {
   .topbar-nav-btn {
     padding: 6px 11px;
     gap: 6px;
@@ -5556,11 +5561,12 @@ input[type="range"]::-moz-range-thumb {
 .demo-badge { flex: 0 0 auto; }
 
 /* 空间不足时先舍弃装饰性文字，而不是让它们互相压 */
-@media (max-width: 1240px) {
+/* 让位顺序：步骤编号 → 引擎标注 → 品牌副标题。导航标签始终完整 */
+@media (max-width: 1500px) {
   .topbar-engines { display: none; }
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1280px) {
   .topbar-tagline { display: none; }
 }
 
