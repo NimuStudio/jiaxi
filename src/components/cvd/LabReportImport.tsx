@@ -22,6 +22,7 @@ const FIELD_LABEL: Record<keyof MappedFields, string> = {
   sbp: "收缩压（mmHg）",
   totalCholesterolMmol: "总胆固醇（mmol/L）",
   hdlMmol: "高密度脂蛋白（mmol/L）",
+  waistCm: "腰围（cm）",
 };
 
 export function LabReportImport({ onApply }: Props) {

@@ -61,6 +61,7 @@ export interface MappedFields {
   sbp?: number;
   totalCholesterolMmol?: number;
   hdlMmol?: number;
+  waistCm?: number;
 }
 
 export interface MapResult {
@@ -75,13 +76,15 @@ const RULES: Array<{ field: keyof MappedFields; match: RegExp }> = [
   { field: "hdlMmol", match: /高密度脂蛋白|\bHDL\b/i },
   { field: "sbp", match: /收缩压|高压/ },
   { field: "age", match: /^年龄$|患者年龄/ },
+  // 腰围是体检表上常见的实测项，且 China-PAR 要用；之前漏了，识别出来只能落进 unused
+  { field: "waistCm", match: /腰围|腹围/ },
 ];
 
 /**
  * 把化验项映射到 China-PAR 字段。
  *
- * 注意：只映射**能从化验单上直接读到**的字段。BMI、腰围这类化验单通常没有，
- * 不做猜测；血糖/糖化血红蛋白也不直接等于"已诊断糖尿病"，所以不映射到 diabetic，
+ * 注意：只映射**能从单据上直接读到**的字段。BMI 需要身高体重，不做猜测；
+ * 血糖/糖化血红蛋白也不直接等于"已诊断糖尿病"，所以不映射到 diabetic，
  * 避免把"血糖偏高"误判成"糖尿病"影响风险方程。
  */
 export function mapLabItems(items: LabItem[]): MapResult {
@@ -97,9 +100,19 @@ export function mapLabItems(items: LabItem[]): MapResult {
     // 只有胆固醇类需要单位换算；年龄与血压用原始值（mmHg 不该走 mmol 换算）
     const needsConversion =
       rule.field === "totalCholesterolMmol" || rule.field === "hdlMmol";
+    // 腰围要认单位：cm 直接用；写了 inch 的按 2.54 换算；认不出的当未映射
     const value = needsConversion ? toMmol(item.value, item.unit) : item.value;
     if (value === null) {
       unused.push(item);
+      continue;
+    }
+    if (rule.field === "waistCm") {
+      const cm = toCm(item.value, item.unit);
+      if (cm === null) {
+        unused.push(item);
+        continue;
+      }
+      if (fields.waistCm === undefined) fields.waistCm = cm;
       continue;
     }
     // 同一字段出现多次时保留第一个（化验单通常只有一条）
@@ -113,6 +126,14 @@ export function mapLabItems(items: LabItem[]): MapResult {
  * 单位换算：China-PAR 用 mmol/L，化验单有时是 mg/dL。
  * 换算系数：胆固醇类 ×0.02586（mg/dL → mmol/L）；血压不做换算。
  */
+/** 腰围单位：cm 直接用，inch 换算，其他不认识就不猜 */
+export function toCm(value: number, unit: string): number | null {
+  const u = unit.toLowerCase().replace(/\s/g, "");
+  if (u === "" || u.includes("cm") || u.includes("厘米")) return Math.round(value * 10) / 10;
+  if (u.includes("inch") || u.includes("英寸") || u === "in") return Math.round(value * 2.54 * 10) / 10;
+  return null;
+}
+
 export function toMmol(value: number, unit: string): number | null {
   const u = unit.toLowerCase().replace(/\s/g, "");
   if (u.includes("mg/dl") || u.includes("mg/dL".toLowerCase())) {

@@ -64,3 +64,36 @@ describe("mapLabItems", () => {
     expect(fields.sbp).toBe(145);
   });
 });
+
+describe("腰围映射（体检表常见项）", () => {
+  it("腰围 cm 直接映射", () => {
+    const r = mapLabItems([{ name: "腰围", value: 80, unit: "cm", ref: "-" } as never]);
+    expect(r.fields.waistCm).toBe(80);
+    expect(r.unused.length).toBe(0);
+  });
+
+  it("腹围也认", () => {
+    const r = mapLabItems([{ name: "腹围", value: 92, unit: "cm", ref: "-" } as never]);
+    expect(r.fields.waistCm).toBe(92);
+  });
+
+  it("英寸换算成厘米", () => {
+    const r = mapLabItems([{ name: "腰围", value: 32, unit: "inch", ref: "-" } as never]);
+    expect(r.fields.waistCm).toBeCloseTo(81.3, 1);
+  });
+
+  it("单位认不出就当未映射（不猜）", () => {
+    const r = mapLabItems([{ name: "腰围", value: 80, unit: "furlong", ref: "-" } as never]);
+    expect(r.fields.waistCm).toBeUndefined();
+    expect(r.unused.length).toBe(1);
+  });
+
+  it("腰围不会污染其他字段", () => {
+    const r = mapLabItems([
+      { name: "腰围", value: 80, unit: "cm", ref: "-" } as never,
+      { name: "收缩压", value: 132, unit: "mmHg", ref: "-" } as never,
+    ]);
+    expect(r.fields.waistCm).toBe(80);
+    expect(r.fields.sbp).toBe(132);
+  });
+});
