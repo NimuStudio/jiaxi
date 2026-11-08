@@ -39,3 +39,12 @@ export function readLungFamilyHistory(persons: ExtractedPerson[]): LungFamilyRea
     persons.find((p) => p.relation !== "self" && !FIRST_DEGREE_RELATIONS.has(p.relation) && hasLungCancer(p)) ?? null;
   return { firstDegree: null, secondDegree };
 }
+
+/** 吸烟史自洽性：从 10 岁起算，吸烟年限 + 戒烟年数不能超过年龄容纳的上限 */
+export function smokingSpanError(age: number, smokingYears: number, quitYears: number): string | null {
+  if (!Number.isFinite(age) || !Number.isFinite(smokingYears) || !Number.isFinite(quitYears)) return null;
+  if (smokingYears + quitYears > age - 10) {
+    return "吸烟年限 + 戒烟年数超过年龄能容纳的上限（按 10 岁开始吸烟算）";
+  }
+  return null;
+}

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   evaluatePlco,
+  formatRiskPercent,
+  isEverSmoker,
   PLCO_RANGE,
   type PlcoEducation,
   type PlcoInput,
@@ -12,7 +14,7 @@ import type { ExtractedPerson } from "@/lib/extract/client";
 import { NumberField } from "@/components/cvd/NumberField";
 import { RELATION_LABEL } from "@/lib/pedigree/viz";
 import type { RelationType } from "@/lib/pedigree/types";
-import { readLungFamilyHistory } from "@/lib/risk/lungFamily";
+import { readLungFamilyHistory, smokingSpanError } from "@/lib/risk/lungFamily";
 import { useCountUp } from "@/components/ui/useCountUp";
 
 /**
@@ -48,7 +50,8 @@ const EDUCATION_OPTIONS: Array<{ value: PlcoEducation; label: string }> = [
 
 const DEFAULTS: PlcoInput = {
   age: 62,
-  race: "white",
+  race: "white", // 引擎需要有值；界面另用 racePicked 控制"是否已选"
+  
   education: 3,
   bmi: 24,
   copd: false,
@@ -60,13 +63,24 @@ const DEFAULTS: PlcoInput = {
   quitYears: 0,
 };
 
-/** 与原文一致的常用筛查阈值：UKLS 用 6 年 ≥1.51%，NLST 等价阈值 1.3455% */
-const THRESHOLD_UKLS = 0.0151;
+/**
+ * 两个常用对照阈值（都不是我们编的）：
+ * - 1.51%：英国肺癌筛查项目采用的门槛（PLCOm2012 6 年风险，见 UK 项目人群定义）；
+ * - 1.3455%：Tammemägi 2013 原文里"与 NLST 入组条件等价"的阈值。
+ * 注意别把 1.51% 说成 "UKLS" —— UKLS 试验用的是 LLPv2，不是这个数。
+ */
+const THRESHOLD_PROGRAM = 0.0151;
 const THRESHOLD_NLST = 0.013455;
 
 export default function LungRiskPage() {
   const [form, setForm] = useState<PlcoInput>(DEFAULTS);
   const [familyNote, setFamilyNote] = useState<string | null>(null);
+  /**
+   * 种族必须由用户自己选。
+   * 模型是按人种分层的，默认「白人」会让绝大多数中国用户算出一个不对的数，
+   * 而人种又没法从家系里推断 —— 所以宁可先不出数。
+   */
+  const [racePicked, setRacePicked] = useState<PlcoRace | null>(null);
 
   // 从家系里读「一级亲属肺癌」：有就自动勾上，并说明是谁
   useEffect(() => {
@@ -101,6 +115,14 @@ export default function LungRiskPage() {
   const result = useMemo(() => evaluatePlco(form), [form]);
   const anim = useCountUp(result.risk, 600);
 
+  const FIELD_LABEL: Record<string, string> = {
+    age: "年龄",
+    bmi: "BMI",
+    cigarettesPerDay: "每天支数",
+    smokingYears: "吸烟年限",
+    quitYears: "戒烟年数",
+  };
+
   const errors = useMemo(() => {
     const out: Record<string, string> = {};
     if (form.age < PLCO_RANGE.minAge || form.age > PLCO_RANGE.maxAge)
@@ -110,12 +132,21 @@ export default function LungRiskPage() {
       out.cigarettesPerDay = "应在 1–80 之间";
     if (form.smokingYears < 0 || form.smokingYears > 70) out.smokingYears = "应在 0–70 之间";
     if (form.quitYears < 0 || form.quitYears > 60) out.quitYears = "应在 0–60 之间";
+    // 自洽性：吸烟起点按 10 岁算，吸烟年限 + 戒烟年数不能超过年龄能容纳的上限
+    if (!out.quitYears && !out.smokingYears) {
+      const span = smokingSpanError(form.age, form.smokingYears, form.quitYears);
+      if (span) out.quitYears = span;
+    }
     return out;
   }, [form]);
 
   const invalid = Object.keys(errors).length > 0;
-  const pct = (v: number) => (v * 100).toFixed(1);
-  const reachedUkls = result.risk >= THRESHOLD_UKLS;
+  const errorNames = Object.keys(errors).map((k) => FIELD_LABEL[k] ?? k).join("、");
+  /** 从不吸烟者不在模型人群内：给数字就是误用，这里直接不给 */
+  const notEverSmoker = !isEverSmoker(form);
+  const noRace = racePicked === null;
+  const blocked = invalid || notEverSmoker || noRace;
+  const reachedProgram = result.risk >= THRESHOLD_PROGRAM;
   const reachedNlst = result.risk >= THRESHOLD_NLST;
   const outsideValidatedAge =
     form.age < PLCO_RANGE.validatedAge[0] || form.age > PLCO_RANGE.validatedAge[1];
@@ -132,7 +163,7 @@ export default function LungRiskPage() {
       currentSmoker: "仍在吸烟",
       copd: "COPD",
       priorCancer: "既往肿瘤史",
-      quitTime: "戒烟年数",
+      quitTime: form.smokingStatus === "current" ? "未戒烟（按 0 年计）" : "戒烟年数",
       bmi: "BMI",
       education: "教育",
       race: "种族",
@@ -142,7 +173,7 @@ export default function LungRiskPage() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
       .map(([k, v]) => ({ label: labels[k] ?? k, value: v }));
-  }, [result.terms]);
+  }, [result.terms, form.smokingStatus]);
 
   return (
     <main className="page">
@@ -157,22 +188,30 @@ export default function LungRiskPage() {
       <section className="card">
         <p className="section-label">未来 6 年肺癌风险 · PLCOm2012</p>
 
-        {invalid ? (
+        {blocked ? (
           <div className="risk-headline">
             <span className="risk-big">—</span>
-            <span className="risk-caption">有几项超出合理范围：{Object.keys(errors).length} 项</span>
+            <span className="risk-caption">
+              {[
+                noRace ? "先选一下种族 / 族裔（模型按人种分层，没法从家系推断）" : null,
+                invalid ? `这几项需要修正：${errorNames}` : null,
+                notEverSmoker ? "模型只对曾经吸烟者建模：把吸烟年限填上（≥1 年）才出数" : null,
+              ]
+                .filter(Boolean)
+                .join("；")}
+            </span>
           </div>
         ) : (
           <div className="risk-headline">
-            <span className={`risk-big ${reachedUkls ? "is-high" : "is-low"}`}>
-              {pct(anim)}
+            <span className={`risk-big ${reachedProgram ? "is-high" : "is-low"}`}>
+              {formatRiskPercent(anim)}
               <span className="risk-unit">%</span>
             </span>
-            <span className={`band-chip ${reachedUkls ? "is-high" : "is-low"}`}>
-              {reachedUkls ? "达到筛查阈值" : "未达筛查阈值"}
+            <span className={`band-chip ${reachedProgram ? "is-high" : "is-low"}`}>
+              {reachedProgram ? "高于 1.51% 对照线" : "低于 1.51% 对照线"}
             </span>
             <span className="risk-caption">
-              常用阈值：6 年 ≥1.51%（UKLS）· ≥1.35%（NLST 等价）
+              对照：6 年 ≥1.51%（英国筛查项目）· ≥1.35%（与 NLST 入组等价）
             </span>
           </div>
         )}
@@ -185,9 +224,9 @@ export default function LungRiskPage() {
           </p>
         )}
 
-        {!invalid && (
+        {!blocked && (
           <p className="cvd-delta">
-            影响最大的三项：
+            抬高风险最多的三项：
             {topTerms
               .map((t) => `${t.label} ${t.value >= 0 ? "+" : "−"}${Math.abs(t.value).toFixed(2)}`)
               .join(" · ")}
@@ -206,7 +245,15 @@ export default function LungRiskPage() {
           />
           <label className="factors-field">
             <span className="factors-label">种族 / 族裔</span>
-            <select value={form.race} onChange={(e) => update({ race: e.target.value as PlcoRace })}>
+            <select
+              value={racePicked ?? ""}
+              onChange={(e) => {
+                const v = e.target.value as PlcoRace;
+                setRacePicked(v);
+                update({ race: v });
+              }}
+            >
+              <option value="" disabled>请选择</option>
               {RACE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
               ))}
@@ -310,8 +357,9 @@ export default function LungRiskPage() {
 
         <p className="foot-note">
           系数与常数项逐项取自 Tammemägi 2013（NEJM 368:728-736）表 2 与表注，包括吸烟强度的
-          非线性变换与各变量的中心化取值。模型只对「曾经吸烟者」建模，年龄在 55–74 岁之外
-          原文明说表现不确定。这里给的是人群模型的估计值，不是你的确定结局，也不替代医生判断。
+          非线性变换与各变量的中心化取值。模型只对「曾经吸烟者」建模——吸烟年限填 0 时这里不出数；
+          年龄在 55–74 岁之外原文明说表现不确定。这里给的是人群模型的估计值，不是你的确定结局，
+          也不替代医生判断；两个阈值只说明"是否够得上筛查条件"，不代表"该不该查"由它一个数决定。
         </p>
       </section>
     </main>

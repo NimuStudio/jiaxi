@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readLungFamilyHistory } from "./lungFamily";
+import { readLungFamilyHistory, smokingSpanError } from "./lungFamily";
 import type { ExtractedPerson } from "@/lib/extract/client";
 
 const person = (relation: string, codes: string[]): ExtractedPerson => ({
@@ -54,5 +54,20 @@ describe("肺癌家族史判定", () => {
     const r = readLungFamilyHistory([person("self", ["lung-cancer"])]);
     expect(r.firstDegree).toBeNull();
     expect(r.secondDegree).toBeNull();
+  });
+});
+
+describe("吸烟史自洽性", () => {
+  it("20 岁开始吸、吸了 30 年、戒了 20 年（本人 62 岁）→ 自洽", () => {
+    expect(smokingSpanError(62, 30, 20)).toBeNull(); // 30+20=50 ≤ 52
+  });
+
+  it("62 岁却吸了 40 年又戒了 30 年 → 不可能", () => {
+    expect(smokingSpanError(62, 40, 30)).toMatch(/超过年龄/);
+  });
+
+  it("边界值 30+22=52 刚好卡住（62−10）", () => {
+    expect(smokingSpanError(62, 30, 22)).toBeNull();
+    expect(smokingSpanError(62, 30, 23)).toMatch(/超过年龄/);
   });
 });

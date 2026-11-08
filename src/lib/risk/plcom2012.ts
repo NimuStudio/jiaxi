@@ -106,6 +106,29 @@ export interface PlcoResult {
 
 export const PLCO_RANGE = { minAge: 40, maxAge: 85, validatedAge: [55, 74] as const };
 
+/**
+ * 模型只对「曾经吸烟者」建模（原文的建模人群）。
+ * 吸烟年限为 0 的人不在这个人群里，算出来的数字没有意义 —— 界面上不给数。
+ */
+export function isEverSmoker(input: Pick<PlcoInput, "smokingYears" | "cigarettesPerDay">): boolean {
+  return input.smokingYears > 0 && input.cigarettesPerDay > 0;
+}
+
+/**
+ * 风险百分比展示。
+ *
+ * 直接用 toFixed(1) 会把 0.0019% 印成 "0.0%" —— 看起来像"零风险"，
+ * 掩盖了"有风险但很低"这个事实。低于 0.1% 时换更细的刻度。
+ */
+export function formatRiskPercent(risk: number): string {
+  const pct = risk * 100;
+  if (!Number.isFinite(pct)) return "—";
+  if (pct <= 0) return "0";
+  if (pct < 0.01) return "<0.01";
+  if (pct < 0.1) return pct.toFixed(2);
+  return pct.toFixed(1);
+}
+
 export function evaluatePlco(input: PlcoInput): PlcoResult {
   const c = PLCO_COEF;
   const terms: Record<string, number> = {

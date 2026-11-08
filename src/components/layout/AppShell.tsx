@@ -179,7 +179,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           隐私说明该页已由 AI 状态横幅承担。 */}
       {pathname !== "/chat" && (
         <p className="app-foot">
-          本地推理 · 家族信息不出机器 · 引擎：FINDRISC（Diabetes Care 2003）/ China-PAR（Circulation 2016）
+          本地推理 · 家族信息不出机器 · 引擎：FINDRISC（Diabetes Care 2003）/ China-PAR（Circulation 2016）/ PLCOm2012（NEJM 2013）
         </p>
       )}
     </>
