@@ -295,6 +295,14 @@ body {
   }
 }
 
+/* 编号回来了，顶栏也得跟着放宽，否则标签又会贴上演示徽标 */
+@media (min-width: 1800px) {
+  .topbar {
+    width: min(1560px, calc(100% - 32px));
+    gap: 18px;
+  }
+}
+
 @media (max-width: 1440px) {
   .topbar-nav-btn {
     padding: 6px 11px;
@@ -5550,9 +5558,9 @@ input[type="range"]::-moz-range-thumb {
   background: #d98324;
 }
 
-/* 顶栏加宽 + 防挤压：加了「演示模式」徽标后原 1120px 上限会溢出，右侧组压到导航上 */
+/* 顶栏防挤压：宽度在基础规则里给（1240px；超宽屏 1560px 见上方 min-width 媒体查询）。
+   这里只补间距 —— 早先这里也写了一份 width，结果把超宽屏那条规则覆盖掉了。 */
 .topbar {
-  width: min(1240px, calc(100% - 32px));
   gap: 16px;
 }
 
