@@ -19,10 +19,10 @@
 import type { RelationType, Sex } from "@/lib/pedigree/types";
 
 export interface RelationSpec {
-  relation: Exclude<RelationType, "self" | "spouse" | "unknown">;
+  relation: Exclude<RelationType, "spouse" | "unknown">;
   sex: Sex;
-  /** 亲缘等级：1 = 一级，2 = 二级 */
-  degree: 1 | 2;
+  /** 亲缘等级：0 = 本人，1 = 一级，2 = 二级 */
+  degree: 0 | 1 | 2;
   /** 常见口语说法（用于渲染句子与识别） */
   aliases: string[];
 }
@@ -32,11 +32,16 @@ export interface RelationSpec {
  * 排序上刻意把最容易混淆的成对关系放在相邻位置，方便人工复核。
  */
 export const RELATIONS: RelationSpec[] = [
+  // —— 本人 ——
+  // 之前词表里没有 self，「我也有点高」「本人」这类永远识别不到关系。
+  // 刻意不收单字「我」：它会出现在「我爸」里，造成满篇 self。
+  { relation: "self", sex: "unknown", degree: 0, aliases: ["我自己", "我本人", "本人", "自己"] },
+
   // —— 一级亲属 ——
   { relation: "father", sex: "male", degree: 1, aliases: ["我爸", "爸爸", "父亲", "老爸", "老爹", "俺爸", "我爸他"] },
   { relation: "mother", sex: "female", degree: 1, aliases: ["我妈", "妈妈", "母亲", "老妈", "老娘", "俺妈", "我妈她"] },
-  { relation: "brother", sex: "male", degree: 1, aliases: ["我哥", "哥哥", "大哥", "二哥", "我弟弟", "弟弟", "我兄弟"] },
-  { relation: "sister", sex: "female", degree: 1, aliases: ["我姐", "姐姐", "大姐", "二姐", "我妹妹", "妹妹", "我姐妹"] },
+  { relation: "brother", sex: "male", degree: 1, aliases: ["我哥", "哥哥", "大哥", "二哥", "我弟", "我弟弟", "弟弟", "我兄弟"] },
+  { relation: "sister", sex: "female", degree: 1, aliases: ["我姐", "姐姐", "大姐", "二姐", "我妹", "我妹妹", "妹妹", "我姐妹"] },
   { relation: "son", sex: "male", degree: 1, aliases: ["我儿子", "儿子"] },
   { relation: "daughter", sex: "female", degree: 1, aliases: ["我女儿", "女儿"] },
 
@@ -49,12 +54,12 @@ export const RELATIONS: RelationSpec[] = [
   { relation: "maternal-grandmother", sex: "female", degree: 2, aliases: ["我外婆", "外婆", "我姥姥", "姥姥", "我外祖母"] },
 
   // —— 二级亲属：父系旁系 ——
-  { relation: "paternal-uncle", sex: "male", degree: 2, aliases: ["我伯伯", "我叔叔", "大伯", "叔叔", "我叔", "二伯", "三伯", "小叔", "三叔"] },
+  { relation: "paternal-uncle", sex: "male", degree: 2, aliases: ["我伯伯", "我叔叔", "大伯", "叔叔", "我叔", "二伯", "三伯", "小叔", "三叔", "大爷", "二大爷"] },
   { relation: "paternal-aunt", sex: "female", degree: 2, aliases: ["我姑姑", "姑姑", "我姑妈", "姑妈", "我姑", "大姑", "小姑", "二姑"] },
 
   // —— 二级亲属：母系旁系（与上面成对） ——
-  { relation: "maternal-uncle", sex: "male", degree: 2, aliases: ["我舅舅", "舅舅", "我舅"] },
-  { relation: "maternal-aunt", sex: "female", degree: 2, aliases: ["我姨妈", "姨妈", "我姨", "姨母", "我小姨", "大姨", "二姨", "三姨"] },
+  { relation: "maternal-uncle", sex: "male", degree: 2, aliases: ["我舅舅", "舅舅", "我舅", "小舅", "老舅"] },
+  { relation: "maternal-aunt", sex: "female", degree: 2, aliases: ["我姨妈", "姨妈", "我姨", "姨母", "我小姨", "小姨", "大姨", "二姨", "三姨"] },
 ];
 
 export interface DiseaseSpec {

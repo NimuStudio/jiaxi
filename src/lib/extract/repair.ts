@@ -18,8 +18,21 @@ export function relationsInText(text: string): string[] {
   const hits: Array<{ at: number; relation: string }> = [];
   for (const spec of RELATIONS) {
     for (const alias of spec.aliases) {
-      const at = text.indexOf(alias);
-      if (at >= 0) hits.push({ at, relation: spec.relation });
+      let from = 0;
+      for (;;) {
+        const at = text.indexOf(alias, from);
+        if (at < 0) break;
+        from = at + 1;
+        // 边界检查：「太奶奶」「曾祖父」「表舅」里的称谓不是独立亲属。
+        // 注意不能一概拒绝中文前字——「和姨妈」的「和」是连词，不是称谓的一部分。
+        const COMPOUND = "太曾表堂干亲";
+        const prev = at > 0 ? text[at - 1]! : "";
+        const bounded = !prev || !COMPOUND.includes(prev) || alias.startsWith("我");
+        if (bounded) {
+          hits.push({ at, relation: spec.relation });
+          break;
+        }
+      }
     }
   }
   // 同一位置多个别名时取最长（「我爷爷」优先于「爷爷」）
@@ -49,6 +62,22 @@ export function repairRelations(
     const spec = RELATIONS.find((s) => s.relation === spare);
     return { ...p, relation: spare, sex: spec?.sex ?? p.sex };
   });
+}
+
+/**
+ * 关系必须有原文依据。
+ *
+ * 实测：「太奶奶那辈不太清楚，只知道有癌症」——文中没有可识别的称谓
+ *（「太奶奶」被边界规则排除），模型仍回填 paternal-grandmother 并配上癌症。
+ * self / unknown 不受此限：self 常由「我也有点高」这类代词句推出，不靠称谓词。
+ */
+export function dropUngroundedRelations(
+  text: string,
+  persons: ExtractedPerson[],
+): ExtractedPerson[] {
+  const mentioned = relationsInText(text);
+  if (mentioned.length > 0) return persons;
+  return persons.filter((p) => p.relation === "self" || p.relation === "unknown");
 }
 
 /** 原文里实际命中的病种编码（按别名长短优先） */
@@ -159,7 +188,11 @@ export function finalizePersons(persons: ExtractedPerson[]): ExtractedPerson[] {
 /** 续句标记：「我哥也是」「父亲同样」这类继承上一句病名的句子 */
 const CONTINUATION = ["也是", "同样", "也一样", "一样", "都有", "也有", "也得了"];
 
+/** 第一人称续句：「我也有点高」「我也一样」——「我」不在词表里，单独判 */
+const SELF_CONTINUATION = /我(也|同样|都)/;
+
 export function isContinuation(text: string): boolean {
+  if (SELF_CONTINUATION.test(text)) return true;
   return CONTINUATION.some((k) => text.includes(k)) && relationsInText(text).length > 0;
 }
 

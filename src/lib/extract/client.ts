@@ -14,6 +14,7 @@
 import { PEDIGREE_GBNF } from "./grammar.ts";
 import { DISEASES, RELATIONS } from "./lexicon.ts";
 import {
+  dropUngroundedRelations,
   expandContinuation,
   finalizePersons,
   isContinuation,
@@ -551,7 +552,10 @@ export async function extractPedigree(
     // （实测「我爷爷高血压、我奶奶糖尿病」→ 两人都变成高血压+糖尿病）。
     // 确定性修补：病种回退（other→词表真编码 / 无病名则丢弃）+ 称谓错配纠正。
     // 放在最后，只动「other」和「文中找不到依据的关系」，不碰模型判对的结论。
-    const repaired = repairRelations(text, repairOtherCodes(text, grounded));
+    const repaired = dropUngroundedRelations(
+      text,
+      repairRelations(text, repairOtherCodes(text, grounded)),
+    );
     const cleaned = expandSharedCondition(text, repaired);
 
     // 模型偶尔会把同一个人输出两次（GBNF 允许数组重复），
@@ -607,8 +611,12 @@ export function splitSegments(text: string): string[] {
         // 接到上一段后面；单独成段会让模型凭空造出第二个亲属（实测多出 paternal-uncle）
         out[out.length - 1] = `${out[out.length - 1]}，${prefix}，${part}`;
         prefix = "";
+      } else if (prefix && isContinuation(prefix) && !hasRelationWord(part)) {
+        // 「父亲也一样」+「糖尿病」：病名归属这个续句，合成一句才有主语
+        out.push(`${prefix}，${part}`);
+        prefix = "";
       } else if (prefix && isContinuation(prefix)) {
-        // 「妈妈也是」是另一个人的续句，不能并进下一段，否则主语丢失
+        // 「妈妈也是」+「我哥…」：两个人，不能并
         out.push(prefix);
         prefix = "";
         out.push(part);
@@ -624,6 +632,13 @@ export function splitSegments(text: string): string[] {
       } else {
         out.push(part);
       }
+    } else if (isContinuation(part)) {
+      // 独立的续句（「我也有点高」）：不能当前缀攒着，否则和下一个人的句子粘在一起
+      if (prefix) {
+        out.push(prefix);
+        prefix = "";
+      }
+      out.push(part);
     } else {
       prefix = prefix ? `${prefix}，${part}` : part;
     }
