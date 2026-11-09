@@ -1,31 +1,28 @@
-feat(decision): 合成评测集 + 结构模型训练，遗传模式默认改走小模型
+docs+eval: 评测留痕、口语集扩到 80 条、数字统一到单一来源
 
-## 结论（先说数据）
-同一批均衡样本（每类 5 条）配对比较：
-  OpenJev-Q4（18.5 GB，6.3 s/次）40%
-  结构逻辑回归（12 维，<0.1 s）      96%
-OpenJev 在隐性 / X 连锁 / 线粒体三类上全错（一律判成证据不足或显性）。
-另一批 92 条的部分结果同向：显性 80%(n=50)、隐性 0%(n=42)。
-=> 不训练大模型：数据没有、收益为负。遗传模式由家系结构决定，小模型够。
+## 为什么动这个
+排查发现同一指标在三处不一致：tech-design 写 F1 1.000、demo-script 写 0.952，
+且文档里的口语集是 21 条、文件里已是 29 条；更关键的是没有任何评测产物文件，
+数字无法追溯 —— 换句话说「指标不可复现，等于没有指标」。
 
-## 新增
-- ml/gen_inheritance_eval.py：按孟德尔规则生成带真值家系（渗透不全/近亲婚配/无男传男/母系外显率），
-  5 类 × 50 = 250 条
-- ml/eval_inheritance.py：逐条打 /v1/systemone，出准确率、混淆矩阵、ECE、延迟；
-  --per-class 均衡抽样、--also-structural 做同批配对、--workers 并发
-- ml/train_inheritance_lr.py：12 维结构特征 + 多项逻辑回归，训练 15k 合成家系，
-  验证集 84.7%，同批 250 条测试 88%；权重导出到 src/lib/decision/structural-weights.json（2.3 KB）
-- src/lib/decision/structural.ts + structural.test.ts：TS 端同特征实现与推理（特征顺序与 python 严格一致）
+## 1. 留痕（scripts/eval-extract.ts）
+每次评测把 commit + 模型 + 数据集 + 逐条预测写进 docs/eval-results/<时间>-<集名>.json，
+指标从此可追溯到某一次具体运行。
 
-## 改动
-- decideHereditary 默认后端改为 structural；INHERITANCE_BACKEND=model 显式切 OpenJev，
-  DecideOptions.backend 供测试/对比覆盖
-- HereditaryDecision 增加 gaps（缺什么信息），UI 在「判不了」时显示追问而不是只说证据不足
-- 前端接受 source=structural，文案区分「决策模型 / 本地结构模型」，并写明「提示，不是诊断」
+## 2. 扩集（data/eval/colloquial-eval-v2.jsonl）
+29 -> 80 条，新增 51 条针对已知失败模式：否定/否认、并列句、续句主语继承、
+多病共存、死亡与早发、旁系称谓、口语别名、年龄模糊、长句夹杂无关信息、重复提及。
 
-## 实测（产品接口，默认后端）
-典型显性 -> autosomal-dominant 99.6%（0.069 s）
-稀疏     -> insufficient 82%（0.012 s）
-线粒体   -> mitochondrial 99%（0.006 s）   <- 大模型在这例上判错（显性 89%）
+## 3. 重跑并统一（用基座模型 few-shot 跑，可复现）
+规整句 16 条：P 0.913 / R 1.000 / F1 0.955，年龄 0.952，完全匹配 14/16
+口语 v2 80 条：P 0.882 / R 0.852 / F1 0.867，年龄 0.933，完全匹配 66/80
+产物：docs/eval-results/2026-11-09T12-42-23-pedigree-eval.json 与 …12-43-36-colloquial-eval-v2.json
 
-219 passed / tsc 0 错误 / build 通过
+## 4. 单一来源（docs/accuracy.md）
+新增：三层分离（确定性计算/抽取/判定/展示）+ 每层机制 + 当前数字与产物 + 已知失败模式 +
+做不到的边界。tech-design 与 demo-script 的旧数字改为指向该文件；
+微调模型的 1.000 系数字标注「待复现」（本机没有合并后的 GGUF）。
+
+## 已知失败模式（14/80 不完全匹配）
+称谓混淆（我哥->paternal-uncle）、续句主语丢失、病种回退 other（房颤/慢阻肺/痴呆）、
+多病错挂（把爸爸的高血压挂到爷爷）、口语动词误判（「一直在吃药」-> other）。

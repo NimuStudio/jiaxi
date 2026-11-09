@@ -49,7 +49,7 @@ npx remotion render src/index.ts Outro    out/4-outro.mp4    --codec=h264 --crf=
 
 **动画里出现的每个数字都来自代码的真实计算**，不是写死的：
 - 33% / 4% / 7 分 / 16 分 → `src/lib/risk/findrisc.ts` 的实际输出
-- F1 0.952 / Precision 1.000 → 评测脚本的实际结果
+- F1 / Precision 的数字 → 以 `docs/accuracy.md` 与 `docs/eval-results/` 里的产物为准
 - 所以改代码后重渲染，画面会跟着变，不会出现「视频说 33%、产品说 17%」。
 
 ---
@@ -169,7 +169,7 @@ pnpm build && pnpm start        # http://localhost:5173
 | 操作 | 说明 |
 |---|---|
 | `pnpm test` | 23 个用例全绿 |
-| `node scripts/eval-extract.ts` | 规整集 F1 0.952 逐条打印 |
+| `node scripts/eval-extract.ts` | 逐条打分并落盘到 `docs/eval-results/`（数字见 `docs/accuracy.md`） |
 | 同上加 `--file=data/eval/colloquial-eval.jsonl` | 口语集 Precision 1.000 |
 | `curl localhost:8080/health` | 本地推理服务，配合一句话 |
 

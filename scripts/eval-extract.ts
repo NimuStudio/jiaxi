@@ -6,7 +6,8 @@
  *
  * 运行：node scripts/eval-extract.ts   （需先启动 llama-server）
  */
-import { readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { extractPedigreeSplit, isLlmReady } from "../src/lib/extract/client.ts";
 import type { ExtractedPerson } from "../src/lib/extract/client.ts";
 
@@ -65,6 +66,7 @@ async function main() {
   let ageChecked = 0;
   let ageCorrect = 0;
   const failures: string[] = [];
+  const perCase: Array<Record<string, unknown>> = [];
 
   for (const c of cases) {
     let actual: ExtractedPerson[] = [];
@@ -118,6 +120,15 @@ async function main() {
       .filter(Boolean)
       .join(" · ");
     console.log(`${mark} ${c.id} ${detail}`);
+    perCase.push({
+      id: c.id,
+      input: c.input,
+      expected: c.expected,
+      actual,
+      missing,
+      extra,
+      exact: isExact,
+    });
   }
 
   const precision = tp + fp === 0 ? 0 : tp / (tp + fp);
@@ -134,6 +145,41 @@ async function main() {
   console.log(`  F1              ${f1.toFixed(3)}`);
   console.log(`年龄准确率        ${ageCorrect}/${ageChecked} = ${ageAcc.toFixed(3)}`);
   console.log(`完全匹配          ${exact}/${cases.length} = ${(exact / cases.length).toFixed(3)}`);
+  // 留痕：没有产物文件的指标等于没有指标。commit + 模型 + 数据集 + 逐条结果一起存。
+  let commit = "unknown";
+  try {
+    commit = execSync("git rev-parse --short HEAD", { encoding: "utf8" }).trim();
+  } catch {
+    /* 非 git 环境 */
+  }
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+  const outDir = "docs/eval-results";
+  mkdirSync(outDir, { recursive: true });
+  const outFile = `${outDir}/${stamp}-${evalFile.split("/").pop()?.replace(".jsonl", "")}.json`;
+  writeFileSync(
+    outFile,
+    JSON.stringify(
+      {
+        at: new Date().toISOString(),
+        commit,
+        model: process.env.LLAMA_MODEL_PATH ?? process.env.LLAMA_SERVER_URL ?? "127.0.0.1:8080",
+        evalFile,
+        fewShot: useFewShot,
+        n: cases.length,
+        tp, fp, fn, precision, recall, f1,
+        ageChecked, ageCorrect, ageAcc,
+        exact,
+        exactRate: exact / cases.length,
+        failures,
+        perCase,
+      },
+      null,
+      1,
+    ),
+    "utf8",
+  );
+  console.log(`\n产物 -> ${outFile}`);
+
   if (failures.length) {
     console.log(`调用失败 ${failures.length} 条：`);
     failures.forEach((f) => console.log("  " + f));
