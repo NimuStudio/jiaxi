@@ -13,6 +13,7 @@
 
 import { PEDIGREE_GBNF } from "./grammar.ts";
 import { DISEASES, RELATIONS } from "./lexicon.ts";
+import { expandContinuation, isContinuation, repairOtherCodes, repairRelations } from "./repair.ts";
 import { SYSTEM_PROMPT } from "./prompt.ts";
 
 export const LLM_URL = process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080";
@@ -542,7 +543,10 @@ export async function extractPedigree(
     // 共享病扩展必须对「整组」调用一次：逐个传入会让 persons.length===1 的守卫永远成立，
     // 于是并列句里每个人的病都被复制给段内其他所有称谓
     // （实测「我爷爷高血压、我奶奶糖尿病」→ 两人都变成高血压+糖尿病）。
-    const cleaned = expandSharedCondition(text, grounded);
+    // 确定性修补：病种回退（other→词表真编码 / 无病名则丢弃）+ 称谓错配纠正。
+    // 放在最后，只动「other」和「文中找不到依据的关系」，不碰模型判对的结论。
+    const repaired = repairRelations(text, repairOtherCodes(text, grounded));
+    const cleaned = expandSharedCondition(text, repaired);
 
     // 模型偶尔会把同一个人输出两次（GBNF 允许数组重复），
     // 这里统一合并去重，避免上游拿到脏数据。
@@ -606,6 +610,11 @@ export function splitSegments(text: string): string[] {
   // 拼过去会让模型张冠李戴——单独留下（预筛会把它当闲聊过滤）。
   if (prefix && out.length > 0 && !hasRelationWord(prefix)) {
     out[out.length - 1] = `${out[out.length - 1]}，${prefix}`;
+  } else if (prefix && (isContinuation(prefix) || hasIllnessHint(prefix))) {
+    // 自带称谓却没有词表病名的片段以前直接丢掉，整句就消失了，模型根本没机会看到。
+    // 但只保留两类：续句（「我哥也是」）与带疾病信号的（「姑姑有甲状腺问题」）；
+    // 「我妈身体还行」这类仍然丢弃，否则小模型会凭空编病出来（历史踩过的坑）。
+    out.push(prefix);
   }
 
   return out;
@@ -638,6 +647,7 @@ export function hasDiseaseWord(segment: string): boolean {
  */
 const ILLNESS_HINTS = [
   "病",
+  "问题", // 「甲状腺问题」这类口语；「没问题」由极性过滤挡掉
   "癌",
   "瘤",
   "瘫",
@@ -738,7 +748,12 @@ export async function extractPedigreeSplit(
 
   // 预筛只拦「确定无疾病信息」的纯闲聊；可疑片段放行给模型，
   // 幻觉由 dropUnmentioned 证据校验兜底（词表外病名归「其他」，不参与校验）。
-  const meaningful = segments.filter((s) => looksRelevant(s));
+  // 续句（「我哥也是」）本身没有病名，按 looksRelevant 会被丢掉；
+  // 它是真实口语里最常见的省略，所以保留下来，用上一句的病名补全再送模型。
+  const kept = segments
+    .map((s) => ({ text: s, relevant: looksRelevant(s), continuation: isContinuation(s) }))
+    .filter((x) => x.relevant || x.continuation);
+  const meaningful = kept.map((x) => x.text);
   onStage?.({
     type: "split",
     total: meaningful.length,
@@ -756,10 +771,20 @@ export async function extractPedigreeSplit(
 
   const results: ExtractResult[] = [];
   let i = 0;
-  for (const seg of meaningful) {
+  let prevLabels: string[] = [];
+  for (let k = 0; k < kept.length; k += 1) {
+    const item = kept[k]!;
     i += 1;
-    onStage?.({ type: "segment", index: i, total: meaningful.length, segment: seg });
-    results.push(await extractPedigree(seg, options));
+    const segText = !item.relevant && item.continuation
+      ? expandContinuation(item.text, prevLabels)
+      : item.text;
+    onStage?.({ type: "segment", index: i, total: meaningful.length, segment: segText });
+    const r = await extractPedigree(segText, options);
+    const labels = r.persons.flatMap((p) =>
+      p.conditions.map((c) => DISEASES.find((d) => d.code === c.code)?.label ?? c.code),
+    );
+    if (labels.length > 0) prevLabels = labels;
+    results.push(r);
   }
   const merged = mergeResults(results);
   onStage?.({ type: "merged", persons: merged.persons.length });
