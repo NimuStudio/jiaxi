@@ -11,6 +11,20 @@
  */
 
 import type { ExtractedPerson } from "../extract/client.ts";
+import { RELATION_LABEL } from "../pedigree/viz.ts";
+import type { RelationType } from "../pedigree/types.ts";
+import { DISEASES } from "../extract/lexicon.ts";
+
+/**
+ * 给模型看的病名取「最长名词说法」：界面上是「心梗」，但实测同一家系
+ * 用「心肌梗死」时模型给显性 66%，用「心梗」只有 37% —— 决策模型对术语完整度敏感。
+ */
+const FULL_NAME = new Map(
+  DISEASES.map((d) => {
+    const longest = [d.label, ...(d.nounAliases ?? [])].sort((a, b) => b.length - a.length)[0]!;
+    return [d.code, longest] as const;
+  }),
+);
 import { DecisionUnavailable, pickChoice, systemone, DECISION_URL } from "./client.ts";
 import type { CallOptions } from "./client.ts";
 import { ScoringUnavailable, scoreChoice } from "./score.ts";
@@ -50,26 +64,43 @@ export interface HereditaryDecision {
 
 const QUESTION_ID = "hereditary-mode";
 
+/**
+ * 选项描述一律留空（协议里 criteria 的 value 允许为 null）。
+ * 实测：给每个模式配「每代都有患者、男女均可发病」这类解释，等于把判据提前塞给模型，
+ * 同一家系的显性概率从 66% 掉到 40% —— 它开始对着描述逐条打勾，而不是读病史。
+ */
 const CRITERIA: Record<string, string | null> = {
-  "autosomal-dominant": "每代都有患者，男女均可发病",
-  "autosomal-recessive": "同辈多发、父母可无症状，近亲婚配更常见",
-  "x-linked": "男性患者明显偏多，无男传男，母系表亲可受累",
-  mitochondrial: "母系传递，母亲患病则子女多受累，父亲患病不传给子女",
-  insufficient: "信息不足以下判断（亲属数、发病年龄、性别有缺口）",
+  "autosomal-dominant": null,
+  "autosomal-recessive": null,
+  "x-linked": null,
+  mitochondrial: null,
+  insufficient: null,
 };
 
+/** 内部代码翻成人话——把 `myocardial-infarction` 这种直接喂给模型，它会判不出来 */
+function describePerson(p: ExtractedPerson): string {
+  const relation = RELATION_LABEL[p.relation as RelationType] ?? p.relation;
+  const sex = p.sex === "male" ? "男" : p.sex === "female" ? "女" : "性别未知";
+  const conds = (p.conditions ?? []).map((c) => {
+    const label = FULL_NAME.get(c.code) ?? c.code;
+    return c.onsetAge == null ? label : `${label}（${c.onsetAge} 岁发病）`;
+  });
+  return `${relation}（${sex}）：${conds.length ? conds.join("、") : "无患病记录"}`;
+}
+
 export function buildHereditaryQuestion(persons: ExtractedPerson[]): SystemOneRequest {
-  const state = persons.map((p) => ({
-    relation: p.relation,
-    sex: p.sex,
-    conditions: (p.conditions ?? []).map((c) => ({ code: c.code, onsetAge: c.onsetAge })),
-  }));
+  const state = [
+    "这是一个家系的病史（只列出用户提到的亲属）：",
+    ...persons.map((p) => `- ${describePerson(p)}`),
+    "未列出的亲属没有信息，请勿假定他们患病或健康。",
+  ].join("\n");
   const q: ChoiceQuestion = {
     type: "choice",
+    // 指令必须是纯中文：实测夹带「onsetAge 为发病年龄，可为 null」这类字段说明，
+    // 同一个家系的显性概率从 66% 掉到 48%（模型被 JSON 措辞带偏）
     instructions:
-      "这是一个家系：state 里列出每位亲属的关系、性别与所患疾病（onsetAge 为发病年龄，可为 null）。" +
-      "请判断该家系最符合哪种遗传模式。若亲属数量、发病年龄或性别信息不足以区分，请选择 insufficient，" +
-      "不要为了给出结论而猜测。",
+      "上面是一个家系的病史。请判断最可能的遗传模式；" +
+      "若亲属数量、发病年龄或性别信息不足以区分，请选「证据不足」，不要猜测。",
     criteria: CRITERIA,
   };
   return { state, questions: { [QUESTION_ID]: q } };

@@ -67,7 +67,9 @@ export async function systemone(
   if (!base) throw new DecisionUnavailable("未配置 DECISION_SERVER_URL");
   const doFetch = opts.fetchImpl ?? fetch;
   const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), opts.timeoutMs ?? 8000);
+  // 18.5 GB Q4 在 16 GB 显存上要混 CPU，实测单次 4.3 s；冷启动会到十几秒，
+  // 默认给 30 s，否则第一次调用必然超时并被误判成「没有决策模型」
+  const timer = setTimeout(() => ctl.abort(), opts.timeoutMs ?? 30000);
   try {
     const res = await doFetch(`${base.replace(/\/$/, "")}/v1/systemone`, {
       method: "POST",

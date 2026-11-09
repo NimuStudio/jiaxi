@@ -62,8 +62,12 @@ describe("buildHereditaryQuestion", () => {
       "mitochondrial",
       "insufficient",
     ]);
-    expect(Array.isArray(req.state)).toBe(true);
-    expect((req.state as Array<{ relation: string }>)[0]?.relation).toBe("father");
+    // state 必须是中文自然语言：实测把内部代码（myocardial-infarction）直接喂给模型会判不出来
+    const state = req.state as string;
+    expect(typeof state).toBe("string");
+    expect(state).toContain("父亲");
+    expect(state).toContain("心肌梗死"); // 取最长术语：决策模型对术语完整度敏感
+    expect(state).not.toContain("myocardial-infarction");
   });
 });
 

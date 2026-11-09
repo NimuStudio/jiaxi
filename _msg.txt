@@ -1,26 +1,21 @@
-feat(decision): 加 logprob 同构打分兜底；实测 1.7B 判断不可信故只作内部信号
+feat(decision): 接通本地 OpenJev 决策模型，遗传模式判定真正落地
 
-## 为什么加这条路径
-llama.cpp 的 /v1/systemone 只服务带决策头的模型（Qwen3 实测 501）。
-在真决策权重到位前，用 /v1/completions 的 logprobs 复现 choice 原语：
-每个选项给首字互不相同的答案词（显性/隐性/X连锁/线粒体/不确定），取首 token 概率后归一化。
+## 后端
+- 权重：ggml-org/OpenJev-GGUF 的 Q4_K_M（18.5 GB，llama.cpp 官方转换），从 ModelScope 并行分块下载
+- llama-server 8086，/v1/models 的 output_modalities = ["decisions"]，确认是决策模型
+- 客户端超时 8s -> 30s：18.5GB Q4 在 16GB 显存上部分走 CPU，单次 4.3-7.6s，8s 会误判成「没有决策模型」
 
-## 实测（线上 llama-server 8085 + triage LoRA）
-输入：父亲 52 岁心梗 / 祖父糖尿病 / 母亲无病
-logprob：隐 -0.342  显 -2.036  X -2.103  线 -5.069  不 -6.886
-结果：隐性 71.1% / X 20.4% / 显性 7.8% / 线粒体 0.6% / 不确定 0.1%
+## 提示词（三处实测修正，都会掉准确率）
+1. 内部代码直接喂模型判不出来 -> 翻成中文术语，且取最长名词说法（心肌梗死，不是心梗）
+2. 指令里夹 JSON 措辞（onsetAge 为发病年龄，可为 null）-> 同一家系显性概率 66% 掉到 48%
+3. criteria 里填判据式描述（每代都有患者…）-> 等于提前给答案，显性概率掉到 40%；现全部为 null
+另补一句「未列出的亲属没有信息，请勿假定他们患病或健康」，稀疏家系置信度从 91% 升到 94%，典型显性从 75% 升到 87%
 
-两代男性发病更像显性，模型给隐性 71% —— 说明这个分诊 LoRA 对遗传模式不可信。
-因此：
-- 打分路径的置信度门槛抬到 0.8（真决策模型仍是 0.55）
-- UI 只渲染 source=model，scored 仅作内部信号，不显示成结论
+## 实测（走产品接口 /api/decision/hereditary）
+稀疏 3 人 1 患病 -> insufficient 94%（正确拒绝）
+典型显性三代男性 -> autosomal-dominant 87%（正确，source=model）
+X 连锁母系男性聚集 -> insufficient 29%（保守，未误判）
+线粒体母系三代 -> autosomal-dominant 89%（判错，已知短板，写入文档）
 
-## 代码
-- src/lib/decision/score.ts：scoreChoice()，缺项按最低值降 4 个 ln 处理，抛 ScoringUnavailable 交上层兜底
-- hereditary.ts：systemone 不可用时退到打分，再不可用退结构事实；source 增加 scored
-- 新增 6 个用例（归一化 / 缺项 / 首字唯一约束 / 无地址 / 空候选 / 非 2xx）；
-  全量 212 passed，tsc 0 错误
-
-## 文档
-ml/DECISION-BACKEND.md：JEV/openjev/协议三者区别、llama.cpp 支持的 12 个决策族、
-本机 llama-server 路径与启动命令、验证清单、同构打分实测数据。
+## 验证
+212 passed / tsc 0 错误 / build 通过；文档 ml/DECISION-BACKEND.md 补第 7 节含四例对照表与三个坑
