@@ -1,0 +1,30 @@
+{"id": "y01", "input": "我奶奶九几年就查出糖尿病。", "expected": [{"relation": "paternal-grandmother", "sex": "female", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "y02", "input": "我爸高血压。他去年还中风了。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "hypertension", "onsetAge": null}, {"code": "stroke", "onsetAge": null}]}]}
+{"id": "y03", "input": "我妈是不是有高血压啊？", "expected": [{"relation": "mother", "sex": "female", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "y04", "input": "我大伯四十八岁做的支架。", "expected": [{"relation": "paternal-uncle", "sex": "male", "conditions": [{"code": "coronary-heart-disease", "onsetAge": 48}]}]}
+{"id": "y05", "input": "我哥、我弟都有哮喘。", "expected": [{"relation": "brother", "sex": "male", "conditions": [{"code": "asthma", "onsetAge": null}]}, {"relation": "brother", "sex": "male", "conditions": [{"code": "asthma", "onsetAge": null}]}]}
+{"id": "y06", "input": "我今年三十五。在公司做开发。", "expected": []}
+{"id": "y07", "input": "我爸不抽烟也不喝酒。", "expected": []}
+{"id": "y08", "input": "外婆糖尿病，后来并发症走了。", "expected": [{"relation": "maternal-grandmother", "sex": "female", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "y09", "input": "我姐也是血压高。", "expected": [{"relation": "sister", "sex": "female", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "y10", "input": "爷爷和奶奶都是高血压。", "expected": [{"relation": "paternal-grandfather", "sex": "male", "conditions": [{"code": "hypertension", "onsetAge": null}]}, {"relation": "paternal-grandmother", "sex": "female", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "y11", "input": "我舅舅五十岁心梗。", "expected": [{"relation": "maternal-uncle", "sex": "male", "conditions": [{"code": "myocardial-infarction", "onsetAge": 50}]}]}
+{"id": "y12", "input": "我爸做过心脏手术，具体什么病不清楚。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "y13", "input": "妈妈那边没人得过癌症。", "expected": []}
+{"id": "y14", "input": "我外公胃癌，发现时已经晚了。", "expected": [{"relation": "maternal-grandfather", "sex": "male", "conditions": [{"code": "gastric-cancer", "onsetAge": null}]}]}
+{"id": "y15", "input": "奶奶糖尿病，妈妈也有。", "expected": [{"relation": "paternal-grandmother", "sex": "female", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}, {"relation": "mother", "sex": "female", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "y16", "input": "我弟三十岁就痛风了。", "expected": [{"relation": "brother", "sex": "male", "conditions": [{"code": "gout", "onsetAge": null}]}]}
+{"id": "y17", "input": "我爸有慢阻肺，常年咳嗽。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "copd", "onsetAge": null}]}]}
+{"id": "y18", "input": "我外婆八十多了。血压高。", "expected": [{"relation": "maternal-grandmother", "sex": "female", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "y19", "input": "我姑姑乳腺癌术后恢复得不错。", "expected": [{"relation": "paternal-aunt", "sex": "female", "conditions": [{"code": "breast-cancer", "onsetAge": null}]}]}
+{"id": "y20", "input": "我妈甲状腺结节，每年复查。", "expected": [{"relation": "mother", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "y21", "input": "父亲糖尿病。我叔叔也是。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}, {"relation": "paternal-uncle", "sex": "male", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "y22", "input": "我姥姥心脏不好。", "expected": [{"relation": "maternal-grandmother", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "y23", "input": "我二伯高血压。", "expected": [{"relation": "paternal-uncle", "sex": "male", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "y24", "input": "我爸血糖高好多年，一直忌口。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "y25", "input": "我姐体检说有点贫血。", "expected": [{"relation": "sister", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "y26", "input": "我妈骨质疏松。", "expected": [{"relation": "mother", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "y27", "input": "爷爷走了好些年，那时候是肺癌。", "expected": [{"relation": "paternal-grandfather", "sex": "male", "conditions": [{"code": "lung-cancer", "onsetAge": null}]}]}
+{"id": "y28", "input": "我舅公高血压。", "expected": []}
+{"id": "y29", "input": "我自己四十二岁发现血压偏高。", "expected": [{"relation": "self", "sex": "unknown", "conditions": [{"code": "hypertension", "onsetAge": 42}]}]}
+{"id": "y30", "input": "我妹身体一直挺好，没得过什么病。", "expected": []}

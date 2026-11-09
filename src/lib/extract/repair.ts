@@ -39,6 +39,12 @@ export function relationsInText(text: string): string[] {
   hits.sort((a, b) => a.at - b.at);
   const out: string[] = [];
   for (const h of hits) if (!out.includes(h.relation)) out.push(h.relation);
+  // 裸「我」：只在没有任何亲属称谓命中、且紧跟的不是亲属字时才算本人。
+  // 这样「我四十岁做过心脏支架」能识别，而「我爸」不会被当成 self。
+  if (out.length === 0) {
+    const m = text.match(/我(?![爸妈爹娘爷奶叔伯姑姨舅哥姐弟妹儿女])/);
+    if (m) out.push("self");
+  }
   return out;
 }
 
