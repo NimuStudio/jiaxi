@@ -47,10 +47,24 @@ export function HereditaryMode({ persons }: { persons: ExtractedPerson[] }) {
     };
   }, [persons]);
 
-  // 只认真决策模型：实测 1.7B 分诊 LoRA 会把「两代男性发病」判成隐性，
-  // logprob 近似打分（source=scored）只能当内部信号，不能显示成结论。
-  if (!decision || decision.source !== "model" || decision.mode === "insufficient") {
-    return null;
+  // 接受两类可解释后端：真决策模型 / 本地训练的结构模型。
+  // logprob 近似打分（source=scored）不可信（1.7B 会把两代男性发病判成隐性），只作内部信号。
+  if (!decision || (decision.source !== "model" && decision.source !== "structural")) return null;
+
+  // 判不了时不装作有结论，而是把缺口摆出来让用户补一句
+  // （实测线粒体那例就是缺父系信息被读成显性）
+  if (decision.mode === "insufficient") {
+    const gaps = decision.gaps.slice(0, 2);
+    if (gaps.length === 0) return null;
+    return (
+      <div className="exposure-hints">
+        <div className="next-step-label">遗传模式：还判不了</div>
+        <div className="exposure-hint">
+          <p className="exposure-hint-title">补充这些信息就能判断</p>
+          <p className="exposure-hint-body">{gaps.join("；")}</p>
+        </div>
+      </div>
+    );
   }
 
   const pct = Math.round(decision.confidence * 100);
@@ -60,7 +74,7 @@ export function HereditaryMode({ persons }: { persons: ExtractedPerson[] }) {
       <div className="exposure-hint">
         <p className="exposure-hint-title">{MODE_LABEL[decision.mode]}</p>
         <p className="exposure-hint-body">
-          决策模型置信度 {pct}% · {decision.reason}
+          {decision.source === "model" ? "决策模型" : "本地结构模型"}提示，不是诊断 · 置信度 {pct}%
         </p>
       </div>
     </div>

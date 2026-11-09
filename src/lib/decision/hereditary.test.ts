@@ -109,7 +109,7 @@ describe("validateAnswers", () => {
 
 describe("decideHereditary", () => {
   it("高置信度直接采信模型结论", async () => {
-    const d = await decideHereditary(tree, { baseUrl: "http://x", fetchImpl: mockFetch(okAnswer) });
+    const d = await decideHereditary(tree, { backend: "model", baseUrl: "http://x", fetchImpl: mockFetch(okAnswer) });
     expect(d.source).toBe("model");
     expect(d.mode).toBe("autosomal-dominant");
     expect(d.confidence).toBeCloseTo(0.74, 2);
@@ -118,31 +118,33 @@ describe("decideHereditary", () => {
   it("置信度不足时降级成「证据不足」，但保留模型原始倾向", async () => {
     const low = JSON.parse(JSON.stringify(okAnswer));
     low.answers["hereditary-mode"].confidence = 0.41;
-    const d = await decideHereditary(tree, { baseUrl: "http://x", fetchImpl: mockFetch(low) });
+    const d = await decideHereditary(tree, { backend: "model", baseUrl: "http://x", fetchImpl: mockFetch(low) });
     expect(d.mode).toBe("insufficient");
     expect(d.rawMode).toBe("autosomal-dominant");
     expect(d.reason).toMatch(/置信度/);
   });
 
-  it("服务端不是决策模型（501）时退回结构事实", async () => {
+  it("服务端不是决策模型（501）时退回本地结构模型", async () => {
     const d = await decideHereditary(tree, {
+      backend: "model",
       baseUrl: "http://x",
       fetchImpl: mockFetch({ error: "not a decision model" }, 501),
     });
-    expect(d.source).toBe("rules");
-    expect(d.mode).toBe("insufficient");
-    expect(d.reason).toContain("亲属");
+    // 结构模型权重是编译进包的，正常情况下不会被跳过
+    expect(d.source).toBe("structural");
+    expect(["autosomal-dominant", "insufficient"]).toContain(d.mode);
+    expect(Number.isFinite(d.confidence)).toBe(true);
   });
 
-  it("没配服务地址时直接走兜底，不发请求", async () => {
+  it("没配服务地址时不再发请求，直接用本地结构模型", async () => {
     let called = false;
     const spy = (async () => {
       called = true;
       return new Response("{}");
     }) as unknown as typeof fetch;
-    const d = await decideHereditary(tree, { baseUrl: "", fetchImpl: spy });
+    const d = await decideHereditary(tree, { backend: "model", baseUrl: "", fetchImpl: spy });
     expect(called).toBe(false);
-    expect(d.source).toBe("rules");
+    expect(d.source).toBe("structural");
   });
 });
 
@@ -152,9 +154,14 @@ describe("兜底文案", () => {
   });
 
   it("缺发病年龄 / 性别单一时给出理由", () => {
-    const facts = structuralFacts([person("father", "male", ["diabetes"])]);
+    // 性别单一只在「不止一位患病亲属」时才有意义，1 位时不该当成缺口
+    const facts = structuralFacts([
+      person("father", "male", ["diabetes"]),
+      person("paternal-uncle", "male", ["diabetes"]),
+    ]);
     expect(facts).toContain("缺发病年龄");
     expect(facts).toContain("性别单一");
+    expect(structuralFacts([person("father", "male", ["diabetes"])])).not.toContain("性别单一");
   });
 
   it("ruleDecision 永远不给具体模式", () => {

@@ -1,19 +1,31 @@
-fix(decision): 审查修掉的 5 个问题（限流/500兜底/死代码/类型守卫/取消在途请求）
+feat(decision): 合成评测集 + 结构模型训练，遗传模式默认改走小模型
 
-1. 路由没有任何限流：一次判定在本机 18.5GB Q4 上是 5-7 秒推理，匿名调用方可以反复触发。
-   照 extract 路由的做法加 allow(`decision:<ip>`, 20, 10min)。
-2. decideHereditary 抛异常时路由没有兜底，直接 500，页面显示成错误。
-   改为 catch 后返回 ruleDecision()（结构事实，前端不显示结论即可）。
-3. decideByScoring 里 `opts.baseUrl && opts.baseUrl !== DECISION_URL ? SCORING_URL : SCORING_URL`
-   两个分支一模一样，等于写死 SCORING_URL 且忽略了调用方传入的地址 —— 删掉。
-4. pickChoice 直接 as 成 choice 答案，服务端若返回 score/noul 会读出 undefined；补类型检查抛
-   DecisionUnavailable 交给兜底。
-5. validateAnswers 声称校验却完全没管 score 类型：补档位数、概率和、score 越界检查。
+## 结论（先说数据）
+同一批均衡样本（每类 5 条）配对比较：
+  OpenJev-Q4（18.5 GB，6.3 s/次）40%
+  结构逻辑回归（12 维，<0.1 s）      96%
+OpenJev 在隐性 / X 连锁 / 线粒体三类上全错（一律判成证据不足或显性）。
+另一批 92 条的部分结果同向：显性 80%(n=50)、隐性 0%(n=42)。
+=> 不训练大模型：数据没有、收益为负。遗传模式由家系结构决定，小模型够。
 
-另外两处健壮性：
-- HereditaryMode 卸载/换人时没有取消在途请求，白烧一次 5-7 秒推理；加 AbortController。
-- 新增 src/lib/decision/mode.ts 放纯类型与文案，客户端组件只从这里取，避免把人
-  lexicon（整份疾病词表）与 viz 拉进浏览器包。
+## 新增
+- ml/gen_inheritance_eval.py：按孟德尔规则生成带真值家系（渗透不全/近亲婚配/无男传男/母系外显率），
+  5 类 × 50 = 250 条
+- ml/eval_inheritance.py：逐条打 /v1/systemone，出准确率、混淆矩阵、ECE、延迟；
+  --per-class 均衡抽样、--also-structural 做同批配对、--workers 并发
+- ml/train_inheritance_lr.py：12 维结构特征 + 多项逻辑回归，训练 15k 合成家系，
+  验证集 84.7%，同批 250 条测试 88%；权重导出到 src/lib/decision/structural-weights.json（2.3 KB）
+- src/lib/decision/structural.ts + structural.test.ts：TS 端同特征实现与推理（特征顺序与 python 严格一致）
 
-验证：212 passed / tsc 0 错误 / --noUnusedLocals 干净 / build 通过；
-线上接口复验 典型显性 -> autosomal-dominant 89%（source=model），非法入参 400。
+## 改动
+- decideHereditary 默认后端改为 structural；INHERITANCE_BACKEND=model 显式切 OpenJev，
+  DecideOptions.backend 供测试/对比覆盖
+- HereditaryDecision 增加 gaps（缺什么信息），UI 在「判不了」时显示追问而不是只说证据不足
+- 前端接受 source=structural，文案区分「决策模型 / 本地结构模型」，并写明「提示，不是诊断」
+
+## 实测（产品接口，默认后端）
+典型显性 -> autosomal-dominant 99.6%（0.069 s）
+稀疏     -> insufficient 82%（0.012 s）
+线粒体   -> mitochondrial 99%（0.006 s）   <- 大模型在这例上判错（显性 89%）
+
+219 passed / tsc 0 错误 / build 通过

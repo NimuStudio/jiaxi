@@ -30,7 +30,9 @@ export interface HereditaryDecision {
   rawMode: HereditaryMode | null;
   confidence: number;
   probabilities: Partial<Record<HereditaryMode, number>>;
-  /** model = 真决策模型；scored = logprob 近似；rules = 兜底 */
-  source: "model" | "scored" | "rules";
+  /** model = 真决策模型；structural = 本地训练的结构模型；scored = logprob 近似；rules = 兜底 */
+  source: "model" | "structural" | "scored" | "rules";
   reason: string;
+  /** 判不了时缺什么：前端用它追问，而不是只说「证据不足」 */
+  gaps: string[];
 }

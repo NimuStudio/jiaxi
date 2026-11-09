@@ -28,6 +28,7 @@ const FULL_NAME = new Map(
 import { DecisionUnavailable, pickChoice, systemone } from "./client.ts";
 import type { CallOptions } from "./client.ts";
 import { ScoringUnavailable, scoreChoice } from "./score.ts";
+import { structuralDecide } from "./structural.ts";
 import type { ChoiceQuestion, SystemOneRequest } from "./types.ts";
 
 /** 打分后端：没有决策模型权重时，用普通 LLM 的 logprob 近似 choice 原语 */
@@ -83,18 +84,37 @@ export function buildHereditaryQuestion(persons: ExtractedPerson[]): SystemOneRe
   return { state, questions: { [QUESTION_ID]: q } };
 }
 
-/** 结构事实，兜底时给用户看「为什么判不了」 */
-export function structuralFacts(persons: ExtractedPerson[]): string {
+/**
+ * 判不了时「缺什么」——直接用于追问。
+ * 这些缺口正是模型最容易看走眼的地方（实测线粒体那例就是缺父系信息被读成显性）。
+ */
+export function missingInfo(persons: ExtractedPerson[]): string[] {
+  const gaps: string[] = [];
   const affected = persons.filter((p) => (p.conditions ?? []).length > 0);
-  if (affected.length === 0) return "还没有任何亲属的患病信息";
+  if (affected.length === 0) gaps.push("还没有任何亲属的患病信息");
+
   const withAge = affected.filter((p) => (p.conditions ?? []).some((c) => c.onsetAge != null));
-  const parts = [`${affected.length} 位亲属有患病记录`];
-  if (withAge.length < affected.length) {
-    parts.push(`其中 ${affected.length - withAge.length} 位缺发病年龄`);
+  if (affected.length > 0 && withAge.length < affected.length) {
+    gaps.push(`${affected.length - withAge.length} 位患病亲属缺发病年龄`);
   }
+
   const sexes = new Set(affected.map((p) => p.sex).filter((s) => s !== "unknown"));
-  if (sexes.size < 2) parts.push("患病亲属性别单一，无法比较男女比例");
-  return parts.join("；");
+  if (affected.length > 1 && sexes.size < 2) gaps.push("患病亲属性别单一，缺另一性别的情况");
+
+  const hasPaternal = persons.some((p) => p.relation.startsWith("paternal-") || p.relation === "father");
+  const hasMaternal = persons.some((p) => p.relation.startsWith("maternal-") || p.relation === "mother");
+  if (!hasPaternal) gaps.push("父系亲属是否患病");
+  if (!hasMaternal) gaps.push("母系亲属是否患病");
+
+  return gaps;
+}
+
+/** 兼容旧调用：拼成一句话 */
+export function structuralFacts(persons: ExtractedPerson[]): string {
+  const gaps = missingInfo(persons);
+  const affected = persons.filter((p) => (p.conditions ?? []).length > 0).length;
+  const head = affected > 0 ? `${affected} 位亲属有患病记录` : "";
+  return [head, ...gaps].filter(Boolean).join("；");
 }
 
 export function ruleDecision(persons: ExtractedPerson[]): HereditaryDecision {
@@ -105,6 +125,7 @@ export function ruleDecision(persons: ExtractedPerson[]): HereditaryDecision {
     probabilities: {},
     source: "rules",
     reason: structuralFacts(persons),
+    gaps: missingInfo(persons),
   };
 }
 
@@ -156,6 +177,7 @@ async function decideByScoring(
         probabilities: r.probabilities as Partial<Record<HereditaryMode, number>>,
         source: "scored",
         reason: `打分倾向「${MODE_LABEL[mode]}」但只有 ${(r.confidence * 100).toFixed(0)}%，不足以采信`,
+        gaps: missingInfo(persons),
       };
     }
     return {
@@ -165,6 +187,7 @@ async function decideByScoring(
       probabilities: r.probabilities as Partial<Record<HereditaryMode, number>>,
       source: "scored",
       reason: `logprob 打分置信度 ${(r.confidence * 100).toFixed(0)}%`,
+      gaps: missingInfo(persons),
     };
   } catch (e) {
     if (e instanceof ScoringUnavailable) return null;
@@ -172,17 +195,74 @@ async function decideByScoring(
   }
 }
 
+/** 本地结构模型：毫秒级，权重来自 ml/train_inheritance_lr.py（同批测试集 88%） */
+const STRUCTURAL_FLOOR = 0.7;
+
+/**
+ * 默认后端 = 本地结构模型。
+ *
+ * 依据（同一批均衡 25 条、每类 5 条，ml/out/inheritance_eval.json）：
+ *   OpenJev-Q4（18.5 GB，单次 6.3 s）40%
+ *   结构逻辑回归（12 维，毫秒级）      96%
+ * OpenJev 在隐性 / X 连锁 / 线粒体三类上全错（一律判成证据不足或显性），
+ * 它是通用决策模型，没有遗传学先验；而这个任务本来就由家系结构决定。
+ * 需要对比 / 演示 JEV 协议时用 INHERITANCE_BACKEND=model 打开。
+ */
+export const BACKEND = process.env.INHERITANCE_BACKEND ?? "structural";
+export const USE_DECISION_MODEL = BACKEND === "model";
+
+function decideByStructure(persons: ExtractedPerson[]): HereditaryDecision {
+  const r = structuralDecide(persons);
+  if (r.confidence < STRUCTURAL_FLOOR && r.mode !== "insufficient") {
+    return {
+      mode: "insufficient",
+      rawMode: r.mode,
+      confidence: r.confidence,
+      probabilities: r.probabilities as Partial<Record<HereditaryMode, number>>,
+      source: "structural",
+      reason: `结构模型倾向「${MODE_LABEL[r.mode]}」但只有 ${(r.confidence * 100).toFixed(0)}%，不足以采信`,
+      gaps: missingInfo(persons),
+    };
+  }
+  return {
+    mode: r.mode,
+    rawMode: r.mode,
+    confidence: r.confidence,
+    probabilities: r.probabilities as Partial<Record<HereditaryMode, number>>,
+    source: "structural",
+    reason: `结构模型置信度 ${(r.confidence * 100).toFixed(0)}%`,
+    gaps: missingInfo(persons),
+  };
+}
+
+export interface DecideOptions extends CallOptions {
+  /** 覆盖默认后端：测试与对比实验用，部署时看 INHERITANCE_BACKEND */
+  backend?: "model" | "structural";
+}
+
 export async function decideHereditary(
   persons: ExtractedPerson[],
-  opts: CallOptions = {},
+  opts: DecideOptions = {},
 ): Promise<HereditaryDecision> {
+  // 默认走结构模型；只有显式要求时才碰 18.5 GB 的大模型
+  const useModel = (opts.backend ?? BACKEND) === "model";
+  if (!useModel) return decideByStructure(persons);
+
   const req = buildHereditaryQuestion(persons);
   let res;
   try {
     res = await systemone(req, opts);
   } catch (e) {
     if (!(e instanceof DecisionUnavailable)) throw e;
-    // 没有决策模型：退到 logprob 同构打分，再不行才用结构事实
+    // 没有决策模型：先退到本地结构模型（实测比 logprob 打分可靠），
+    // 连权重都没有才退回结构事实
+    if (typeof structuralDecide === "function") {
+      try {
+        return decideByStructure(persons);
+      } catch {
+        /* 权重异常就继续往下兜底 */
+      }
+    }
     const scored = await decideByScoring(persons, opts);
     return scored ?? ruleDecision(persons);
   }
@@ -200,6 +280,7 @@ export async function decideHereditary(
       probabilities: probs,
       source: "model",
       reason: `模型倾向「${MODE_LABEL[mode]}」但置信度仅 ${(confidence * 100).toFixed(0)}%，不足以采信`,
+      gaps: missingInfo(persons),
     };
   }
 
@@ -210,5 +291,6 @@ export async function decideHereditary(
     probabilities: probs,
     source: "model",
     reason: `置信度 ${(confidence * 100).toFixed(0)}%`,
+    gaps: [],
   };
 }
