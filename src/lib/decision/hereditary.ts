@@ -25,7 +25,7 @@ const FULL_NAME = new Map(
     return [d.code, longest] as const;
   }),
 );
-import { DecisionUnavailable, pickChoice, systemone, DECISION_URL } from "./client.ts";
+import { DecisionUnavailable, pickChoice, systemone } from "./client.ts";
 import type { CallOptions } from "./client.ts";
 import { ScoringUnavailable, scoreChoice } from "./score.ts";
 import type { ChoiceQuestion, SystemOneRequest } from "./types.ts";
@@ -33,34 +33,11 @@ import type { ChoiceQuestion, SystemOneRequest } from "./types.ts";
 /** 打分后端：没有决策模型权重时，用普通 LLM 的 logprob 近似 choice 原语 */
 export const SCORING_URL = process.env.SCORING_SERVER_URL ?? process.env.LLAMA_SERVER_URL ?? "";
 
-export type HereditaryMode =
-  | "autosomal-dominant"
-  | "autosomal-recessive"
-  | "x-linked"
-  | "mitochondrial"
-  | "insufficient";
+import { CONFIDENCE_FLOOR, MODE_LABEL } from "./mode.ts";
+import type { HereditaryDecision, HereditaryMode } from "./mode.ts";
 
-export const MODE_LABEL: Record<HereditaryMode, string> = {
-  "autosomal-dominant": "常染色体显性",
-  "autosomal-recessive": "常染色体隐性",
-  "x-linked": "X 连锁",
-  mitochondrial: "线粒体遗传",
-  insufficient: "证据不足",
-};
-
-/** 低于这个置信度就不给结论，只报「证据不足」 */
-export const CONFIDENCE_FLOOR = 0.55;
-
-export interface HereditaryDecision {
-  mode: HereditaryMode;
-  /** 模型原始给出的众数选项（可能被置信度门槛否掉） */
-  rawMode: HereditaryMode | null;
-  confidence: number;
-  probabilities: Partial<Record<HereditaryMode, number>>;
-  /** model = 真决策模型；scored = logprob 近似；rules = 兜底 */
-  source: "model" | "scored" | "rules";
-  reason: string;
-}
+export { CONFIDENCE_FLOOR, MODE_LABEL };
+export type { HereditaryDecision, HereditaryMode };
 
 const QUESTION_ID = "hereditary-mode";
 
@@ -159,7 +136,8 @@ async function decideByScoring(
   persons: ExtractedPerson[],
   opts: CallOptions,
 ): Promise<HereditaryDecision | null> {
-  const base = opts.baseUrl && opts.baseUrl !== DECISION_URL ? SCORING_URL : SCORING_URL;
+  // 只认 SCORING_URL：opts.baseUrl 指向的是决策模型服务器，不是文本模型
+  const base = SCORING_URL;
   if (!base) return null;
   try {
     const r = await scoreChoice(scoringPrompt(persons), PROBES, {

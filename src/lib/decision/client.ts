@@ -9,7 +9,7 @@
  * 上层会拿一个假结论去做医疗判断。
  */
 
-import type { Answer, SystemOneRequest, SystemOneResponse } from "./types.ts";
+import type { SystemOneRequest, SystemOneResponse } from "./types.ts";
 
 export const DECISION_URL = process.env.DECISION_SERVER_URL ?? "";
 
@@ -55,6 +55,17 @@ export function validateAnswers(
     if (q.type === "choice") checkChoice(a, Object.keys(q.criteria));
     if (q.type === "noul" && (typeof a.noul !== "number" || a.noul < 0 || a.noul > 1)) {
       fail(`noul 非法: ${String(a.noul)}`);
+    }
+    if (q.type === "score") {
+      const probs = a.probabilities;
+      if (!Array.isArray(probs) || probs.length !== q.criteria.length) {
+        fail(`score 档位数不符: ${Array.isArray(probs) ? probs.length : "非数组"} vs ${q.criteria.length}`);
+      }
+      const sum = (probs as number[]).reduce((x, y) => x + (typeof y === "number" ? y : NaN), 0);
+      if (!Number.isFinite(sum) || Math.abs(sum - 1) > 0.02) fail(`score 概率和不为 1: ${sum}`);
+      if (typeof a.score !== "number" || a.score < 0 || a.score > q.criteria.length - 1) {
+        fail(`score 越界: ${String(a.score)}`);
+      }
     }
   }
 }
@@ -120,6 +131,9 @@ export function pickChoice(
   res: SystemOneResponse,
   id: string,
 ): { choice: string; confidence: number; probabilities: Record<string, number> } {
-  const a = res.answers[id] as Extract<Answer, { type: "choice" }>;
+  const a = res.answers[id];
+  if (!a || a.type !== "choice") {
+    throw new DecisionUnavailable(`answer ${id} 不是 choice 类型`);
+  }
   return { choice: a.choice, confidence: a.confidence, probabilities: a.probabilities };
 }

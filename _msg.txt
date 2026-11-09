@@ -1,21 +1,19 @@
-feat(decision): 接通本地 OpenJev 决策模型，遗传模式判定真正落地
+fix(decision): 审查修掉的 5 个问题（限流/500兜底/死代码/类型守卫/取消在途请求）
 
-## 后端
-- 权重：ggml-org/OpenJev-GGUF 的 Q4_K_M（18.5 GB，llama.cpp 官方转换），从 ModelScope 并行分块下载
-- llama-server 8086，/v1/models 的 output_modalities = ["decisions"]，确认是决策模型
-- 客户端超时 8s -> 30s：18.5GB Q4 在 16GB 显存上部分走 CPU，单次 4.3-7.6s，8s 会误判成「没有决策模型」
+1. 路由没有任何限流：一次判定在本机 18.5GB Q4 上是 5-7 秒推理，匿名调用方可以反复触发。
+   照 extract 路由的做法加 allow(`decision:<ip>`, 20, 10min)。
+2. decideHereditary 抛异常时路由没有兜底，直接 500，页面显示成错误。
+   改为 catch 后返回 ruleDecision()（结构事实，前端不显示结论即可）。
+3. decideByScoring 里 `opts.baseUrl && opts.baseUrl !== DECISION_URL ? SCORING_URL : SCORING_URL`
+   两个分支一模一样，等于写死 SCORING_URL 且忽略了调用方传入的地址 —— 删掉。
+4. pickChoice 直接 as 成 choice 答案，服务端若返回 score/noul 会读出 undefined；补类型检查抛
+   DecisionUnavailable 交给兜底。
+5. validateAnswers 声称校验却完全没管 score 类型：补档位数、概率和、score 越界检查。
 
-## 提示词（三处实测修正，都会掉准确率）
-1. 内部代码直接喂模型判不出来 -> 翻成中文术语，且取最长名词说法（心肌梗死，不是心梗）
-2. 指令里夹 JSON 措辞（onsetAge 为发病年龄，可为 null）-> 同一家系显性概率 66% 掉到 48%
-3. criteria 里填判据式描述（每代都有患者…）-> 等于提前给答案，显性概率掉到 40%；现全部为 null
-另补一句「未列出的亲属没有信息，请勿假定他们患病或健康」，稀疏家系置信度从 91% 升到 94%，典型显性从 75% 升到 87%
+另外两处健壮性：
+- HereditaryMode 卸载/换人时没有取消在途请求，白烧一次 5-7 秒推理；加 AbortController。
+- 新增 src/lib/decision/mode.ts 放纯类型与文案，客户端组件只从这里取，避免把人
+  lexicon（整份疾病词表）与 viz 拉进浏览器包。
 
-## 实测（走产品接口 /api/decision/hereditary）
-稀疏 3 人 1 患病 -> insufficient 94%（正确拒绝）
-典型显性三代男性 -> autosomal-dominant 87%（正确，source=model）
-X 连锁母系男性聚集 -> insufficient 29%（保守，未误判）
-线粒体母系三代 -> autosomal-dominant 89%（判错，已知短板，写入文档）
-
-## 验证
-212 passed / tsc 0 错误 / build 通过；文档 ml/DECISION-BACKEND.md 补第 7 节含四例对照表与三个坑
+验证：212 passed / tsc 0 错误 / --noUnusedLocals 干净 / build 通过；
+线上接口复验 典型显性 -> autosomal-dominant 89%（source=model），非法入参 400。

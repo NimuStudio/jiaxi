@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { ExtractedPerson } from "@/lib/extract/client";
-import { decideHereditary } from "@/lib/decision/hereditary";
+import { decideHereditary, ruleDecision } from "@/lib/decision/hereditary";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 /**
  * 遗传模式判定（typed decision model）
@@ -39,6 +40,11 @@ function sanitize(input: unknown): ExtractedPerson[] | null {
 }
 
 export async function POST(request: Request) {
+  // 一次判定在 18.5 GB Q4 上是 5-7 秒本机推理，不限流等于给匿名调用方一个放大器
+  if (!allow(`decision:${clientIp(request)}`, 20, 10 * 60 * 1000)) {
+    return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -51,6 +57,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "persons 缺失或超出范围" }, { status: 400 });
   }
 
-  const decision = await decideHereditary(persons);
-  return NextResponse.json(decision);
+  try {
+    return NextResponse.json(await decideHereditary(persons));
+  } catch (error) {
+    // 判定失败不该变成页面报错：退回结构事实，前端不显示结论即可
+    console.error("[decision/hereditary] 判定失败", error);
+    return NextResponse.json(ruleDecision(persons));
+  }
 }

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { ExtractedPerson } from "@/lib/extract/client";
-import { MODE_LABEL, type HereditaryDecision } from "@/lib/decision/hereditary";
+// 只从 mode.ts 取：从 hereditary.ts 取会把疾病词表打进客户端包
+import { MODE_LABEL, type HereditaryDecision } from "@/lib/decision/mode";
 
 /**
  * 遗传模式提示（typed decision model）
@@ -21,17 +22,20 @@ export function HereditaryMode({ persons }: { persons: ExtractedPerson[] }) {
       return;
     }
     let alive = true;
+    const ctl = new AbortController();
     const timer = setTimeout(() => {
       fetch("/api/decision/hereditary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ persons }),
+        signal: ctl.signal,
       })
         .then((r) => (r.ok ? r.json() : null))
         .then((d: HereditaryDecision | null) => {
           if (alive) setDecision(d);
         })
         .catch(() => {
+          // 卸载/换人导致的 abort 是正常路径，不当成失败
           if (alive) setDecision(null);
         });
     }, 600);
@@ -39,6 +43,7 @@ export function HereditaryMode({ persons }: { persons: ExtractedPerson[] }) {
     return () => {
       alive = false;
       clearTimeout(timer);
+      ctl.abort(); // 在途请求必须掐掉：一次判定要烧 5-7 秒本机推理
     };
   }, [persons]);
 
