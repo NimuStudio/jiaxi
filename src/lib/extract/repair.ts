@@ -137,6 +137,15 @@ export function repairOtherCodes(
   persons: ExtractedPerson[],
 ): ExtractedPerson[] {
   const codes = diseaseCodesInText(text);
+
+  // 只在这一段出现「恰好一个 other」时才回填：
+  // 多人各自说了不同病名时，按顺序硬分配会把同一个病分给两个人（旧实现的 bug）。
+  const otherCount = persons.reduce(
+    (n, p) => n + p.conditions.filter((c) => c.code === "other").length,
+    0,
+  );
+  const singleOther = otherCount === 1 && codes.length > 0 ? codes[0]! : null;
+
   return persons
     .map((p) => ({
       ...p,
@@ -146,15 +155,12 @@ export function repairOtherCodes(
         return codes.length > 0 || hasIllnessSignal(text);
       }),
     }))
-    .map((p) => {
-      let i = 0;
-      return {
-        ...p,
-        conditions: p.conditions.map((c) =>
-          c.code === "other" ? { ...c, code: codes[i++] ?? "other" } : c,
-        ),
-      };
-    })
+    .map((p) => ({
+      ...p,
+      conditions: p.conditions.map((c) =>
+        c.code === "other" && singleOther ? { ...c, code: singleOther } : c,
+      ),
+    }))
     // 按关系归并：模型可能把同一个人拆成两条（一条带具体病种、一条 other），
     // 归并后 other 才是可判断的噪声，否则逐条看都「有理」
     .reduce<ExtractedPerson[]>((acc, p) => {
@@ -227,7 +233,8 @@ export function ruleExtract(text: string): ExtractedPerson[] {
   }
 
   const rels = collect(relationPairs, text);
-  const dis = collect(diseasePairs, text).filter((h) => h.key !== "other" || text.includes(h.text));
+  // 别名能命中就说明原文提过它，不需要再加条件（旧写法 h.key !== "other" || text.includes(h.text) 恒真）
+  const dis = collect(diseasePairs, text);
   if (rels.length === 0 || dis.length === 0) return [];
 
   const byRelation = new Map<string, ExtractedPerson>();

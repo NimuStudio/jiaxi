@@ -62,6 +62,12 @@ export interface StructuralPrediction {
 
 export function structuralDecide(persons: ExtractedPerson[]): StructuralPrediction {
   const f = structuralFeatures(persons);
+  // 权重由训练脚本导出，字段对不上时直接报错——静默算出 NaN 会一路传到置信度比较里
+  if (f.length !== weights.mean.length || weights.W.length !== f.length) {
+    throw new Error(
+      `结构模型权重与特征维度不一致：features=${f.length}, mean=${weights.mean.length}, W=${weights.W.length}`,
+    );
+  }
   const z = weights.modes.map((_, k) =>
     f.reduce((s, x, i) => s + ((x - weights.mean[i]!) / weights.std[i]!) * weights.W[i]![k]!, weights.b[k]!),
   );

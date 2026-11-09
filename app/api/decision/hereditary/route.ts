@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { ExtractedPerson } from "@/lib/extract/client";
 import { decideHereditary, ruleDecision } from "@/lib/decision/hereditary";
 import { allow, clientIp } from "@/lib/rate-limit";
+import { currentUser } from "@/lib/auth";
 
 /**
  * 遗传模式判定（typed decision model）
@@ -40,8 +41,12 @@ function sanitize(input: unknown): ExtractedPerson[] | null {
 }
 
 export async function POST(request: Request) {
-  // 一次判定在 18.5 GB Q4 上是 5-7 秒本机推理，不限流等于给匿名调用方一个放大器
-  if (!allow(`decision:${clientIp(request)}`, 20, 10 * 60 * 1000)) {
+  // 一次判定在本机是数百毫秒到数秒的推理，不限流等于给匿名调用方一个放大器。
+  // 登录用户按 user id 计，未登录按 IP 计：反代后面所有人的 x-forwarded-for 可能是同一个值，
+  // 只按 IP 计会把不相干的用户一起限死。
+  const user = await currentUser(request);
+  const bucketKey = user ? `decision:user:${user.id}` : `decision:ip:${clientIp(request)}`;
+  if (!allow(bucketKey, user ? 60 : 20, 10 * 60 * 1000)) {
     return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 });
   }
 

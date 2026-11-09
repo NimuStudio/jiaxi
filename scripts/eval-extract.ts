@@ -152,6 +152,18 @@ async function main() {
   } catch {
     /* 非 git 环境 */
   }
+  // 记录服务器实际加载的模型：只看环境变量会撒谎（换个服务但忘了改 env 就记错）
+  let servedModel = process.env.LLAMA_MODEL_PATH ?? "";
+  try {
+    const r = await fetch(`${process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080"}/v1/models`, {
+      signal: AbortSignal.timeout(3000),
+    });
+    const j = (await r.json()) as { data?: Array<{ id?: string }> };
+    servedModel = j.data?.[0]?.id ?? servedModel;
+  } catch {
+    /* 拿不到就退回环境变量 */
+  }
+
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
   const outDir = "docs/eval-results";
   mkdirSync(outDir, { recursive: true });
@@ -162,7 +174,7 @@ async function main() {
       {
         at: new Date().toISOString(),
         commit,
-        model: process.env.LLAMA_MODEL_PATH ?? process.env.LLAMA_SERVER_URL ?? "127.0.0.1:8080",
+        model: servedModel || "unknown",
         evalFile,
         fewShot: useFewShot,
         n: cases.length,
