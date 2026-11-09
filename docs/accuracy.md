@@ -53,6 +53,12 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval-v2.jsonl
 现在模型返回空时，用规则直接从原文抽（要求：有称谓、病名就近归属、前面 6 字无否定），
 Recall 0.750 → 0.839，Precision 保持 1.000。
 
+### 封存留出集（微调后才跑）
+
+`pedigree/data/eval/sealed-holdout-v6.jsonl`（30 条全新措辞）**刻意没有进任何训练集**，
+也没被本轮调优看过。微调产物出来后只跑它一次；跑过就不再干净，需要再造一套。
+详见 `ml/FINETUNE.md`。
+
 ### holdout-v5 剩余 5 条（下一轮目标，不在本轮修）
 
 | 例 | 现象 | 推断 |

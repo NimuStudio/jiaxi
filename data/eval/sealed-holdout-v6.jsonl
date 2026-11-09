@@ -1,0 +1,30 @@
+{"id": "s01", "input": "我爸前年查出高血压。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "s02", "input": "我奶奶糖尿病十几年了。", "expected": [{"relation": "paternal-grandmother", "sex": "female", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "s03", "input": "外公去年脑梗。", "expected": [{"relation": "maternal-grandfather", "sex": "male", "conditions": [{"code": "stroke", "onsetAge": null}]}]}
+{"id": "s04", "input": "我妈骨质疏松。", "expected": [{"relation": "mother", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "s05", "input": "我哥痛风。", "expected": [{"relation": "brother", "sex": "male", "conditions": [{"code": "gout", "onsetAge": null}]}]}
+{"id": "s06", "input": "我姐甲状腺结节。", "expected": [{"relation": "sister", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "s07", "input": "外婆心脏不好。", "expected": [{"relation": "maternal-grandmother", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "s08", "input": "我弟哮喘好多年。", "expected": [{"relation": "brother", "sex": "male", "conditions": [{"code": "asthma", "onsetAge": null}]}]}
+{"id": "s09", "input": "我叔做过支架。", "expected": [{"relation": "paternal-uncle", "sex": "male", "conditions": [{"code": "coronary-heart-disease", "onsetAge": null}]}]}
+{"id": "s10", "input": "我妈贫血。", "expected": [{"relation": "mother", "sex": "female", "conditions": [{"code": "other", "onsetAge": null}]}]}
+{"id": "s11", "input": "爷爷肺癌走的。", "expected": [{"relation": "paternal-grandfather", "sex": "male", "conditions": [{"code": "lung-cancer", "onsetAge": null}]}]}
+{"id": "s12", "input": "我外公胃癌。", "expected": [{"relation": "maternal-grandfather", "sex": "male", "conditions": [{"code": "gastric-cancer", "onsetAge": null}]}]}
+{"id": "s13", "input": "我爸和我妈都高血压。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "hypertension", "onsetAge": null}]}, {"relation": "mother", "sex": "female", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "s14", "input": "我哥血糖高。", "expected": [{"relation": "brother", "sex": "male", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "s15", "input": "母亲乳腺癌。", "expected": [{"relation": "mother", "sex": "female", "conditions": [{"code": "breast-cancer", "onsetAge": null}]}]}
+{"id": "s16", "input": "我自己血压偏高。", "expected": [{"relation": "self", "sex": "unknown", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "s17", "input": "姥爷慢阻肺。", "expected": [{"relation": "maternal-grandfather", "sex": "male", "conditions": [{"code": "copd", "onsetAge": null}]}]}
+{"id": "s18", "input": "奶奶记性差不记事。", "expected": []}
+{"id": "s19", "input": "我爸身体挺好。", "expected": []}
+{"id": "s20", "input": "我妹没得过大病。", "expected": []}
+{"id": "s21", "input": "爸爸四十八岁心梗。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "myocardial-infarction", "onsetAge": 48}]}]}
+{"id": "s22", "input": "我二叔糖尿病。", "expected": [{"relation": "paternal-uncle", "sex": "male", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "s23", "input": "姑姑乳腺癌。", "expected": [{"relation": "paternal-aunt", "sex": "female", "conditions": [{"code": "breast-cancer", "onsetAge": null}]}]}
+{"id": "s24", "input": "我舅舅心衰。", "expected": [{"relation": "maternal-uncle", "sex": "male", "conditions": [{"code": "heart-failure", "onsetAge": null}]}]}
+{"id": "s25", "input": "外婆和我妈都糖尿病。", "expected": [{"relation": "maternal-grandmother", "sex": "female", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}, {"relation": "mother", "sex": "female", "conditions": [{"code": "type2-diabetes", "onsetAge": null}]}]}
+{"id": "s26", "input": "我爸结直肠癌。", "expected": [{"relation": "father", "sex": "male", "conditions": [{"code": "colorectal-cancer", "onsetAge": null}]}]}
+{"id": "s27", "input": "我哥血压有点高。", "expected": [{"relation": "brother", "sex": "male", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "s28", "input": "我姥爷心脏放过支架。", "expected": [{"relation": "maternal-grandfather", "sex": "male", "conditions": [{"code": "coronary-heart-disease", "onsetAge": null}]}]}
+{"id": "s29", "input": "我妈也是高血压。", "expected": [{"relation": "mother", "sex": "female", "conditions": [{"code": "hypertension", "onsetAge": null}]}]}
+{"id": "s30", "input": "老丈人有高血压。", "expected": []}
