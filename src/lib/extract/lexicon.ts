@@ -38,7 +38,7 @@ export const RELATIONS: RelationSpec[] = [
   { relation: "self", sex: "unknown", degree: 0, aliases: ["我自己", "我本人", "本人", "自己"] },
 
   // —— 一级亲属 ——
-  { relation: "father", sex: "male", degree: 1, aliases: ["我爸", "爸爸", "父亲", "老爸", "老爹", "俺爸", "我爸他", "老爷子"] },
+  { relation: "father", sex: "male", degree: 1, aliases: ["我爸", "爸爸", "父亲", "老爸", "老爹", "俺爸", "我爸他", "老爷子", "我爹", "爹"] },
   { relation: "mother", sex: "female", degree: 1, aliases: ["我妈", "妈妈", "母亲", "老妈", "老娘", "俺妈", "我妈她"] },
   { relation: "brother", sex: "male", degree: 1, aliases: ["我哥", "哥哥", "大哥", "二哥", "我弟", "我弟弟", "弟弟", "我兄弟"] },
   { relation: "sister", sex: "female", degree: 1, aliases: ["我姐", "姐姐", "大姐", "二姐", "我妹", "我妹妹", "妹妹", "我姐妹"] },
@@ -54,7 +54,7 @@ export const RELATIONS: RelationSpec[] = [
   { relation: "maternal-grandmother", sex: "female", degree: 2, aliases: ["我外婆", "外婆", "我姥姥", "姥姥", "我外祖母"] },
 
   // —— 二级亲属：父系旁系 ——
-  { relation: "paternal-uncle", sex: "male", degree: 2, aliases: ["我伯伯", "我叔叔", "大伯", "叔叔", "我叔", "二伯", "三伯", "小叔", "三叔", "大爷", "二大爷"] },
+  { relation: "paternal-uncle", sex: "male", degree: 2, aliases: ["我伯伯", "我叔叔", "大伯", "叔叔", "我叔", "二伯", "三伯", "小叔", "三叔", "大爷", "二大爷", "二叔", "四叔", "大叔"] },
   { relation: "paternal-aunt", sex: "female", degree: 2, aliases: ["我姑姑", "姑姑", "我姑妈", "姑妈", "我姑", "大姑", "小姑", "二姑", "三姑"] },
 
   // —— 二级亲属：母系旁系（与上面成对） ——
@@ -113,6 +113,8 @@ export const DISEASES: DiseaseSpec[] = [
       "放了心脏支架",
       "装了支架",
       "做了支架",
+      "做的支架",
+      "做支架",
       "支架手术",
       "心脏搭桥",
       "搭桥手术",
@@ -198,7 +200,7 @@ export const DISEASES: DiseaseSpec[] = [
     label: "其他",
     // 这些词表故意不给细编码，但必须能「看见」——否则整句被当成无病名丢掉，
     // 用户说的贫血、骨质疏松就凭空消失了（宁可归到「其他」，也不吞掉）
-    nounAliases: ["贫血", "骨质疏松", "甲状腺结节", "结石", "胃病"],
+    nounAliases: ["贫血", "骨质疏松", "甲状腺结节", "结石", "胃病", "心脏不好", "心脏有问题", "心脏有点问题"],
   },
 ];
 

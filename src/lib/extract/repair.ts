@@ -163,6 +163,78 @@ export function repairOtherCodes(
     .filter((p) => p.conditions.length > 0);
 }
 
+
+/**
+ * 规则抽取兜底：模型返回空时的最后一道网
+ *
+ * 依据：口语留出集 v4 上 Precision 已 1.000，Recall 只有 0.750 ——
+ * 漏抽几乎全是「词表能看见、但模型认为不是病所以返回空」
+ *（甲状腺结节 / 骨质疏松 / 心脏不好 / 做过支架 / 疑问句）。
+ * 这类片段用规则直接抽，比等模型开口更可靠。
+ *
+ * 刻意保守：
+ *  1. 找不到称谓就不抽（避免模型那类「默认亲属」幻觉）
+ *  2. 病名必须落在某个称谓之后（同一句内就近归属）
+ *  3. 病名前面 6 个字内出现否定词就不抽
+ */
+const NEGATION = /(没有|没得|没查出|未曾|否认|不是|并没有|无)/;
+
+interface Hit {
+  at: number;
+  text: string;
+  key: string;
+}
+
+function collect(pairs: Array<[string, string]>, text: string): Hit[] {
+  const hits: Hit[] = [];
+  for (const [alias, key] of pairs) {
+    let from = 0;
+    for (;;) {
+      const at = text.indexOf(alias, from);
+      if (at < 0) break;
+      from = at + 1;
+      hits.push({ at, text: alias, key });
+    }
+  }
+  return hits.sort((a, b) => a.at - b.at || b.text.length - a.text.length);
+}
+
+export function ruleExtract(text: string): ExtractedPerson[] {
+  const relationPairs: Array<[string, string]> = [];
+  for (const spec of RELATIONS) for (const a of spec.aliases) relationPairs.push([a, spec.relation]);
+  const diseasePairs: Array<[string, string]> = [];
+  for (const d of DISEASES) {
+    for (const a of [...d.nounAliases, ...(d.verbAliases ?? [])]) diseasePairs.push([a, d.code]);
+  }
+
+  const rels = collect(relationPairs, text);
+  const dis = collect(diseasePairs, text).filter((h) => h.key !== "other" || text.includes(h.text));
+  if (rels.length === 0 || dis.length === 0) return [];
+
+  const byRelation = new Map<string, ExtractedPerson>();
+  for (const d of dis) {
+    // 否定：病名前 6 字内有否定词就跳过
+    const before = text.slice(Math.max(0, d.at - 6), d.at);
+    if (NEGATION.test(before)) continue;
+
+    // 就近归属：优先取它前面最近的称谓，没有就取后面最近的
+    const prev = [...rels].reverse().find((r) => r.at < d.at);
+    const next = rels.find((r) => r.at > d.at);
+    const owner = prev ?? next;
+    if (!owner) continue;
+
+    const spec = RELATIONS.find((s) => s.relation === owner.key);
+    const person =
+      byRelation.get(owner.key) ??
+      ({ relation: owner.key, sex: spec?.sex ?? "unknown", conditions: [] } as ExtractedPerson);
+    if (!person.conditions.some((c) => c.code === d.key)) {
+      person.conditions.push({ code: d.key, onsetAge: null });
+    }
+    byRelation.set(owner.key, person);
+  }
+  return [...byRelation.values()];
+}
+
 /**
  * 收尾归一：同一个人被拆成多条时合并，并在已有具体病种的情况下去掉兜底码 other。
  * 分段抽取的场景必须对「合并后的整组」再跑一次——每段单独看都合理，
@@ -192,7 +264,10 @@ export function finalizePersons(persons: ExtractedPerson[]): ExtractedPerson[] {
 }
 
 /** 续句标记：「我哥也是」「父亲同样」这类继承上一句病名的句子 */
-const CONTINUATION = ["也是", "同样", "也一样", "一样", "都有", "也有", "也得了"];
+const CONTINUATION = [
+  "也是", "同样", "也一样", "一样", "都有", "也有", "也得了",
+  "也高", "也低", "也差不多", // 「我爸也高」这类省略谓语
+];
 
 /** 第一人称续句：「我也有点高」「我也一样」——「我」不在词表里，单独判 */
 const SELF_CONTINUATION = /我(也|同样|都)/;

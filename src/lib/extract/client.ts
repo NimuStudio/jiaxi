@@ -20,6 +20,7 @@ import {
   isContinuation,
   repairOtherCodes,
   repairRelations,
+  ruleExtract,
 } from "./repair.ts";
 import { SYSTEM_PROMPT } from "./prompt.ts";
 
@@ -219,6 +220,35 @@ const FEW_SHOT: Array<{ role: "user" | "assistant"; content: string }> = [
     role: "assistant",
     content:
       '{"persons":[{"relation":"paternal-uncle","sex":"male","conditions":[{"code":"其他","onsetAge":null}]}]}',
+  },
+  // 下面三条来自留出集实测：模型对「结节/疏松/不好」这类模糊说法会直接返回空，
+  // 对疑问句式也会漏抽。示范「模糊但确有其病 → 其他」，以及疑问句照常抽取。
+  {
+    role: "user",
+    content: "我姐体检说甲状腺有点结节。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"sister","sex":"female","conditions":[{"code":"其他","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
+    content: "我爸心脏不好，具体啥病说不清。",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"father","sex":"male","conditions":[{"code":"其他","onsetAge":null}]}]}',
+  },
+  {
+    role: "user",
+    content: "我舅是不是有高血压来着？",
+  },
+  {
+    role: "assistant",
+    content:
+      '{"persons":[{"relation":"maternal-uncle","sex":"male","conditions":[{"code":"高血压","onsetAge":null}]}]}',
   },
 ];
 
@@ -556,7 +586,11 @@ export async function extractPedigree(
       text,
       repairRelations(text, repairOtherCodes(text, grounded)),
     );
-    const cleaned = expandSharedCondition(text, repaired);
+    // 兜底：模型对「甲状腺结节/骨质疏松/心脏不好/做支架」这类说法会直接返回空
+    // （口语留出集 v4：Precision 1.000、Recall 0.750，漏的几乎都是这种）。
+    // 词表能看见、原文有称谓、无否定 → 规则直接抽，不必等模型开口。
+    const fallback = repaired.length === 0 ? ruleExtract(text) : [];
+    const cleaned = expandSharedCondition(text, [...repaired, ...fallback]);
 
     // 模型偶尔会把同一个人输出两次（GBNF 允许数组重复），
     // 这里统一合并去重，避免上游拿到脏数据。
