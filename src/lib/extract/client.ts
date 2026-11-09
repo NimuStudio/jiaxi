@@ -14,6 +14,7 @@
 import { PEDIGREE_GBNF } from "./grammar.ts";
 import { DISEASES, RELATIONS } from "./lexicon.ts";
 import {
+  diseasePhrasesInText,
   dropUngroundedRelations,
   expandContinuation,
   finalizePersons,
@@ -686,6 +687,15 @@ export function splitSegments(text: string): string[] {
   // 拼过去会让模型张冠李戴——单独留下（预筛会把它当闲聊过滤）。
   if (prefix && out.length > 0 && !hasRelationWord(prefix)) {
     out[out.length - 1] = `${out[out.length - 1]}，${prefix}`;
+  } else if (prefix && out.length > 0 && hasRelationWord(prefix)) {
+    // 「因为高血压，我爸一直吃药」：前段只有病名、后段只有称谓，
+    // 不合并的话后段被判为不相关直接丢掉，父亲就漏了
+    const last = out[out.length - 1]!;
+    if (!hasRelationWord(last) && hasDiseaseWord(last)) {
+      out[out.length - 1] = `${last}，${prefix}`;
+    } else if (isContinuation(prefix) || hasIllnessHint(prefix)) {
+      out.push(prefix);
+    }
   } else if (prefix && (isContinuation(prefix) || hasIllnessHint(prefix))) {
     // 自带称谓却没有词表病名的片段以前直接丢掉，整句就消失了，模型根本没机会看到。
     // 但只保留两类：续句（「我哥也是」）与带疾病信号的（「姑姑有甲状腺问题」）；
@@ -856,9 +866,14 @@ export async function extractPedigreeSplit(
       : item.text;
     onStage?.({ type: "segment", index: i, total: meaningful.length, segment: segText });
     const r = await extractPedigree(segText, options);
-    const labels = r.persons.flatMap((p) =>
-      p.conditions.map((c) => DISEASES.find((d) => d.code === c.code)?.label ?? c.code),
-    );
+    // 续句补全用「原文里命中的病名原话」：补规范标签会把「骨质疏松」补成「其他」，
+    // 拼出来是病句，模型反而抽不出来（实测漏抽「我妈也是」）
+    const phrases = diseasePhrasesInText(segText);
+    const labels = phrases.length > 0
+      ? phrases
+      : r.persons.flatMap((p) =>
+          p.conditions.map((c) => DISEASES.find((d) => d.code === c.code)?.label ?? c.code),
+        );
     if (labels.length > 0) prevLabels = labels;
     results.push(r);
   }

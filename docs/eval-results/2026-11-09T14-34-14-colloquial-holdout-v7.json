@@ -1,0 +1,938 @@
+{
+ "at": "2026-11-09T14:34:14.640Z",
+ "commit": "18d390e",
+ "model": "127.0.0.1:8080",
+ "evalFile": "data/eval/colloquial-holdout-v7.jsonl",
+ "fewShot": true,
+ "n": 30,
+ "tp": 28,
+ "fp": 0,
+ "fn": 2,
+ "precision": 1,
+ "recall": 0.9333333333333333,
+ "f1": 0.9655172413793104,
+ "ageChecked": 28,
+ "ageCorrect": 28,
+ "ageAcc": 1,
+ "exact": 28,
+ "exactRate": 0.9333333333333333,
+ "failures": [],
+ "perCase": [
+  {
+   "id": "v01",
+   "input": "我大伯前几年做了支架。",
+   "expected": [
+    {
+     "relation": "paternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "coronary-heart-disease",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "coronary-heart-disease",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v02",
+   "input": "外婆血压有点高。",
+   "expected": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v03",
+   "input": "我妈骨质疏松很多年。",
+   "expected": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v04",
+   "input": "我爸查出来甲状腺结节。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v05",
+   "input": "我哥血糖有点高。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [],
+   "missing": [
+    "brother|type2-diabetes"
+   ],
+   "extra": [],
+   "exact": false
+  },
+  {
+   "id": "v06",
+   "input": "奶奶心脏不太好。",
+   "expected": [
+    {
+     "relation": "paternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [],
+   "missing": [
+    "paternal-grandmother|other"
+   ],
+   "extra": [],
+   "exact": false
+  },
+  {
+   "id": "v07",
+   "input": "爷爷中风过一次。",
+   "expected": [
+    {
+     "relation": "paternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "stroke",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "stroke",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v08",
+   "input": "我爸和我叔都抽烟喝酒，身体还好。",
+   "expected": [],
+   "actual": [],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v09",
+   "input": "我姐乳腺癌。",
+   "expected": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v10",
+   "input": "我妈没病。",
+   "expected": [],
+   "actual": [],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v11",
+   "input": "我姥爷肺气肿。",
+   "expected": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "copd",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "copd",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v12",
+   "input": "我弟贫血。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v13",
+   "input": "父亲心梗，母亲健康。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "myocardial-infarction",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "myocardial-infarction",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v14",
+   "input": "我外婆高血压，我妈也有点高。",
+   "expected": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v15",
+   "input": "我哥三十二岁查出高血压。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": 32
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": 32
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v16",
+   "input": "我叔是不是痛风？",
+   "expected": [
+    {
+     "relation": "paternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gout",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gout",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v17",
+   "input": "姑妈糖尿病。",
+   "expected": [
+    {
+     "relation": "paternal-aunt",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-aunt",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v18",
+   "input": "因为糖尿病，我妈一直打胰岛素。",
+   "expected": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v19",
+   "input": "我爸身体挺好，没得过病。",
+   "expected": [],
+   "actual": [],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v20",
+   "input": "我妹哮喘，从小就有。",
+   "expected": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "asthma",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "asthma",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v21",
+   "input": "姥姥心衰。",
+   "expected": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "heart-failure",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "heart-failure",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v22",
+   "input": "我家老爷子高血压。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v23",
+   "input": "我哥痛风，我弟也痛风。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gout",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gout",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gout",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v24",
+   "input": "爷爷走了，是胃癌。",
+   "expected": [
+    {
+     "relation": "paternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gastric-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gastric-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v25",
+   "input": "我自己血压偏高。",
+   "expected": [
+    {
+     "relation": "self",
+     "sex": "unknown",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "self",
+     "sex": "unknown",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v26",
+   "input": "我姐甲状腺结节。",
+   "expected": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v27",
+   "input": "外婆糖尿病，我妈也是。",
+   "expected": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v28",
+   "input": "爸爸肺癌走了。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "lung-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "lung-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v29",
+   "input": "我舅老年痴呆。",
+   "expected": [
+    {
+     "relation": "maternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "dementia",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "dementia",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "v30",
+   "input": "我妈和我姨都乳腺癌。",
+   "expected": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "maternal-aunt",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "maternal-aunt",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  }
+ ]
+}

@@ -86,6 +86,25 @@ export function dropUngroundedRelations(
   return persons.filter((p) => p.relation === "self" || p.relation === "unknown");
 }
 
+/**
+ * 原文里命中的病名「原话」（给续句补全用）。
+ * 为什么不用规范标签：骨质疏松的规范标签是「其他」，补进续句就成了
+ * 「我妈也是其他。」—— 病句，模型反而抽不出来（实测漏抽）。
+ */
+export function diseasePhrasesInText(text: string): string[] {
+  const hits: Array<{ at: number; text: string }> = [];
+  for (const d of DISEASES) {
+    for (const alias of [...d.nounAliases, ...(d.verbAliases ?? [])]) {
+      const at = text.indexOf(alias);
+      if (at >= 0) hits.push({ at, text: alias });
+    }
+  }
+  hits.sort((a, b) => a.at - b.at || b.text.length - a.text.length);
+  const out: string[] = [];
+  for (const h of hits) if (!out.includes(h.text)) out.push(h.text);
+  return out;
+}
+
 /** 原文里实际命中的病种编码（按别名长短优先） */
 export function diseaseCodesInText(text: string): string[] {
   const hits: Array<{ at: number; len: number; code: string }> = [];
@@ -213,8 +232,12 @@ export function ruleExtract(text: string): ExtractedPerson[] {
 
   const byRelation = new Map<string, ExtractedPerson>();
   for (const d of dis) {
-    // 否定：病名前 6 字内有否定词就跳过
-    const before = text.slice(Math.max(0, d.at - 6), d.at);
+    // 否定：病名前 6 字内有否定词就跳过。
+    // 但「是不是 / 有没有 / 是否」是疑问句式，不是否定——先剥掉再判，
+    // 否则「我叔是不是糖尿病？」会被当成否认而漏抽（实测）
+    const before = text
+      .slice(Math.max(0, d.at - 6), d.at)
+      .replace(/(是不是|有没有|是否有|是否)/g, "");
     if (NEGATION.test(before)) continue;
 
     // 就近归属：优先取它前面最近的称谓，没有就取后面最近的

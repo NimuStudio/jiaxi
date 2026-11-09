@@ -115,6 +115,9 @@ export const DISEASES: DiseaseSpec[] = [
       "做了支架",
       "做的支架",
       "做支架",
+      "放过支架",
+      "放个支架",
+      "心脏放过支架",
       "支架手术",
       "心脏搭桥",
       "搭桥手术",
@@ -148,7 +151,7 @@ export const DISEASES: DiseaseSpec[] = [
       "脑栓塞",
     ],
   },
-  { category: "心脑血管", code: "hypertension", label: "高血压", nounAliases: ["高血压", "血压偏高"], verbAliases: ["血压高"] },
+  { category: "心脑血管", code: "hypertension", label: "高血压", nounAliases: ["高血压", "血压偏高", "血压有点高", "血压稍高"], verbAliases: ["血压高"] },
   { category: "心脑血管", code: "heart-failure", label: "心衰", nounAliases: ["心衰", "心力衰竭"] },
   { category: "心脑血管", code: "atrial-fibrillation", label: "房颤", nounAliases: ["房颤", "心房颤动"] },
 
