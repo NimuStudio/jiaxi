@@ -253,6 +253,8 @@ if (mentioned.size !== 1) return person;
 
 ### 4.8 评测方法与结果
 
+> 完整版（含留出集制度、失败分析、微调 A/B 对照、复现命令）见 **`docs/准确性说明.md`**。
+
 自建两套评测集，同一套指标：
 
 > **数字统一以 `docs/accuracy.md` 为准**，每次评测自动落盘到 `docs/eval-results/`（含 commit 与模型）。

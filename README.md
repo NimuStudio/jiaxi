@@ -113,6 +113,7 @@
 | 病名必须能回查原文 | 抽出来的每一条都要在用户原话里找到依据，抽不出就宁可不抽 | `src/lib/extract/lexicon.ts` + 评测口径 |
 | 三引擎互补 | FINDRISC 覆盖糖代谢、China-PAR 覆盖心血管、PLCOm2012 覆盖肺癌（含吸烟量与家族史） | `src/lib/risk/findrisc.ts`、`src/lib/risk/chinapar.ts`、`src/lib/risk/plcom2012.ts` |
 | 数字可溯源 | 每个进入产品的系数都登记出处与核实状态 | `docs/references.md` |
+| 抽取准确性可复算 | 5 套"全新措辞、只跑一次"的留出集；当前 Precision 1.000 / Recall 0.966 / F1 0.982；每次评测留痕，产物可追溯 | `docs/准确性说明.md` |
 
 ### 3. 交互创新：口述 → 追问 → 点选回溯 → 反事实推演
 
