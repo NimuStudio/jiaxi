@@ -42,6 +42,8 @@ export function HereditaryMode({ persons }: { persons: ExtractedPerson[] }) {
     };
   }, [persons]);
 
+  // 只认真决策模型：实测 1.7B 分诊 LoRA 会把「两代男性发病」判成隐性，
+  // logprob 近似打分（source=scored）只能当内部信号，不能显示成结论。
   if (!decision || decision.source !== "model" || decision.mode === "insufficient") {
     return null;
   }

@@ -1,25 +1,26 @@
-feat(decision): 接入 typed decision model（/v1/systemone），先落地遗传模式判定
+feat(decision): 加 logprob 同构打分兜底；实测 1.7B 判断不可信故只作内部信号
 
-协议层 src/lib/decision/
-- types.ts：choice / score / noul 三种原语，照 llama.cpp tools/server/README.md 的
-  「POST /v1/systemone」一节对齐（一次前向，不生成 token）
-- client.ts：发请求 + 严格校验（choice 必在候选内、概率和必须为 1），
-  501（非决策模型）与不可达都归入 DecisionUnavailable 交给兜底；另带 /v1/models 探测
-- hereditary.ts：把家系结构做成五选一（AD / AR / XL / 线粒体 / 证据不足），
-  置信度 < 0.55 不给结论，退回「证据不足」并保留模型原始倾向
+## 为什么加这条路径
+llama.cpp 的 /v1/systemone 只服务带决策头的模型（Qwen3 实测 501）。
+在真决策权重到位前，用 /v1/completions 的 logprobs 复现 choice 原语：
+每个选项给首字互不相同的答案词（显性/隐性/X连锁/线粒体/不确定），取首 token 概率后归一化。
 
-产品接线
-- app/api/decision/hereditary：入参清洗（条数/字段长度上限），
-  没配决策模型时返回 200 + source=rules，而不是 500（接口挂了不等于报错）
-- src/components/pedigree/HereditaryMode：只在 source=model 且结论非 insufficient 时显示，
-  判不了就不显示，不印一句「证据不足」充数
+## 实测（线上 llama-server 8085 + triage LoRA）
+输入：父亲 52 岁心梗 / 祖父糖尿病 / 母亲无病
+logprob：隐 -0.342  显 -2.036  X -2.103  线 -5.069  不 -6.886
+结果：隐性 71.1% / X 20.4% / 显性 7.8% / 线粒体 0.6% / 不确定 0.1%
 
-验证
-- 新增 12 个用例（问题构造 / 响应校验 / 高置信采信 / 低置信降级 / 501 兜底 / 不配地址不发请求）
-- pnpm vitest run：206 passed；pnpm tsc --noEmit：0 错误；pnpm build 通过
-- 本地 POST /api/decision/hereditary：无决策模型时返回
-  {source:rules, mode:insufficient, reason:2 位亲属有患病记录…}，非法入参 400
+两代男性发病更像显性，模型给隐性 71% —— 说明这个分诊 LoRA 对遗传模式不可信。
+因此：
+- 打分路径的置信度门槛抬到 0.8（真决策模型仍是 0.55）
+- UI 只渲染 source=model，scored 仅作内部信号，不显示成结论
 
-尚未完成：本机没有 llama-server 二进制，也没有 OpenJEV 系权重，
-所以真实决策后端还没跑起来；配置 DECISION_SERVER_URL 指向带决策模型的
-llama-server 后，遗传模式会自动出现在聊天页。
+## 代码
+- src/lib/decision/score.ts：scoreChoice()，缺项按最低值降 4 个 ln 处理，抛 ScoringUnavailable 交上层兜底
+- hereditary.ts：systemone 不可用时退到打分，再不可用退结构事实；source 增加 scored
+- 新增 6 个用例（归一化 / 缺项 / 首字唯一约束 / 无地址 / 空候选 / 非 2xx）；
+  全量 212 passed，tsc 0 错误
+
+## 文档
+ml/DECISION-BACKEND.md：JEV/openjev/协议三者区别、llama.cpp 支持的 12 个决策族、
+本机 llama-server 路径与启动命令、验证清单、同构打分实测数据。

@@ -11,9 +11,13 @@
  */
 
 import type { ExtractedPerson } from "../extract/client.ts";
-import { DecisionUnavailable, pickChoice, systemone } from "./client.ts";
+import { DecisionUnavailable, pickChoice, systemone, DECISION_URL } from "./client.ts";
 import type { CallOptions } from "./client.ts";
+import { ScoringUnavailable, scoreChoice } from "./score.ts";
 import type { ChoiceQuestion, SystemOneRequest } from "./types.ts";
+
+/** 打分后端：没有决策模型权重时，用普通 LLM 的 logprob 近似 choice 原语 */
+export const SCORING_URL = process.env.SCORING_SERVER_URL ?? process.env.LLAMA_SERVER_URL ?? "";
 
 export type HereditaryMode =
   | "autosomal-dominant"
@@ -39,8 +43,8 @@ export interface HereditaryDecision {
   rawMode: HereditaryMode | null;
   confidence: number;
   probabilities: Partial<Record<HereditaryMode, number>>;
-  /** model = 决策模型；rules = 兜底 */
-  source: "model" | "rules";
+  /** model = 真决策模型；scored = logprob 近似；rules = 兜底 */
+  source: "model" | "scored" | "rules";
   reason: string;
 }
 
@@ -96,6 +100,69 @@ export function ruleDecision(persons: ExtractedPerson[]): HereditaryDecision {
   };
 }
 
+/** 打分用的答案词：首字必须互不相同，否则首 token 概率会串 */
+const PROBES: Array<{ key: HereditaryMode; probe: string }> = [
+  { key: "autosomal-dominant", probe: "显性" },
+  { key: "autosomal-recessive", probe: "隐性" },
+  { key: "x-linked", probe: "X连锁" },
+  { key: "mitochondrial", probe: "线粒体" },
+  { key: "insufficient", probe: "不确定" },
+];
+
+function scoringPrompt(persons: ExtractedPerson[]): string {
+  const lines = persons.map((p) => {
+    const conds = (p.conditions ?? [])
+      .map((c) => (c.onsetAge == null ? c.code : `${c.code}（${c.onsetAge} 岁）`))
+      .join("、");
+    return `- ${p.relation}（${p.sex === "male" ? "男" : p.sex === "female" ? "女" : "性别未知"}）：${conds || "无患病记录"}`;
+  });
+  return [
+    "下面是一个家系的病史。请判断最可能的遗传模式，只回答一个词。",
+    ...lines,
+    "可选：显性 / 隐性 / X连锁 / 线粒体 / 不确定",
+    "结论：",
+  ].join("\n");
+}
+
+async function decideByScoring(
+  persons: ExtractedPerson[],
+  opts: CallOptions,
+): Promise<HereditaryDecision | null> {
+  const base = opts.baseUrl && opts.baseUrl !== DECISION_URL ? SCORING_URL : SCORING_URL;
+  if (!base) return null;
+  try {
+    const r = await scoreChoice(scoringPrompt(persons), PROBES, {
+      baseUrl: base,
+      timeoutMs: opts.timeoutMs,
+      fetchImpl: opts.fetchImpl,
+    });
+    const mode = r.choice as HereditaryMode;
+    // 近似打分比真决策模型更容易「自信地错」，门槛单独抬高
+    const floor = 0.8;
+    if (r.confidence < floor && mode !== "insufficient") {
+      return {
+        mode: "insufficient",
+        rawMode: mode,
+        confidence: r.confidence,
+        probabilities: r.probabilities as Partial<Record<HereditaryMode, number>>,
+        source: "scored",
+        reason: `打分倾向「${MODE_LABEL[mode]}」但只有 ${(r.confidence * 100).toFixed(0)}%，不足以采信`,
+      };
+    }
+    return {
+      mode,
+      rawMode: mode,
+      confidence: r.confidence,
+      probabilities: r.probabilities as Partial<Record<HereditaryMode, number>>,
+      source: "scored",
+      reason: `logprob 打分置信度 ${(r.confidence * 100).toFixed(0)}%`,
+    };
+  } catch (e) {
+    if (e instanceof ScoringUnavailable) return null;
+    throw e;
+  }
+}
+
 export async function decideHereditary(
   persons: ExtractedPerson[],
   opts: CallOptions = {},
@@ -105,8 +172,10 @@ export async function decideHereditary(
   try {
     res = await systemone(req, opts);
   } catch (e) {
-    if (e instanceof DecisionUnavailable) return ruleDecision(persons);
-    throw e;
+    if (!(e instanceof DecisionUnavailable)) throw e;
+    // 没有决策模型：退到 logprob 同构打分，再不行才用结构事实
+    const scored = await decideByScoring(persons, opts);
+    return scored ?? ruleDecision(persons);
   }
 
   const { choice, confidence, probabilities } = pickChoice(res, QUESTION_ID);
