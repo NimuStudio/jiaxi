@@ -1,25 +1,23 @@
-review: 修 3 个 bug + 2 处隐患；词表缺口发现转正为脚本
+audit: 全项目审查 —— 修 1 处无上限入参与 2 处过期数字（幻视）
 
-## Bug
-1. repairOtherCodes 的 other 回填把 i 每人重置 —— 多人各说一种病时，
-   第二个人会拿到第一个人的病名（如「我爸房颤，我妈骨质疏松」两人都变房颤）。
-   改为：整段只出现一个 other 且存在具体病名时才回填，否则保留 other。
-2. ruleExtract 里 `h.key !== "other" || text.includes(h.text)` 恒真 —— 死条件，删除。
-3. 结构模型权重与特征维度不一致时会静默算出 NaN，NaN<0.55 恒为 false → 会被当成
-   「高置信度」放行。改为构造时校验维度并抛错，让上层兜底。
+## 幻视（界面数字与代码/文档不一致）
+1. 登录页写「25 种疾病可识别」，实际 DISEASES.length = 26（colophon 同处也写了 25）。
+2. 登录页写「1.000 口语集抽取 F1」—— 这是我们自己判定为不可对外报数的开发集数字；
+   改为 0.982（封存留出集 v8 的干净成绩），文案改为「口语留出集抽取 F1」。
+3. tech-design 里「词表从 9 种扩到 25 种」同步为 26 种，并重新生成 tech-design.html。
 
-## 隐患
-4. 决策接口的限流只按 IP：反代后所有用户可能共用同一个 x-forwarded-for，
-   会把不相干的人一起限死。改为登录用户按 user id（60 次/10 分钟）、未登录按 IP（20 次/10 分钟）。
-5. 评测产物里的 model 字段取自环境变量，换服务但忘改 env 就会记错模型。
-   改为实际查询 /v1/models 记录的 id。
+## 逻辑/健壮性
+4. /api/agent 的 parsePersons 没有条数上限，数组会序列化进模型上下文；
+   加 slice(0, 200)，与 /api/me/pedigree 的上限保持一致。
 
-## 新增
-- scripts/lexicon-gaps.ts + npm run gaps：自动发现「出现但词表没收录」的称谓与病名，
-  并单独列出「设计上不支持」的姻亲/曾祖辈（老丈人/公公/舅妈/太奶奶），避免每次重复讨论。
-  当前 11 个文件 365 条输入：真缺口 0，不支持 4 条。
-- build_extract_dataset.py：训练集若包含已对外报数的留出集，打印警告并点名，
-  提醒重训后需要新造封存集。
+## 查过确认没问题的（记录，避免重复怀疑）
+- localStorage 读写、JSON.parse 全部有 try/catch（chat 页、RiskFactorsForm、OCR 解析）
+- 无空 catch、无 TODO/FIXME、无遗留 console.log
+- 代码里没有外部网络请求（唯一的 https 出现在注释里的论文链接）→「100% 本机推理」成立
+- China-PAR 年龄越界（<35 或 >74）界面有「仅供参考」提示；PLCO 有 outOfRange 标记
+- China-PAR「论文 Table 2 八个验证点、偏差 ≤0.35pp」有对应单测（8 个 it）
+- 云端同步有三重门闩（demoMode / account / cloudSyncedRef），演示数据与旧数据都不会覆盖云端
+- extract/text ≤2000、ocr/image ≤11MB、decision/persons ≤40、pedigree/persons ≤200 均有上限
+- agent/extract/ocr 三个重接口都有限流
 
-## 验证
-233 passed / tsc 0 / build 通过；回归：v8 仍 F1 0.982（同一处失败），规整集 1.000。
+233 passed / tsc 0 / build 通过

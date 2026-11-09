@@ -31,7 +31,9 @@ interface AgentBody {
 /** 只信任结构正确的输入，避免把脏数据喂给工具。 */
 function parsePersons(v: unknown): ExtractedPerson[] {
   if (!Array.isArray(v)) return [];
-  return v
+  // 条数上限与 /api/me/pedigree 保持一致（200）：
+  // 这个数组会被序列化进模型上下文，无上限时一个超大 payload 就能把上下文撑爆
+  return v.slice(0, 200)
     .filter((p): p is Record<string, unknown> => typeof p === "object" && p !== null)
     .map((p): ExtractedPerson => ({
       relation: String(p.relation ?? "unknown"),

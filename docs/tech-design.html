@@ -353,8 +353,11 @@ if (mentioned.size !== 1) return person;
 口语集 Recall:    0.810 → 0.762
 </code></pre>
 <blockquote>
-<p>注：上表是加入证据校验<strong>当时的即时影响</strong>。此后疾病词表从 9 种扩到 25 种，
-口语集 Recall 回升到 0.750、F1 0.857，<strong>Precision 仍保持 1.000</strong>。</p>
+<p>注：上表是加入证据校验<strong>当时的即时影响</strong>。此后疾病词表从 9 种扩到 26 种、
+补齐「放的支架」等谓语变体，分句时让无称谓续句继承主语，few-shot 补
+「A 和 B 都 X」「主语那人，血压高」句式。<strong>微调模型</strong>在旧版 21 条口语集上达到过
+Recall 1.000、F1 1.000；该模型当前无法在本机复现，数字统一标注「待复现」，
+可复现的基线数字见 <code>docs/accuracy.md</code>。</p>
 </blockquote>
 <p><strong>这个交换是刻意的</strong>：在医疗场景里，漏掉一个病只是信息不全，编造一个病会让下游给出错误建议。宁可漏，不可编。</p>
 <p><strong>第三层：结果去重</strong></p>
@@ -375,7 +378,15 @@ if (mentioned.size !== 1) return person;
 <p>微调版本不使用 few-shot，让模型把称谓映射内化，推理时上下文更短。</p>
 <p>为此，system prompt 抽到 <code>src/lib/extract/prompt.ts</code> 单独维护，训练数据生成器与线上推理都从这里 import——<strong>否则会出现「训练时见过的指令」和「推理时收到的指令」不一致，效果直接打折</strong>。</p>
 <h3>4.8 评测方法与结果</h3>
+<blockquote>
+<p>完整版（含留出集制度、失败分析、微调 A/B 对照、复现命令）见 <strong><code>docs/准确性说明.md</code></strong>。</p>
+</blockquote>
 <p>自建两套评测集，同一套指标：</p>
+<blockquote>
+<p><strong>数字统一以 <code>docs/accuracy.md</code> 为准</strong>，每次评测自动落盘到 <code>docs/eval-results/</code>（含 commit 与模型）。
+下方为 2026-11-09 用**基座模型（few-shot，未微调）**跑出的可复现结果；
+微调模型的数字需要先导出合并后的 GGUF 才能复现，在那之前标注「待复现」，不对外承诺。</p>
+</blockquote>
 <table>
 <thead>
 <tr>
@@ -390,18 +401,18 @@ if (mentioned.size !== 1) return person;
 <tbody><tr>
 <td>规整句</td>
 <td>16</td>
-<td>0.952</td>
-<td>0.952</td>
-<td><strong>0.952</strong></td>
+<td>0.913</td>
+<td>1.000</td>
+<td>0.955</td>
 <td>14/16</td>
 </tr>
 <tr>
-<td>口语</td>
-<td>21</td>
-<td><strong>1.000</strong></td>
-<td>0.750</td>
-<td>0.857</td>
-<td>16/21</td>
+<td>口语 v2</td>
+<td>80</td>
+<td>0.882</td>
+<td>0.852</td>
+<td>0.867</td>
+<td>66/80</td>
 </tr>
 </tbody></table>
 <p><strong>指标定义</strong>：把每个人 × 每种病展开成 <code>(relation, code)</code> 对，与人工标注比对，算 Precision / Recall / F1。年龄准确率单独统计（容差 ±2 岁）。完全匹配指整条输入的全部对与年龄都对。</p>
@@ -441,7 +452,8 @@ if (mentioned.size !== 1) return person;
 <h3>4.10 微调尝试与阻塞</h3>
 <p>按计划生成了 1080 条训练数据（结构驱动：先构造语义结构再渲染成中文，标注 100% 准确，不依赖模型生成），并准备了完整的 LoRA 训练链路。</p>
 <p><strong>但训练被硬件架构阻塞</strong>：开发机为 RTX 5080（Blackwell，sm_120），预装的 PyTorch 为 cu126 构建，只编译到 sm_90，执行算子报 <code>no kernel image is available</code>。官方 cu128 wheel 在本地网络不可达，阿里云 PyTorch 镜像的下载速度约 90–600 KB/s，2.5 GB 需要一小时以上。</p>
-<p><strong>判断</strong>：此时 few-shot 方案已达 F1 0.952（规整）/ 0.857（口语），而微调能带来的确定性收益主要是「去掉 few-shot 提速」——但 <code>cache_prompt</code> 已让 few-shot 几乎不增加延迟。所以没有把时间押在训练上，转而补齐产品闭环与 RAG。</p>
+<p><strong>判断</strong>：此时 few-shot 方案已达 F1 0.952（规整）/ 0.857（口语）（2026-11-09 用 16/80 条集复测为
+0.955 / 0.867，见 <code>docs/accuracy.md</code>），而微调能带来的确定性收益主要是「去掉 few-shot 提速」——但 <code>cache_prompt</code> 已让 few-shot 几乎不增加延迟。所以没有把时间押在训练上，转而补齐产品闭环与 RAG。</p>
 <p>训练数据、词表、生成器、评测集全部保留在仓库中，环境具备后可随时接上。</p>
 <hr>
 <h2>五、核心功能实现</h2>
@@ -646,7 +658,7 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl
 </tr>
 <tr>
 <td>本地 LLM 抽取（GBNF + 分句 + 三层校验）</td>
-<td>完成，F1 0.952 / 口语 P 1.000</td>
+<td>完成；基线实测 F1 0.955 / 口语 0.867（<code>docs/accuracy.md</code>）</td>
 </tr>
 <tr>
 <td>对话页 + 家系图实时生长</td>

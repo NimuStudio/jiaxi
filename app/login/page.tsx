@@ -292,7 +292,7 @@ export default function LoginPage() {
         </span>
         <span className="login-topmeta-col">
           <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
-          <span className="login-colophon">25 种疾病 · 3 套风险模型 · 100% 本机推理</span>
+          <span className="login-colophon">26 种疾病 · 3 套风险模型 · 100% 本机推理</span>
         </span>
       </header>
 
@@ -463,7 +463,7 @@ export default function LoginPage() {
 
       <footer className="login-stats-strip">
         <div className="login-stat">
-          <b>25</b>
+          <b>26</b>
           <span>种疾病可识别</span>
         </div>
         <div className="login-stat">
@@ -475,8 +475,8 @@ export default function LoginPage() {
           <span>本机推理</span>
         </div>
         <div className="login-stat">
-          <b>1.000</b>
-          <span>口语集抽取 F1</span>
+          <b>0.982</b>
+          <span>口语留出集抽取 F1</span>
         </div>
         <p className="login-stats-note">FINDRISC · China-PAR ｜ 数据保存在本机 MySQL，不上传</p>
       </footer>
