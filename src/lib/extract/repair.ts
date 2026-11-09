@@ -101,6 +101,58 @@ export function repairOtherCodes(
         ),
       };
     })
+    // 按关系归并：模型可能把同一个人拆成两条（一条带具体病种、一条 other），
+    // 归并后 other 才是可判断的噪声，否则逐条看都「有理」
+    .reduce<ExtractedPerson[]>((acc, p) => {
+      const same = acc.find((x) => x.relation === p.relation);
+      if (!same) {
+        acc.push({ ...p, conditions: [...p.conditions] });
+        return acc;
+      }
+      for (const c of p.conditions) {
+        if (!same.conditions.some((d) => d.code === c.code)) same.conditions.push(c);
+        else if (c.onsetAge != null) {
+          const dup = same.conditions.find((d) => d.code === c.code)!;
+          if (dup.onsetAge == null) dup.onsetAge = c.onsetAge;
+        }
+      }
+      return acc;
+    }, [])
+    .map((p) => {
+      // other 是兜底码：同一个人已经有具体病种时，兜底码就是噪声
+      const hasSpecific = p.conditions.some((c) => c.code !== "other");
+      return hasSpecific
+        ? { ...p, conditions: p.conditions.filter((c) => c.code !== "other") }
+        : p;
+    })
+    .filter((p) => p.conditions.length > 0);
+}
+
+/**
+ * 收尾归一：同一个人被拆成多条时合并，并在已有具体病种的情况下去掉兜底码 other。
+ * 分段抽取的场景必须对「合并后的整组」再跑一次——每段单独看都合理，
+ * 合起来才会暴露「姨妈：乳腺癌 + other」这种重复。
+ */
+export function finalizePersons(persons: ExtractedPerson[]): ExtractedPerson[] {
+  const merged: ExtractedPerson[] = [];
+  for (const p of persons) {
+    const same = merged.find((x) => x.relation === p.relation);
+    if (!same) {
+      merged.push({ ...p, conditions: [...p.conditions] });
+      continue;
+    }
+    for (const c of p.conditions) {
+      const dup = same.conditions.find((d) => d.code === c.code);
+      if (!dup) same.conditions.push(c);
+      else if (dup.onsetAge == null && c.onsetAge != null) dup.onsetAge = c.onsetAge;
+    }
+  }
+  return merged
+    .map((p) =>
+      p.conditions.some((c) => c.code !== "other")
+        ? { ...p, conditions: p.conditions.filter((c) => c.code !== "other") }
+        : p,
+    )
     .filter((p) => p.conditions.length > 0);
 }
 
@@ -112,8 +164,13 @@ export function isContinuation(text: string): boolean {
 }
 
 /** 把上一句的病名补进续句，让它成为可抽取的完整句 */
+const HEDGES = ["好像", "似乎", "可能", "大概", "听说", "估计"];
+
 export function expandContinuation(text: string, labels: string[]): string {
   if (labels.length === 0) return text;
-  const trimmed = text.replace(/[。；;！!？?]$/, "");
+  let trimmed = text.replace(/[。；;！!？?]$/, "");
+  // 「我爷爷好像也是」：病名在上一句已经断言过，这里的模糊词只是口头语，
+  // 留着会被不确定性过滤整条丢掉（实测漏抽爷爷）
+  for (const h of HEDGES) trimmed = trimmed.split(h).join("");
   return `${trimmed}${labels.join("、")}。`;
 }

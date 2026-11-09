@@ -13,7 +13,13 @@
 
 import { PEDIGREE_GBNF } from "./grammar.ts";
 import { DISEASES, RELATIONS } from "./lexicon.ts";
-import { expandContinuation, isContinuation, repairOtherCodes, repairRelations } from "./repair.ts";
+import {
+  expandContinuation,
+  finalizePersons,
+  isContinuation,
+  repairOtherCodes,
+  repairRelations,
+} from "./repair.ts";
 import { SYSTEM_PROMPT } from "./prompt.ts";
 
 export const LLM_URL = process.env.LLAMA_SERVER_URL ?? "http://127.0.0.1:8080";
@@ -576,6 +582,9 @@ function hasRelationWord(segment: string): boolean {
   );
 }
 
+/** 亲属健康/否认句：不含病名、也不是诊断，纯描述「他没事」 */
+const HEALTHY_CLAIM = /(没问题|没事|正常|还行|挺好|身体健康|挺硬朗|没查出)/;
+
 export function splitSegments(text: string): string[] {
   const parts = text
     .split(/[。；;]|(?<![和及与、])，/)
@@ -586,8 +595,24 @@ export function splitSegments(text: string): string[] {
   let prefix = "";
 
   for (const part of parts) {
+    // 「我自己目前没问题」这类否认句不该并进上一位亲属的片段里，
+    // 否则模型会把整段读成「上一个人没问题」，把真病句吞掉（实测漏抽父亲）
+    if (HEALTHY_CLAIM.test(part)) {
+      prefix = "";
+      continue;
+    }
     if (looksRelevant(part)) {
-      if (prefix) {
+      if (prefix && !hasRelationWord(part) && out.length > 0) {
+        // 前缀 + 无称谓的后续（「我爸高血压」+「对，就是高血压」）是同一个人的补充，
+        // 接到上一段后面；单独成段会让模型凭空造出第二个亲属（实测多出 paternal-uncle）
+        out[out.length - 1] = `${out[out.length - 1]}，${prefix}，${part}`;
+        prefix = "";
+      } else if (prefix && isContinuation(prefix)) {
+        // 「妈妈也是」是另一个人的续句，不能并进下一段，否则主语丢失
+        out.push(prefix);
+        prefix = "";
+        out.push(part);
+      } else if (prefix) {
         // 前面有无病名片段：它是这部分的主语
         out.push(`${prefix}，${part}`);
         prefix = "";
@@ -787,6 +812,8 @@ export async function extractPedigreeSplit(
     results.push(r);
   }
   const merged = mergeResults(results);
-  onStage?.({ type: "merged", persons: merged.persons.length });
-  return merged;
+  // 分段合并后再归一一次：每段单独看都合理，合起来才会出现「同一人 乳腺癌 + other」
+  const finalized = { persons: finalizePersons(merged.persons) };
+  onStage?.({ type: "merged", persons: finalized.persons.length });
+  return finalized;
 }

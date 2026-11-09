@@ -33,10 +33,10 @@ export interface RelationSpec {
  */
 export const RELATIONS: RelationSpec[] = [
   // —— 一级亲属 ——
-  { relation: "father", sex: "male", degree: 1, aliases: ["我爸", "父亲", "老爸", "老爹", "俺爸", "我爸他"] },
-  { relation: "mother", sex: "female", degree: 1, aliases: ["我妈", "母亲", "老妈", "老娘", "俺妈", "我妈她"] },
-  { relation: "brother", sex: "male", degree: 1, aliases: ["我哥", "我弟弟", "哥哥", "弟弟", "我兄弟"] },
-  { relation: "sister", sex: "female", degree: 1, aliases: ["我姐", "我妹妹", "姐姐", "妹妹", "我姐妹"] },
+  { relation: "father", sex: "male", degree: 1, aliases: ["我爸", "爸爸", "父亲", "老爸", "老爹", "俺爸", "我爸他"] },
+  { relation: "mother", sex: "female", degree: 1, aliases: ["我妈", "妈妈", "母亲", "老妈", "老娘", "俺妈", "我妈她"] },
+  { relation: "brother", sex: "male", degree: 1, aliases: ["我哥", "哥哥", "大哥", "二哥", "我弟弟", "弟弟", "我兄弟"] },
+  { relation: "sister", sex: "female", degree: 1, aliases: ["我姐", "姐姐", "大姐", "二姐", "我妹妹", "妹妹", "我姐妹"] },
   { relation: "son", sex: "male", degree: 1, aliases: ["我儿子", "儿子"] },
   { relation: "daughter", sex: "female", degree: 1, aliases: ["我女儿", "女儿"] },
 
