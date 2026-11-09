@@ -1,0 +1,25 @@
+feat(decision): 接入 typed decision model（/v1/systemone），先落地遗传模式判定
+
+协议层 src/lib/decision/
+- types.ts：choice / score / noul 三种原语，照 llama.cpp tools/server/README.md 的
+  「POST /v1/systemone」一节对齐（一次前向，不生成 token）
+- client.ts：发请求 + 严格校验（choice 必在候选内、概率和必须为 1），
+  501（非决策模型）与不可达都归入 DecisionUnavailable 交给兜底；另带 /v1/models 探测
+- hereditary.ts：把家系结构做成五选一（AD / AR / XL / 线粒体 / 证据不足），
+  置信度 < 0.55 不给结论，退回「证据不足」并保留模型原始倾向
+
+产品接线
+- app/api/decision/hereditary：入参清洗（条数/字段长度上限），
+  没配决策模型时返回 200 + source=rules，而不是 500（接口挂了不等于报错）
+- src/components/pedigree/HereditaryMode：只在 source=model 且结论非 insufficient 时显示，
+  判不了就不显示，不印一句「证据不足」充数
+
+验证
+- 新增 12 个用例（问题构造 / 响应校验 / 高置信采信 / 低置信降级 / 501 兜底 / 不配地址不发请求）
+- pnpm vitest run：206 passed；pnpm tsc --noEmit：0 错误；pnpm build 通过
+- 本地 POST /api/decision/hereditary：无决策模型时返回
+  {source:rules, mode:insufficient, reason:2 位亲属有患病记录…}，非法入参 400
+
+尚未完成：本机没有 llama-server 二进制，也没有 OpenJEV 系权重，
+所以真实决策后端还没跑起来；配置 DECISION_SERVER_URL 指向带决策模型的
+llama-server 后，遗传模式会自动出现在聊天页。

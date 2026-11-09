@@ -11,6 +11,7 @@ import type { ExtractedPerson } from "@/lib/extract/client";
 import { DISEASE_LABEL, RELATION_LABEL } from "@/lib/pedigree/viz";
 import { exposureHints } from "@/lib/risk/exposure";
 import { familySignals } from "@/lib/risk/familySignals";
+import { HereditaryMode } from "@/components/pedigree/HereditaryMode";
 import type { RelationType } from "@/lib/pedigree/types";
 import {
   AUTH_EVENT,
@@ -727,6 +728,8 @@ export default function ChatPage() {
               ))}
             </div>
           )}
+
+          <HereditaryMode persons={persons} />
 
           {exposureHints(persons, {
             smoker: factors?.smoker ?? false,
