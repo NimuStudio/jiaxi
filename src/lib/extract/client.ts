@@ -582,14 +582,16 @@ export async function extractPedigree(
     // （实测「我爷爷高血压、我奶奶糖尿病」→ 两人都变成高血压+糖尿病）。
     // 确定性修补：病种回退（other→词表真编码 / 无病名则丢弃）+ 称谓错配纠正。
     // 放在最后，只动「other」和「文中找不到依据的关系」，不碰模型判对的结论。
-    const repaired = dropUngroundedRelations(
-      text,
-      repairRelations(text, repairOtherCodes(text, grounded)),
-    );
+    // SKIP_REPAIR=1 用于评测模型本身的能力：关掉规则修补与兜底，
+    // 只保留模型原始输出（含 label->code 映射与年龄接地）。
+    const skipRepair = process.env.SKIP_REPAIR === "1";
+    const repaired = skipRepair
+      ? grounded
+      : dropUngroundedRelations(text, repairRelations(text, repairOtherCodes(text, grounded)));
     // 兜底：模型对「甲状腺结节/骨质疏松/心脏不好/做支架」这类说法会直接返回空
     // （口语留出集 v4：Precision 1.000、Recall 0.750，漏的几乎都是这种）。
     // 词表能看见、原文有称谓、无否定 → 规则直接抽，不必等模型开口。
-    const fallback = repaired.length === 0 ? ruleExtract(text) : [];
+    const fallback = !skipRepair && repaired.length === 0 ? ruleExtract(text) : [];
     const cleaned = expandSharedCondition(text, [...repaired, ...fallback]);
 
     // 模型偶尔会把同一个人输出两次（GBNF 允许数组重复），

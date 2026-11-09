@@ -1,0 +1,877 @@
+{
+ "at": "2026-11-09T14:24:42.389Z",
+ "commit": "71274c8",
+ "model": "ml/out/qwen3-base-Q4_K_M.gguf",
+ "evalFile": "data/eval/sealed-holdout-v6.jsonl",
+ "fewShot": true,
+ "n": 30,
+ "tp": 25,
+ "fp": 0,
+ "fn": 3,
+ "precision": 1,
+ "recall": 0.8928571428571429,
+ "f1": 0.9433962264150945,
+ "ageChecked": 25,
+ "ageCorrect": 25,
+ "ageAcc": 1,
+ "exact": 27,
+ "exactRate": 0.9,
+ "failures": [],
+ "perCase": [
+  {
+   "id": "s01",
+   "input": "我爸前年查出高血压。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s02",
+   "input": "我奶奶糖尿病十几年了。",
+   "expected": [
+    {
+     "relation": "paternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s03",
+   "input": "外公去年脑梗。",
+   "expected": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "stroke",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "stroke",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s04",
+   "input": "我妈骨质疏松。",
+   "expected": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s05",
+   "input": "我哥痛风。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gout",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gout",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s06",
+   "input": "我姐甲状腺结节。",
+   "expected": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "sister",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s07",
+   "input": "外婆心脏不好。",
+   "expected": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s08",
+   "input": "我弟哮喘好多年。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "asthma",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "asthma",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s09",
+   "input": "我叔做过支架。",
+   "expected": [
+    {
+     "relation": "paternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "coronary-heart-disease",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [],
+   "missing": [
+    "paternal-uncle|coronary-heart-disease"
+   ],
+   "extra": [],
+   "exact": false
+  },
+  {
+   "id": "s10",
+   "input": "我妈贫血。",
+   "expected": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "other",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s11",
+   "input": "爷爷肺癌走的。",
+   "expected": [
+    {
+     "relation": "paternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "lung-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "lung-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s12",
+   "input": "我外公胃癌。",
+   "expected": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gastric-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "gastric-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s13",
+   "input": "我爸和我妈都高血压。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s14",
+   "input": "我哥血糖高。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s15",
+   "input": "母亲乳腺癌。",
+   "expected": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s16",
+   "input": "我自己血压偏高。",
+   "expected": [
+    {
+     "relation": "self",
+     "sex": "unknown",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "self",
+     "sex": "unknown",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s17",
+   "input": "姥爷慢阻肺。",
+   "expected": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "copd",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "copd",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s18",
+   "input": "奶奶记性差不记事。",
+   "expected": [],
+   "actual": [],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s19",
+   "input": "我爸身体挺好。",
+   "expected": [],
+   "actual": [],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s20",
+   "input": "我妹没得过大病。",
+   "expected": [],
+   "actual": [],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s21",
+   "input": "爸爸四十八岁心梗。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "myocardial-infarction",
+       "onsetAge": 48
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "myocardial-infarction",
+       "onsetAge": 48
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s22",
+   "input": "我二叔糖尿病。",
+   "expected": [
+    {
+     "relation": "paternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s23",
+   "input": "姑姑乳腺癌。",
+   "expected": [
+    {
+     "relation": "paternal-aunt",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "paternal-aunt",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "breast-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s24",
+   "input": "我舅舅心衰。",
+   "expected": [
+    {
+     "relation": "maternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "heart-failure",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-uncle",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "heart-failure",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s25",
+   "input": "外婆和我妈都糖尿病。",
+   "expected": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "maternal-grandmother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    },
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "type2-diabetes",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s26",
+   "input": "我爸结直肠癌。",
+   "expected": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "colorectal-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "father",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "colorectal-cancer",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s27",
+   "input": "我哥血压有点高。",
+   "expected": [
+    {
+     "relation": "brother",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [],
+   "missing": [
+    "brother|hypertension"
+   ],
+   "extra": [],
+   "exact": false
+  },
+  {
+   "id": "s28",
+   "input": "我姥爷心脏放过支架。",
+   "expected": [
+    {
+     "relation": "maternal-grandfather",
+     "sex": "male",
+     "conditions": [
+      {
+       "code": "coronary-heart-disease",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [],
+   "missing": [
+    "maternal-grandfather|coronary-heart-disease"
+   ],
+   "extra": [],
+   "exact": false
+  },
+  {
+   "id": "s29",
+   "input": "我妈也是高血压。",
+   "expected": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "actual": [
+    {
+     "relation": "mother",
+     "sex": "female",
+     "conditions": [
+      {
+       "code": "hypertension",
+       "onsetAge": null
+      }
+     ]
+    }
+   ],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  },
+  {
+   "id": "s30",
+   "input": "老丈人有高血压。",
+   "expected": [],
+   "actual": [],
+   "missing": [],
+   "extra": [],
+   "exact": true
+  }
+ ]
+}
