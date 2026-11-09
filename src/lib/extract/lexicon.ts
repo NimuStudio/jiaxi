@@ -156,7 +156,7 @@ export const DISEASES: DiseaseSpec[] = [
   { category: "心脑血管", code: "atrial-fibrillation", label: "房颤", nounAliases: ["房颤", "心房颤动"] },
 
   // —— 代谢与肾脏 ——
-  { category: "代谢与肾脏", code: "type2-diabetes", label: "糖尿病", nounAliases: ["糖尿病"], verbAliases: ["血糖高"] },
+  { category: "代谢与肾脏", code: "type2-diabetes", label: "糖尿病", nounAliases: ["糖尿病", "血糖有点高", "血糖稍高"], verbAliases: ["血糖高"] },
   { category: "代谢与肾脏", code: "gout", label: "痛风", nounAliases: ["痛风"] },
   {
     category: "代谢与肾脏",
@@ -203,7 +203,10 @@ export const DISEASES: DiseaseSpec[] = [
     label: "其他",
     // 这些词表故意不给细编码，但必须能「看见」——否则整句被当成无病名丢掉，
     // 用户说的贫血、骨质疏松就凭空消失了（宁可归到「其他」，也不吞掉）
-    nounAliases: ["贫血", "骨质疏松", "甲状腺结节", "结石", "胃病", "心脏不好", "心脏有问题", "心脏有点问题"],
+    nounAliases: [
+      "贫血", "骨质疏松", "甲状腺结节", "结石", "胃病",
+      "心脏不好", "心脏不太好", "心脏有问题", "心脏有点问题",
+    ],
   },
 ];
 
