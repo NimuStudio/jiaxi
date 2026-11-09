@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAccount } from "@/lib/auth/account-client";
+import { METRICS } from "@/lib/metrics";
 
 // three.js 只在浏览器跑：动态加载，避免进服务端渲染，也不拖慢首屏 HTML。
 const DnaScene3D = dynamic(() => import("@/components/home/DnaScene3D").then((m) => m.DnaScene3D), {
@@ -292,7 +293,9 @@ export default function LoginPage() {
         </span>
         <span className="login-topmeta-col">
           <span className="login-topmeta">传智杯 · AI 健康与生活服务</span>
-          <span className="login-colophon">26 种疾病 · 3 套风险模型 · 100% 本机推理</span>
+          <span className="login-colophon">
+            {METRICS.diseaseCount} 种疾病 · {METRICS.riskModelCount} 套风险模型 · {METRICS.localInferencePct}% 本机推理
+          </span>
         </span>
       </header>
 
@@ -463,19 +466,19 @@ export default function LoginPage() {
 
       <footer className="login-stats-strip">
         <div className="login-stat">
-          <b>26</b>
+          <b>{METRICS.diseaseCount}</b>
           <span>种疾病可识别</span>
         </div>
         <div className="login-stat">
-          <b>3</b>
+          <b>{METRICS.riskModelCount}</b>
           <span>套风险模型</span>
         </div>
         <div className="login-stat">
-          <b>100%</b>
+          <b>{METRICS.localInferencePct}%</b>
           <span>本机推理</span>
         </div>
         <div className="login-stat">
-          <b>0.982</b>
+          <b title={METRICS.extractionEvalSet}>{METRICS.extractionF1Text}</b>
           <span>口语留出集抽取 F1</span>
         </div>
         <p className="login-stats-note">FINDRISC · China-PAR ｜ 数据保存在本机 MySQL，不上传</p>

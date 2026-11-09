@@ -1,23 +1,16 @@
-audit: 全项目审查 —— 修 1 处无上限入参与 2 处过期数字（幻视）
+extract+ui: 修 v8 最后一条失败（留出集 v9 满分）；对外数字收敛到单一来源并加校验
 
-## 幻视（界面数字与代码/文档不一致）
-1. 登录页写「25 种疾病可识别」，实际 DISEASES.length = 26（colophon 同处也写了 25）。
-2. 登录页写「1.000 口语集抽取 F1」—— 这是我们自己判定为不可对外报数的开发集数字；
-   改为 0.982（封存留出集 v8 的干净成绩），文案改为「口语留出集抽取 F1」。
-3. tech-design 里「词表从 9 种扩到 25 种」同步为 26 种，并重新生成 tech-design.html。
+## 数据
+- v8 唯一失败「我叔做过两次支架」：词表加裸「支架」兜住所有变体（做过两次/下了三个…）
+  代价是领域外可能误命中，但在家族病史语境里几乎只指心脏支架，且下游还有「必须能回查原文」
+- 全新留出集 v9（30 条，只跑一次）：P 1.000 / R 1.000 / F1 1.000 / 年龄 1.000 / 完全匹配 30/30
+  干净留出集轨迹：v2 0.877 → v3 0.868 → v5 0.912 → v7 0.966 → v8 0.982 → v9 1.000
 
-## 逻辑/健壮性
-4. /api/agent 的 parsePersons 没有条数上限，数组会序列化进模型上下文；
-   加 slice(0, 200)，与 /api/me/pedigree 的上限保持一致。
+## 防幻视：对外数字单一来源
+- 新增 src/lib/metrics.ts：疾病种数 / 风险模型数 / 本机推理比例 / 抽取 F1 与其评测集名
+  登录页统计条与竖排 colophon 全部改成从 METRICS 取值，不再手写数字
+- 新增 src/lib/metrics.test.ts：校验 diseaseCount == DISEASES.length、
+  F1 文本与数值一致、F1 与 docs/eval-results 下最近一份留出集产物一致（容差 0.001）
+  做了反向验证：把 F1 改成 0.95，测试立刻失败（0.05 > 0.001）
 
-## 查过确认没问题的（记录，避免重复怀疑）
-- localStorage 读写、JSON.parse 全部有 try/catch（chat 页、RiskFactorsForm、OCR 解析）
-- 无空 catch、无 TODO/FIXME、无遗留 console.log
-- 代码里没有外部网络请求（唯一的 https 出现在注释里的论文链接）→「100% 本机推理」成立
-- China-PAR 年龄越界（<35 或 >74）界面有「仅供参考」提示；PLCO 有 outOfRange 标记
-- China-PAR「论文 Table 2 八个验证点、偏差 ≤0.35pp」有对应单测（8 个 it）
-- 云端同步有三重门闩（demoMode / account / cloudSyncedRef），演示数据与旧数据都不会覆盖云端
-- extract/text ≤2000、ocr/image ≤11MB、decision/persons ≤40、pedigree/persons ≤200 均有上限
-- agent/extract/ocr 三个重接口都有限流
-
-233 passed / tsc 0 / build 通过
+237 passed / tsc 0 / build 通过
