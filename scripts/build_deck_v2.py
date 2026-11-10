@@ -214,6 +214,7 @@ def f1_chart(s, x, y, w, h, values, labels, notes):
 
 
 ICONS = os.path.join(ART, "icons")
+BRAND = os.path.join(ART, "brand")
 
 
 def holdout_stats():
@@ -719,7 +720,7 @@ BANDS = [
 
 band_x, band_w = 2.30, 8.55
 note_x = 11.05
-top, band_h, band_gap = 1.98, 0.74, 0.15
+top, band_h, band_gap = 1.96, 0.68, 0.12
 tone_of = [PRIMARY, PRIMARY, RECLAIM, RECLAIM, DANGER]
 
 for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
@@ -767,7 +768,22 @@ for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
         ar.fill.solid(); ar.fill.fore_color.rgb = LINE2
         ar.line.fill.background(); ar.shadow.inherit = False
 
-tf = text_box(s, M, 6.42, W, 0.3)
+# 底部：技术栈官方图标（品牌矢量，来自 simple-icons）
+tf = text_box(s, M, 5.96, 1.6, 0.28)
+para(tf, "技术栈", size=9.5, bold=True, color=PRIMARY, first=True)
+stack = [("nextjs", "Next.js"), ("react", "React"), ("typescript", "TypeScript"),
+         ("nodejs", "Node.js"), ("python", "Python"), ("mysql", "MySQL"),
+         ("nvidia", "CUDA")]
+sx = M + 0.95
+for name, label in stack:
+    p = os.path.join(BRAND, name + ".png")
+    if os.path.exists(p):
+        s.shapes.add_picture(p, Inches(sx), Inches(5.99), Inches(0.26), Inches(0.26))
+    tf = text_box(s, sx + 0.31, 6.00, 1.05, 0.26)
+    para(tf, label, size=9, color=MUTED, first=True)
+    sx += 0.31 + 0.98
+
+tf = text_box(s, M, 6.36, W, 0.3)
 para(tf, "依赖方向自上而下：上层可换（表现层 / 接口层），下层稳定（领域层纯函数、引擎层确定性）。",
      size=9.5, color=MUTED, first=True)
 footer(s, 10)
@@ -777,14 +793,21 @@ s = new_slide(2, "部署视图：一台电脑跑完全部，只有公网入口�
               icon="layers", sub="评委常问的三件事——跑在哪、要不要联网、花多少钱")
 
 
-def dep_box(x, y, w, h, icon=None, title="", sub="", fill=SURFACE):
+def dep_box(x, y, w, h, icon=None, title="", sub="", fill=SURFACE, brand=None):
     rect(s, x, y, w, h, fill=fill, line=LINE2)
     tx = x + 0.16
-    if icon:
-        path = os.path.join(ICONS, icon + ".png")
-        if os.path.exists(path):
-            s.shapes.add_picture(path, Inches(x + 0.14), Inches(y + 0.14), Inches(0.22), Inches(0.22))
-            tx = x + 0.44
+    path = None
+    if brand:
+        cand = os.path.join(BRAND, brand + ".png")
+        if os.path.exists(cand):
+            path = cand
+    if path is None and icon:
+        cand = os.path.join(ICONS, icon + ".png")
+        if os.path.exists(cand):
+            path = cand
+    if path:
+        s.shapes.add_picture(path, Inches(x + 0.14), Inches(y + 0.14), Inches(0.24), Inches(0.24))
+        tx = x + 0.46
     tf = text_box(s, tx, y + 0.10, w - (tx - x) - 0.14, 0.3)
     para(tf, title, size=10.5, bold=True, color=TEXT, first=True)
     if sub:
@@ -809,20 +832,24 @@ frame.line.color.rgb = RECLAIM
 frame.line.width = Pt(1.25)
 frame.line.dash_style = 4
 frame.shadow.inherit = False
-rect(s, 3.95, 1.96, 2.75, 0.30, fill=RECLAIM_SOFT, line=RECLAIM)
-tf = text_box(s, 3.95, 1.99, 2.75, 0.24, align=PP_ALIGN.CENTER)
-para(tf, "同一台电脑 · RTX 5080 16 GB", size=9, bold=True, color=RECLAIM, first=True,
-     align=PP_ALIGN.CENTER)
+rect(s, 3.95, 1.96, 3.55, 0.30, fill=RECLAIM_SOFT, line=RECLAIM)
+if os.path.exists(os.path.join(BRAND, "nvidia.png")):
+    s.shapes.add_picture(os.path.join(BRAND, "nvidia.png"), Inches(4.02), Inches(2.00),
+                         Inches(0.22), Inches(0.22))
+tf = text_box(s, 4.32, 1.99, 3.10, 0.24)
+para(tf, "同一台电脑 · RTX 5080 16 GB · CUDA", size=9, bold=True, color=RECLAIM, first=True)
 
-dep_box(3.85, 2.50, 6.10, 0.82, "chip", "Next.js 站点 :5173",
-        "页面 + API 路由（extract / ocr / agent / decision）")
+dep_box(3.85, 2.50, 6.10, 0.82, brand="nextjs", title="Next.js 站点 :5173",
+        sub="页面 + API 路由（extract / ocr / agent / decision）")
 
 # 标题写「角色」，端口放说明行：直接写 llama-server :8080 会在 1.9" 的框里折行
 for i, (ic, t, sb) in enumerate([("chip", "抽取模型", "llama-server :8080\nQwen3-1.7B + GBNF"),
                                  ("camera", "视觉模型", "llama-server :8082\n化验单识别"),
                                  ("db", "MySQL", ":3306\n家系 · 体检 · 会话")]):
     bx = 3.85 + i * 2.10
-    dep_box(bx, 3.78, 1.90, 0.95, ic, t, sb)
+    # MySQL 用官方 logo；llama.cpp 没有官方品牌图，沿用自绘线性图标
+    dep_box(bx, 3.78, 1.90, 0.95, icon=ic, title=t, sub=sb,
+            brand="mysql" if ic == "db" else None)
     ln = s.shapes.add_connector(1, Inches(bx + 0.95), Inches(3.32), Inches(bx + 0.95), Inches(3.78))
     ln.line.color.rgb = LINE2
     ln.line.width = Pt(1.25)
