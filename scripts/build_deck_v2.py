@@ -616,6 +616,156 @@ para(tf, "现场可演示：口述家族史 → 家系图 → 三套风险 → �
 para(tf, "代码与评测产物：留出集 6 套、每套 30 条，docs/eval-results 可逐条复核", size=11.5, color=MUTED, line=1.6)
 
 
+# ---------------- 动画与切换 ----------------
+def _ns(tag):
+    return "{http://schemas.openxmlformats.org/presentationml/2006/main}" + tag
+
+
+def add_transition(slide, kind="fade"):
+    """页面切换：淡入。放在 clrMapOvr 之后、timing 之前（schema 顺序）。"""
+    from lxml import etree
+    sld = slide._element
+    for old in sld.findall(_ns("transition")):
+        sld.remove(old)
+    t = etree.SubElement(sld, _ns("transition"))
+    t.set("advClick", "1")
+    etree.SubElement(t, _ns(kind))
+
+
+def add_entrance(slide, groups, dur=400):
+    """给 shape id 分组加「淡入」进入动画。
+
+    groups: [[id, id], [id], ...] —— 第一组随页面自动播放，其余每点一次出一组。
+    结构（par → par → par → set + animEffect）与 PowerPoint 自己写出的一致；
+    delay="indefinite" 的那组就是「等一次点击」。
+    """
+    from lxml import etree
+    sld = slide._element
+    for old in sld.findall(_ns("timing")):
+        sld.remove(old)
+
+    A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+    P = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
+    nid = [1]
+
+    def cid():
+        nid[0] += 1
+        return str(nid[0])
+
+    timing = etree.SubElement(sld, P + "timing")
+    tnLst = etree.SubElement(timing, P + "tnLst")
+    par0 = etree.SubElement(tnLst, P + "par")
+    ctn0 = etree.SubElement(par0, P + "cTn")
+    ctn0.set("id", cid()); ctn0.set("dur", "indefinite")
+    ctn0.set("restart", "never"); ctn0.set("nodeType", "tmRoot")
+    child0 = etree.SubElement(ctn0, P + "childTnLst")
+    seq = etree.SubElement(child0, P + "seq")
+    seq.set("concurrent", "1"); seq.set("nextAc", "seek")
+    ctnSeq = etree.SubElement(seq, P + "cTn")
+    ctnSeq.set("id", cid()); ctnSeq.set("dur", "indefinite"); ctnSeq.set("nodeType", "mainSeq")
+    seqChild = etree.SubElement(ctnSeq, P + "childTnLst")
+
+    for gi, ids in enumerate(groups):
+        outer = etree.SubElement(seqChild, P + "par")
+        ctnOuter = etree.SubElement(outer, P + "cTn")
+        ctnOuter.set("id", cid()); ctnOuter.set("fill", "hold")
+        stOuter = etree.SubElement(ctnOuter, P + "stCondLst")
+        condOuter = etree.SubElement(stOuter, P + "cond")
+        condOuter.set("delay", "0" if gi == 0 else "indefinite")
+
+        mid = etree.SubElement(ctnOuter, P + "childTnLst")
+        parMid = etree.SubElement(mid, P + "par")
+        ctnMid = etree.SubElement(parMid, P + "cTn")
+        ctnMid.set("id", cid()); ctnMid.set("fill", "hold")
+        stMid = etree.SubElement(ctnMid, P + "stCondLst")
+        etree.SubElement(stMid, P + "cond").set("delay", "0")
+
+        leafHost = etree.SubElement(ctnMid, P + "childTnLst")
+        for spid in ids:
+            parLeaf = etree.SubElement(leafHost, P + "par")
+            ctnLeaf = etree.SubElement(parLeaf, P + "cTn")
+            ctnLeaf.set("id", cid())
+            ctnLeaf.set("presetID", "10")        # 10 = Fade
+            ctnLeaf.set("presetClass", "entr")
+            ctnLeaf.set("presetSubtype", "0")
+            ctnLeaf.set("fill", "hold")
+            ctnLeaf.set("grpId", "0")
+            ctnLeaf.set("nodeType", "afterEffect" if gi == 0 else "clickEffect")
+            stLeaf = etree.SubElement(ctnLeaf, P + "stCondLst")
+            etree.SubElement(stLeaf, P + "cond").set("delay", "0")
+
+            leafKids = etree.SubElement(ctnLeaf, P + "childTnLst")
+
+            # 1) 先把不透明度设为 0（否则淡入前会先闪一下）
+            setEl = etree.SubElement(leafKids, P + "set")
+            cBhvr = etree.SubElement(setEl, P + "cBhvr")
+            ctnSet = etree.SubElement(cBhvr, P + "cTn")
+            ctnSet.set("id", cid()); ctnSet.set("dur", "1"); ctnSet.set("fill", "hold")
+            stSet = etree.SubElement(ctnSet, P + "stCondLst")
+            etree.SubElement(stSet, P + "cond").set("delay", "0")
+            tgt = etree.SubElement(cBhvr, P + "tgtEl")
+            spTgt = etree.SubElement(tgt, P + "spTgt")
+            spTgt.set("spid", str(spid))
+            attrs = etree.SubElement(cBhvr, P + "attrNameLst")
+            etree.SubElement(attrs, P + "attrName").text = "style.opacity"
+            to = etree.SubElement(setEl, P + "to")
+            etree.SubElement(to, P + "strVal").set("val", "0")
+
+            # 2) 淡入
+            eff = etree.SubElement(leafKids, P + "animEffect")
+            eff.set("transition", "in"); eff.set("filter", "fade")
+            cb2 = etree.SubElement(eff, P + "cBhvr")
+            ctn2 = etree.SubElement(cb2, P + "cTn")
+            ctn2.set("id", cid()); ctn2.set("dur", str(dur))
+            tgt2 = etree.SubElement(cb2, P + "tgtEl")
+            etree.SubElement(tgt2, P + "spTgt").set("spid", str(spid))
+
+    prev = etree.SubElement(seq, P + "prevCondLst")
+    c1 = etree.SubElement(prev, P + "cond")
+    c1.set("evt", "onPrev"); c1.set("delay", "0")
+    etree.SubElement(etree.SubElement(c1, P + "tgtEl"), P + "sldTgt")
+    nxt = etree.SubElement(seq, P + "nextCondLst")
+    c2 = etree.SubElement(nxt, P + "cond")
+    c2.set("evt", "onNext"); c2.set("delay", "0")
+    etree.SubElement(etree.SubElement(c2, P + "tgtEl"), P + "sldTgt")
+
+
+def animate_all(presentation, max_groups=3):
+    """内容形状按「上到下、左到右」排序后分成最多 max_groups 组：
+
+    第 1 组随页面自动出现（标题 + 副标题），其余每组一次点击。
+    一页最多按两次 —— 8~10 分钟的答辩不该把时间花在按空格上。
+    """
+    for idx, slide in enumerate(presentation.slides):
+        add_transition(slide, "fade")
+        picked = []
+        for shp in slide.shapes:
+            try:
+                top = shp.top / 914400.0
+                w = shp.width / 914400.0
+                h = shp.height / 914400.0
+            except TypeError:
+                continue
+            if top < 0.95:          # 顶部导航条与左侧主色条
+                continue
+            if w > 13.0 or h > 7.0:  # 整屏背景
+                continue
+            if w * h < 0.15:        # 分隔细线
+                continue
+            picked.append(((shp.top, shp.left), shp.shape_id))
+        picked.sort(key=lambda t: t[0])
+        ids = [i for _, i in picked]
+        k = min(max_groups, len(ids))
+        if k == 0:
+            continue
+        size = -(-len(ids) // k)          # ceil，保证组数不超过 k
+        groups = [ids[i:i + size] for i in range(0, len(ids), size)]
+        add_entrance(slide, groups)
+
+
+animate_all(prs)
+
+
 def flatten(presentation):
     from lxml import etree
     A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
@@ -658,7 +808,8 @@ for i, slide in enumerate(prs.slides):
         slide.notes_slide.notes_text_frame.text = NOTES[i]
 
 flatten(prs)
-out = os.path.join(CWD, "deliverables", "家系-答辩-v2.pptx")
+# 输出名可用环境变量覆盖：PowerPoint 打开着目标文件时无法写入
+out = os.path.join(CWD, "deliverables", os.environ.get("DECK_OUT", "家系-答辩-v2.pptx"))
 os.makedirs(os.path.dirname(out), exist_ok=True)
 prs.save(out)
 print("已生成:", out, "| 页数:", len(prs.slides._sldIdLst))
