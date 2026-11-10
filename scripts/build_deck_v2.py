@@ -996,6 +996,37 @@ para(tf, "判断标准只有一条：这件事换个人、换台机器，答案�
      size=11, bold=True, color=TEXT, first=True)
 footer(s, 12)
 
+# ============ AI 的三道保险 ============
+s = new_slide(2, "让模型不跑偏的三道保险：语法、兜底、评测", icon="route",
+              sub="每一道都能举出一个真实失败的例子——不是设计时想到的，是踩到之后补的")
+
+layers3 = [
+    ("chip", "语法层 · GBNF 约束解码",
+     "解码阶段就把非法 token 屏蔽掉：模型不是「事后被校验」，而是根本生成不出词表外的值。",
+     "例：病名只能是词表里的 code，不可能吐出 {\"code\": \"heart-attack\"}"),
+    ("bulb", "确定层 · 词表与规则兜底",
+     "模型抽不出来时，用词表在原文里找最长命中；三条兜底规则都在 repair.ts 里可回查。",
+     "例：「放了支架」→ 冠心病；模型吐泛称「癌症」→ 词表找回「肝癌」；「我爸和我叔都心梗」→ 补齐第二人"),
+    ("target", "质量层 · 评测与降级",
+     "六套留出集只跑一次；决策模型置信度门槛 0.55、打分路径 0.8；超时 30 秒自动降级。",
+     "例：只渲染 source=model 的真决策结果，内部信号不进 UI；校验不过就退回规则判定"),
+]
+for i, (ic, h1, h2, h3) in enumerate(layers3):
+    y = 2.02 + i * 1.42
+    rect(s, M, y, W, 1.24, fill=SURFACE, line=LINE)
+    s.shapes.add_picture(icon_p(ic), Inches(M + 0.26), Inches(y + 0.18), Inches(0.40), Inches(0.40))
+    tf = text_box(s, M + 0.82, y + 0.14, 4.3, 0.32)
+    para(tf, h1, size=12.5, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, M + 0.82, y + 0.50, 4.35, 0.66)
+    para(tf, h2, size=9.5, color=TEXT, first=True, line=1.3)
+    tf = text_box(s, M + 5.55, y + 0.14, 6.0, 0.98, anchor=MSO_ANCHOR.MIDDLE)
+    para(tf, h3, size=9.5, color=MUTED, first=True, line=1.35)
+
+tf = text_box(s, M, 6.38, W, 0.3)
+para(tf, "三道保险的顺序很重要：能靠语法解决的不用规则，能靠规则解决的不用模型，剩下的才交给评测兜底。",
+     size=9.5, color=MUTED, first=True)
+footer(s, 14)
+
 # ============ P9 准确性 ============
 s = new_slide(3, "口语抽取：留出集 F1 从 0.877 到 1.000", icon="target",
               sub="每套留出集都是全新措辞、只跑一次；跑过即降级为开发集，不再对外报数")
@@ -1099,45 +1130,104 @@ for i, (h1, h2) in enumerate(eng):
     para(tf, h2, size=9, color=MUTED, first=True, line=1.25)
 footer(s, 15)
 
-# ============ P10 判定选型 ============
-s = new_slide(3, "同一批样本上的对比：为什么最后没用它", icon="scales")
+# ============ JEV 实测：40% 与那三个坑 ============
+s = new_slide(3, "实测：18.5 GB 的决策模型拿了 40%，输在「没有遗传学先验」", icon="chart",
+              sub="同一批均衡样本（每类 5 条），同一份输入，逐类看差距在哪")
+
 rows = [
-    ("OpenJev-Q4（18.5 GB，通用决策模型）", "40%", "6.3 s", "隐性 / X 连锁 / 线粒体 三类全错"),
-    ("结构逻辑回归（12 维特征，2.3 KB）", "96%", "< 0.1 s", "同一批均衡样本，每类 5 条"),
+    ("常染色体显性", "100%", "100%"),
+    ("常染色隐性", "0%（全判证据不足）", "高"),
+    ("X 连锁", "0%（4/5 判证据不足）", "高"),
+    ("线粒体", "0%（5/5 判成显性）", "高"),
+    ("证据不足", "100%", "高"),
 ]
-tbl = s.shapes.add_table(len(rows) + 1, 4, Inches(M), Inches(2.15), Inches(W), Inches(1.7)).table
-for j, wd in enumerate([4.9, 1.4, 1.5, 3.9]):
-    tbl.columns[j].width = Inches(wd)
-for j, h in enumerate(["方案", "准确率", "单次延迟", "说明"]):
-    cell = tbl.cell(0, j); cell.text = ""
-    r = cell.text_frame.paragraphs[0].add_run(); r.text = h
-    set_font(r, 11, True, MUTED)
-    cell.fill.solid(); cell.fill.fore_color.rgb = PRIMARY_SOFT
-for i, row in enumerate(rows, start=1):
-    for j, val in enumerate(row):
-        cell = tbl.cell(i, j); cell.text = ""
-        r = cell.text_frame.paragraphs[0].add_run(); r.text = val
-        set_font(r, 11.5, j == 1, TEXT if j != 3 else MUTED)
-        cell.fill.solid(); cell.fill.fore_color.rgb = SURFACE
-for row in tbl.rows:
-    row.height = Inches(0.5)
-    for cell in row.cells:
-        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
-        cell.margin_left = Inches(0.14)
-        cell.margin_right = Inches(0.1)
+rect(s, M, 2.02, 6.15, 0.34, fill=PRIMARY_SOFT, line=None)
+heads = [("类别", M + 0.16), ("OpenJev-Q4", M + 2.55), ("结构模型", M + 4.55)]
+for h, hx in heads:
+    tf = text_box(s, hx, 2.06, 2.0, 0.26)
+    para(tf, h, size=9, bold=True, color=MUTED, first=True)
+for i, (cat, jev, st) in enumerate(rows):
+    y = 2.42 + i * 0.46
+    tf = text_box(s, M + 0.16, y, 2.35, 0.3)
+    para(tf, cat, size=9.5, color=TEXT, first=True)
+    tf = text_box(s, M + 2.55, y, 1.9, 0.3)
+    para(tf, jev, size=9.5, bold=True, color=DANGER if jev.startswith("0%") else TEXT, first=True)
+    tf = text_box(s, M + 4.55, y, 1.5, 0.3)
+    para(tf, st, size=9.5, color=RECLAIM, first=True)
+    if i < len(rows) - 1:
+        rect(s, M + 0.16, y + 0.36, 5.8, 0.006, fill=LINE, radius=False)
 
-tf = text_box(s, M, 4.15, W, 1.1)
-para(tf, "结论：输出空间被 GBNF + 词表 + few-shot 收得很窄，问题不在模型容量，而在「家系结构本身就能判」。",
-     size=12.5, bold=True, first=True, line=1.45)
-para(tf, "默认后端换成结构模型（毫秒级、无需 18 GB 权重）；OpenJev 保留为可切换的对照后端。协议层照 TypeSafe /v1/systemone 实现，换官方 API 只改一个环境变量。",
-     size=11, color=MUTED, line=1.45)
+rect(s, M, 4.86, 6.15, 0.62, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.18, 4.94, 5.8, 0.5)
+rich(tf, [("总体  ", True, MUTED), ("40%", True, DANGER), ("  vs  ", False, MUTED),
+          ("96%", True, RECLAIM), ("     单次延迟 6.3 s vs 0.005–0.07 s     ECE 0.401", False, MUTED)],
+     size=10.5, first=True)
 
-rect(s, M, 5.45, W, 1.05, fill=SURFACE, line=LINE)
-tf = text_box(s, M + 0.28, 5.56, W - 0.56, 0.85)
-para(tf, "产品里的样子：模型给出五种模式的概率 → 最高项达门槛才显示结论；不达门槛退回「证据不足」，",
-     size=11, first=True, line=1.35)
-para(tf, "并列出缺什么让用户补一句（例如「母系亲属是否患病」），而不是硬给一个模式。", size=11, line=1.35)
-footer(s, 10)
+tf = text_box(s, 6.95, 2.02, 5.6, 0.3)
+para(tf, "调参踩到的三个坑（都写进了代码注释）", size=11, bold=True, color=PRIMARY, first=True)
+pits = [
+    ("01", "内部代码直接喂模型", "\"myocardial-infarction\" 判不出来，必须翻成「心肌梗死」"),
+    ("02", "指令里夹 JSON 措辞", "「onsetAge 可为 null」让同一家系的显性概率从 66% 掉到 48%"),
+    ("03", "选项描述填了判据", "给每个模式配「每代都有患者…」等于提前告诉答案，显性概率掉到 40%"),
+]
+for i, (num, h1, h2) in enumerate(pits):
+    y = 2.40 + i * 1.02
+    rect(s, 6.95, y, 5.6, 0.92, fill=SURFACE, line=LINE)
+    tf = text_box(s, 7.10, y + 0.10, 0.6, 0.3)
+    para(tf, num, size=10, bold=True, color=DANGER, first=True)
+    tf = text_box(s, 7.62, y + 0.08, 4.75, 0.3)
+    para(tf, h1, size=10, bold=True, color=TEXT, first=True)
+    tf = text_box(s, 7.62, y + 0.38, 4.75, 0.5)
+    para(tf, h2, size=8.5, color=MUTED, first=True, line=1.3)
+
+rect(s, M, 5.62, W, 0.98, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.28, 5.72, W - 0.56, 0.8)
+para(tf, "还试过用文本模型的 logprobs 打分（分诊 LoRA）：它给隐性 71%，而两代男性发病更像显性——判不可信，",
+     size=10, first=True, line=1.35)
+para(tf, "于是门槛抬到 0.8 且结果不进界面。结论：通用决策模型不知道家系结构意味着什么，12 维特征就够了。",
+     size=10, color=MUTED, line=1.35)
+footer(s, 16)
+
+# ============ 判定链路（产品里怎么用） ============
+s = new_slide(3, "产品里的一条链路：从五个概率，到一句用户看得懂的话", icon="route",
+              sub="判定不是把模型的答案直接印在屏幕上，中间有四道处理")
+
+steps = [
+    ("tree", "输入家系", "关系 / 性别 / 病名 / 发病年龄；缺什么记什么"),
+    ("chart", "后端出概率", "五种模式的概率；默认本机结构模型，可切决策模型"),
+    ("scales", "过门槛", "决策 0.55 / 结构 0.7 / 打分 0.8——不达标就不下结论"),
+    ("chat", "给一句话或一个追问", "有结论就写「提示」；没结论就列出缺什么，让用户补一句"),
+]
+cw3 = (W - 0.45) / 4
+for i, (ic, h1, h2) in enumerate(steps):
+    x = M + i * (cw3 + 0.15)
+    rect(s, x, 2.02, cw3, 1.86, fill=SURFACE, line=LINE)
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22), Inches(2.18), Inches(0.36), Inches(0.36))
+    tf = text_box(s, x + 0.68, 2.20, cw3 - 0.9, 0.32)
+    para(tf, h1, size=11, bold=True, color=TEXT, first=True)
+    tf = text_box(s, x + 0.22, 2.66, cw3 - 0.44, 1.1)
+    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.35)
+    if i < 3:
+        ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + cw3 + 0.01), Inches(2.86),
+                                Inches(0.12), Inches(0.16))
+        ar.fill.solid(); ar.fill.fore_color.rgb = LINE2; ar.line.fill.background(); ar.shadow.inherit = False
+
+rect(s, M, 4.12, 6.5, 1.95, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.26, 4.24, 6.0, 0.3)
+para(tf, "界面上会出现的两种结果", size=10.5, bold=True, color=PRIMARY, first=True)
+tf = text_box(s, M + 0.26, 4.60, 6.0, 1.35)
+rich(tf, [("有结论", True, RECLAIM), ("：「提示：常染色体显性遗传 · 置信度 87%」，并补一句「不是诊断」", False, TEXT)],
+     size=9.5, line=1.5)
+rich(tf, [("没结论", True, DANGER), ("：「证据不足」+ 列出缺什么（父系是否患病 / 缺发病年龄 / 性别单一）", False, TEXT)],
+     size=9.5, line=1.5)
+
+rect(s, 7.55, 4.12, 5.0, 1.95, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, 7.80, 4.24, 4.5, 1.7)
+para(tf, "为什么这样设计", size=10.5, bold=True, color=PRIMARY, first=True)
+para(tf, "· 门槛不达标时，给一个错结论比不给结论更糟", size=9.5, line=1.45)
+para(tf, "· 内部打分信号（logprobs）不进界面，只做调试用", size=9.5, line=1.45)
+para(tf, "· 追问是收集证据，不是把判断推回给用户", size=9.5, line=1.45)
+footer(s, 18)
 
 # ============ P11 微调 A/B ============
 s = new_slide(3, "我们真的微调了一次，然后被数据否掉", icon="flask")
@@ -1548,19 +1638,21 @@ NOTES = [
     "开场 15 秒：家系做什么、为谁做。作品编号与省份等待填。",
     "目录：六个问题一条主线。不要逐条念，指一下结构即可。",
     "痛点三层；右边给出关键论据——家族史在三套引擎里都有权重（FINDRISC 占 5/26 分）。",
-    "一句真话：停顿两秒再翻页。这一页只用一句话把问题钉住。",
+    "一句真话：停顿两秒再翻页。这页只用一句话把问题钉住。",
     "四步闭环，强调每一步都能被用户复核。",
     "第一屏：一段话直接长出家系图。能现场跑就直接演示，不用截图。",
     "第二屏：可回收风险把「可改」与「改不了」分账；China-PAR 每改一项实时重算。",
-    "现场动线：两分钟四拍；抽取 0.11 秒，几乎没有等待，讲慢一点就行。卡住就翻截图页。",
+    "现场动线：两分钟四拍；抽取 0.11 秒几乎没有等待，讲慢一点就行。卡住就翻截图页。",
     "数据流：从输入到输出四段，模型只占「抽取与理解」那一格。",
     "分层架构：五层，每层只依赖下一层；路径都是仓库真实目录，被问到可以当场打开。",
     "部署视图：一台电脑跑完全部；公网入口是可选项，断网也能完整演示。",
     "三套引擎各管一段，都对齐原始文献；越界只提示，落在建模人群外就不给数字。",
     "AI 用在哪四件事、哪三件事刻意不用。判断标准一句话：换人换机器答案会不会变。",
+    "三道保险：语法层挡住非法值，确定层兜住漏抽，质量层决定敢不敢下结论。顺序不能反。",
     "准确性：六套留出集只跑一次，F1 0.877 → 1.000；如实说 ±10% 的置信区间。",
-    "JEV：讲协议三原语、501 判据、我们的四条工程处理；实测 40% vs 96% 是下一页的引子。",
-    "判定选型：同一批样本 40% vs 96%，说明问题不在模型容量；默认走结构模型，决策模型可切。",
+    "JEV：讲三原语与真实返回、501 判据、四条工程处理（含降级路径）。",
+    "JEV 实测：逐类看差距（隐性/X连锁/线粒体都是 0%），再讲三个调参坑——这是最有说服力的部分。",
+    "判定链路：从概率到一句话，中间四道处理；门槛不达标就给追问，不给错结论。",
     "方法论：微调做了、封存集 A/B 否掉，所以不引入。负结果也是结果。",
     "隐私合规：本机、不落盘、不诊断、不确定就不显示。",
     "差异化：四类现有做法各缺一环，最后一列是我们补的那一环。",
