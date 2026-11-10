@@ -800,7 +800,7 @@ for i, (ic, t, sb) in enumerate([("chip", "抽取模型", "llama-server :8080\nQ
     ln.line.width = Pt(1.25)
 
 tf = text_box(s, 3.85, 4.92, 6.10, 0.85)
-para(tf, "模型与数据都在本机：代码里没有任何外部 API 调用，所以没有按次计费，也没有额度限流。",
+para(tf, "本机实测：模型启动 1.7 s、单句抽取 0.11 s、显存占用 1.8 GB（RTX 5080）。",
      size=9.5, color=TEXT, first=True, line=1.35)
 para(tf, "断网时除「公网入口」外一切正常，包括现场演示。", size=9.5, color=RECLAIM, line=1.35)
 
@@ -818,7 +818,7 @@ tf = text_box(s, 10.62, 4.62, 1.95, 0.55)
 para(tf, "只为让评委用手机打开；不开也能完整演示。", size=8.5, color=FAINT, first=True, line=1.3)
 
 # 底部三条结论
-for i, (big, label) in enumerate([("1 台", "16 GB 显存的单机即可承载全部"),
+for i, (big, label) in enumerate([("1 台", "实测显存 1.8 GB，单机即可承载全部"),
                                   ("0 元", "每次推理不产生费用"),
                                   ("离线", "断网状态可完整演示")]):
     x = M + i * 3.95
@@ -1112,9 +1112,9 @@ for i, (name, size) in enumerate(items):
 
 tf = text_box(s, 7.65, 2.02, 4.9, 0.3)
 para(tf, "要等多久（实测）", size=10.5, bold=True, color=PRIMARY, first=True)
-metrics = [("2.7", " 秒", "模型服务启动到首个可用响应"),
-           ("1.2", " 秒", "单句家族史抽取（含 GBNF 约束）"),
-           ("1.0", " 秒", "站点启动（已有构建产物）"),
+metrics = [("1.7", " 秒", "模型服务启动到首个可用响应"),
+           ("0.11", " 秒", "单句家族史抽取（含 GBNF 约束）"),
+           ("1.8", " GB", "模型推理的显存占用"),
            ("< 1", " 毫秒", "三套风险方程（纯本地函数）")]
 for i, (big, unit, label) in enumerate(metrics):
     y = 2.42 + i * 0.76
@@ -1128,7 +1128,7 @@ rect(s, M, 5.62, W, 1.05, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.3, 5.72, W - 0.6, 0.9)
 para(tf, "成本：推理全在本机，没有按次计费、没有额度限制；整套演示环境约 4.5 GB 磁盘，一台机器即可承载。",
      size=11, first=True, line=1.35)
-para(tf, "口径说明：耗时为本机 CPU 路径实测；补齐 CUDA 运行时后走 GPU 会更快（模型仅 1.2 GB，16 GB 显存绰绰有余）。",
+para(tf, "口径：本机实测（RTX 5080 / GPU 推理，多次取中位）；换普通 CPU 也能跑，只是抽取约慢一个数量级。",
      size=9.5, color=MUTED, line=1.35)
 footer(s, 18)
 
