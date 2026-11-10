@@ -584,6 +584,88 @@ para(tf, "模型只负责「口语 → 结构」这一段；风险与可回收�
      size=11, color=MUTED, first=True)
 footer(s, 7)
 
+# ============ P9 部署视图 ============
+s = new_slide(2, "部署视图：一台电脑跑完全部，只有公网入口是可选项",
+              icon="layers", sub="评委常问的三件事——跑在哪、要不要联网、花多少钱")
+
+
+def dep_box(x, y, w, h, icon=None, title="", sub="", fill=SURFACE):
+    rect(s, x, y, w, h, fill=fill, line=LINE2)
+    tx = x + 0.16
+    if icon:
+        path = os.path.join(ICONS, icon + ".png")
+        if os.path.exists(path):
+            s.shapes.add_picture(path, Inches(x + 0.14), Inches(y + 0.14), Inches(0.22), Inches(0.22))
+            tx = x + 0.44
+    tf = text_box(s, tx, y + 0.10, w - (tx - x) - 0.14, 0.3)
+    para(tf, title, size=10.5, bold=True, color=TEXT, first=True)
+    if sub:
+        tf = text_box(s, x + 0.16, y + 0.42, w - 0.30, h - 0.46)
+        para(tf, sub, size=9, color=MUTED, first=True, line=1.3)
+
+
+# 左：用户侧
+dep_box(M, 2.35, 2.25, 0.95, "chat", "浏览器 / 手机", "不需要安装客户端")
+dep_box(M, 3.55, 2.25, 1.25, "mic", "三种输入", "语音 · 文本 · 拍化验单")
+
+ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(3.10), Inches(2.74), Inches(0.42), Inches(0.22))
+ar.fill.solid(); ar.fill.fore_color.rgb = LINE2; ar.line.fill.background(); ar.shadow.inherit = False
+tf = text_box(s, 3.02, 2.44, 0.6, 0.24, align=PP_ALIGN.CENTER)
+para(tf, "HTTP", size=8, color=FAINT, first=True, align=PP_ALIGN.CENTER)
+
+# 中：一台电脑（虚线边界）
+frame = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(3.62), Inches(2.05),
+                           Inches(6.55), Inches(4.0))
+frame.fill.background()
+frame.line.color.rgb = RECLAIM
+frame.line.width = Pt(1.25)
+frame.line.dash_style = 4
+frame.shadow.inherit = False
+rect(s, 3.95, 1.96, 2.75, 0.30, fill=RECLAIM_SOFT, line=RECLAIM)
+tf = text_box(s, 3.95, 1.99, 2.75, 0.24, align=PP_ALIGN.CENTER)
+para(tf, "同一台电脑 · RTX 5080 16 GB", size=9, bold=True, color=RECLAIM, first=True,
+     align=PP_ALIGN.CENTER)
+
+dep_box(3.85, 2.50, 6.10, 0.82, "chip", "Next.js 站点 :5173",
+        "页面 + API 路由（extract / ocr / agent / decision）")
+
+# 标题写「角色」，端口放说明行：直接写 llama-server :8080 会在 1.9" 的框里折行
+for i, (ic, t, sb) in enumerate([("chip", "抽取模型", "llama-server :8080\nQwen3-1.7B + GBNF"),
+                                 ("camera", "视觉模型", "llama-server :8082\n化验单识别"),
+                                 ("db", "MySQL", ":3306\n家系 · 体检 · 会话")]):
+    bx = 3.85 + i * 2.10
+    dep_box(bx, 3.78, 1.90, 0.95, ic, t, sb)
+    ln = s.shapes.add_connector(1, Inches(bx + 0.95), Inches(3.32), Inches(bx + 0.95), Inches(3.78))
+    ln.line.color.rgb = LINE2
+    ln.line.width = Pt(1.25)
+
+tf = text_box(s, 3.85, 4.92, 6.10, 0.85)
+para(tf, "模型与数据都在本机：代码里没有任何外部 API 调用，所以没有按次计费，也没有额度限流。",
+     size=9.5, color=TEXT, first=True, line=1.35)
+para(tf, "断网时除「公网入口」外一切正常，包括现场演示。", size=9.5, color=RECLAIM, line=1.35)
+
+# 右：可选的公网入口
+dash = s.shapes.add_connector(1, Inches(10.22), Inches(2.90), Inches(10.60), Inches(2.90))
+dash.line.color.rgb = FAINT
+dash.line.width = Pt(1.25)
+dash.line.dash_style = 4
+tf = text_box(s, 10.12, 2.60, 0.6, 0.24, align=PP_ALIGN.CENTER)
+para(tf, "可选", size=8, color=FAINT, first=True, align=PP_ALIGN.CENTER)
+
+dep_box(10.62, 2.35, 1.95, 0.95, "flag", "VPS", "clear.ysti.com.cn")
+dep_box(10.62, 3.55, 1.95, 0.95, "layers", "SSH 反向隧道", "-R 18001 → 5173")
+tf = text_box(s, 10.62, 4.62, 1.95, 0.55)
+para(tf, "只为让评委用手机打开；不开也能完整演示。", size=8.5, color=FAINT, first=True, line=1.3)
+
+# 底部三条结论
+for i, (big, label) in enumerate([("1 台", "16 GB 显存的单机即可承载全部"),
+                                  ("0 元", "每次推理不产生费用"),
+                                  ("离线", "断网状态可完整演示")]):
+    x = M + i * 3.95
+    tf = text_box(s, x, 6.28, 3.6, 0.36)
+    rich(tf, [(big + "  ", True, PRIMARY), (label, False, MUTED)], size=11, first=True)
+footer(s, 9)
+
 # ============ P8 三引擎 ============
 s = new_slide(2, "三套引擎，各管一段，都对齐原始文献", icon="calc")
 engines = [
@@ -1017,6 +1099,7 @@ NOTES = [
     "第二屏：可回收风险把可改与改不了分账；China-PAR 实时重算。",
     "现场动线：说一句 -> 点节点 -> 改一项 -> 看结论，两分半钟；卡住就翻截图页，别现场调试。",
     "四层架构：模型只做把口语变成结构这一件事。",
+    "部署视图：一台电脑跑完全部；只有公网入口是可选的，断网也能完整演示。",
     "三套引擎各管一段，都对齐原始文献。",
     "准确性：六套留出集只跑一次，F1 0.877 -> 1.000；同时说明 ±10% 的置信区间。",
     "判定选型：同一批样本 40% vs 96%，说明问题不在模型容量。",
