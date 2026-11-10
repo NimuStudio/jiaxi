@@ -139,11 +139,17 @@ def new_slide(section, title, sub=None):
     return s
 
 
-def footer(slide, idx):
+FOOTERS = {}
+
+
+def footer(slide, idx=None):
+    """页脚。页码不再手写：登记下来，生成结束后按真实页序统一填，
+    这样中间插页不用手工改后面每一页的编号（插错过一次）。"""
     tf = text_box(slide, M, 6.98, 8, 0.28)
     para(tf, "家系 · 家族健康风险量化", size=9, color=FAINT, first=True)
     tf = text_box(slide, 13.333 - M - 1.2, 6.98, 1.2, 0.28, align=PP_ALIGN.RIGHT)
-    para(tf, f"{idx:02d}", size=9, color=FAINT, first=True, align=PP_ALIGN.RIGHT)
+    para(tf, "00", size=9, color=FAINT, first=True, align=PP_ALIGN.RIGHT)
+    FOOTERS[id(slide)] = tf
 
 
 def stat_card(slide, x, y, w, h, big, unit, label, color=PRIMARY):
@@ -329,7 +335,49 @@ para(tf, "界面上的每个数都能复算：China-PAR 对论文 Table 2 的 8 
      size=10.5, color=FAINT, first=True)
 footer(s, 6)
 
-# ============ P7 技术路线 ============
+# ============ P7 现场动线 ============
+s = new_slide(1, "现场一走：四个动作，两分半钟",
+              "网页与 PPT 交替；任何一步卡住就退回上一页截图，不在台上调试")
+beats = [
+    ("0:00 – 0:40", "说一句",
+     ["打开 /chat，照这句话念：", "「我爸 52 岁放了支架，", "爷爷糖尿病，外公脑溢血。」"],
+     "您听我怎么说，它就怎么记。"),
+    ("0:40 – 1:20", "点节点",
+     ["点家系图里的父亲节点", "弹出「回查原话」"],
+     "抽出来的每一条，都能回到你原话。"),
+    ("1:20 – 2:00", "改一项",
+     ["跳到 /cvd", "把 BMI 从 27 拖到 24", "看风险实时下降"],
+     "改一项，数字立刻变——这就是可回收。"),
+    ("2:00 – 2:30", "看结论",
+     ["回到 /risk 可回收页", "指着 33% 与那 7 分"],
+     "这一部分，是这周就能拿回来的。"),
+]
+cw = (W - 0.45) / 4
+for i, (when, what, how, line) in enumerate(beats):
+    x = M + i * (cw + 0.15)
+    rect(s, x, 2.1, cw, 3.15, fill=SURFACE, line=LINE)
+    tf = text_box(s, x + 0.24, 2.22, cw - 0.48, 0.28)
+    para(tf, when, size=9.5, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, x + 0.24, 2.52, cw - 0.48, 0.36)
+    para(tf, what, size=15, bold=True, first=True)
+    tf = text_box(s, x + 0.24, 2.95, cw - 0.48, 1.15)
+    for j, ln in enumerate(how):
+        para(tf, ln, size=9.5, color=MUTED, first=(j == 0), line=1.5)
+    tf = text_box(s, x + 0.24, 4.25, cw - 0.48, 0.85)
+    para(tf, "「" + line + "」", size=10, color=RECLAIM, first=True, line=1.4)
+    if i < 3:
+        ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + cw + 0.005), Inches(3.55),
+                                Inches(0.12), Inches(0.18))
+        ar.fill.solid(); ar.fill.fore_color.rgb = LINE2; ar.line.fill.background(); ar.shadow.inherit = False
+
+rect(s, M, 5.5, W, 1.1, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.3, 5.62, W - 0.6, 0.9)
+para(tf, "兜底：模型没起来或网络断了，直接翻 P5 / P6 的截图页，说明「演示机今天没连模型，这是同一份代码的真实截图」，",
+     size=10.5, first=True, line=1.4)
+para(tf, "不要在现场重启服务。启动脚本在桌面：启动家系演示.cmd（断网也不影响这套流程）。", size=10.5, color=MUTED, line=1.4)
+footer(s, 7)
+
+# ============ P8 技术路线 ============
 s = new_slide(2, "四层架构：模型只做它不可替代的一件事")
 layers = [
     ("输入层", "语音（Web Speech API）· 自然语言文本", 2.15),
@@ -792,6 +840,7 @@ NOTES = [
     "四步闭环，强调每一步都能复核。",
     "第一屏演示：一段话 -> 家系图。若现场能跑，直接演示，不用截图。",
     "第二屏：可回收风险把可改与改不了分账；China-PAR 实时重算。",
+    "现场动线：说一句 -> 点节点 -> 改一项 -> 看结论，两分半钟；卡住就翻截图页，别现场调试。",
     "四层架构：模型只做把口语变成结构这一件事。",
     "三套引擎各管一段，都对齐原始文献。",
     "准确性：六套留出集只跑一次，F1 0.877 -> 1.000；同时说明 ±10% 的置信区间。",
@@ -804,6 +853,9 @@ NOTES = [
     "结尾：留时间提问，主动提出可现场演示。",
 ]
 for i, slide in enumerate(prs.slides):
+    tf = FOOTERS.get(id(slide))
+    if tf is not None:
+        tf.paragraphs[0].runs[0].text = f"{i + 1:02d}"
     if i < len(NOTES):
         slide.notes_slide.notes_text_frame.text = NOTES[i]
 
