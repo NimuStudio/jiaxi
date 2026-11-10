@@ -511,10 +511,17 @@ s = new_slide(2, "一张图看懂：数据怎么流动，模型只占哪一格",
               sub="从一句口述到一份行动方案，中间经过四段处理，全部在本机完成")
 
 COLS = [
-    ("输入", PRIMARY, ["语音（浏览器 Web Speech）", "自然语言文本", "化验单照片（可选）"]),
-    ("抽取与理解", PRIMARY, ["Qwen3-1.7B + GBNF 约束解码", "规则兜底：词表 / 修补 / 切句", "Agent 工具调用（最多 4 步）"]),
-    ("计算", RECLAIM, ["家系图结构信号（12 维）", "FINDRISC / China-PAR / PLCO", "可回收分解：可改 vs 改不了"]),
-    ("输出", RECLAIM, ["家系图（可点选回溯原话）", "三个风险百分比 + 分层", "一份这周就能做的行动清单"]),
+    ("输入", PRIMARY, [("mic", "语音 · Web Speech"), ("chat", "自然语言文本"),
+                     ("camera", "化验单照片")]),
+    ("抽取与理解", PRIMARY, [("chip", "Qwen3-1.7B + GBNF"),
+                        ("layers", "规则兜底：词表 / 修补"),
+                        ("terminal", "Agent 工具调用 ≤4 步")]),
+    ("计算", RECLAIM, [("tree", "家系结构信号 12 维"),
+                     ("calc", "三套风险方程"),
+                     ("trend", "可回收：可改 vs 改不了")]),
+    ("输出", RECLAIM, [("target", "家系图 · 可回溯原话"),
+                     ("balance", "风险百分比 + 分层"),
+                     ("flag", "这周就能做的清单")]),
 ]
 col_w, gap = 2.42, 0.52
 col_x = [M + i * (col_w + gap) for i in range(len(COLS))]
@@ -526,12 +533,16 @@ for ci, (name, tone, items) in enumerate(COLS):
     # 列标题
     tf = text_box(s, x, 2.06, col_w, 0.3, align=PP_ALIGN.CENTER)
     para(tf, name, size=10.5, bold=True, color=tone, first=True, align=PP_ALIGN.CENTER)
-    for bi, item in enumerate(items):
+    for bi, (ic, item) in enumerate(items):
         y = top + bi * (box_h + box_gap)
         rect(s, x, y, col_w, box_h, fill=SURFACE, line=LINE2)
-        tf = text_box(s, x + 0.12, y + 0.06, col_w - 0.24, box_h - 0.12,
-                      align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
-        para(tf, item, size=9.5, color=TEXT, first=True, align=PP_ALIGN.CENTER, line=1.25)
+        icon_path = os.path.join(ICONS, ic + ".png")
+        if os.path.exists(icon_path):
+            s.shapes.add_picture(icon_path, Inches(x + 0.12), Inches(y + 0.20),
+                                 Inches(0.22), Inches(0.22))
+        tf = text_box(s, x + 0.38, y + 0.05, col_w - 0.48, box_h - 0.10,
+                      align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.MIDDLE)
+        para(tf, item, size=9, color=TEXT, first=True, align=PP_ALIGN.LEFT, line=1.2)
     # 列间箭头
     if ci < len(COLS) - 1:
         ay = top + box_h / 2 + 0.05
@@ -543,7 +554,11 @@ for ci, (name, tone, items) in enumerate(COLS):
 # 底部：本机数据层（服务层与模型层写入）
 data_y = top + 3 * (box_h + box_gap) + 0.28
 rect(s, col_x[1], data_y, col_w * 2 + gap, 0.6, fill=PRIMARY_SOFT, line=LINE2)
-tf = text_box(s, col_x[1] + 0.15, data_y + 0.1, col_w * 2 + gap - 0.3, 0.4)
+db_icon = os.path.join(ICONS, "db.png")
+if os.path.exists(db_icon):
+    s.shapes.add_picture(db_icon, Inches(col_x[1] + 0.28), Inches(data_y + 0.17),
+                         Inches(0.26), Inches(0.26))
+tf = text_box(s, col_x[1] + 0.6, data_y + 0.1, col_w * 2 + gap - 0.75, 0.4)
 para(tf, "本机 MySQL：家系 · 体检数字 · 会话（单用户单份，整份覆盖保存）", size=9.5,
      color=TEXT, first=True, align=PP_ALIGN.CENTER)
 for cx in (col_x[1] + col_w / 2, col_x[2] + col_w / 2):
