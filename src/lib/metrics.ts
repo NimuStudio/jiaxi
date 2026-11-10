@@ -9,8 +9,13 @@
  * 改这里之前先跑评测，再把产物文件名写进 extractionEvalSet。
  */
 export const METRICS = {
-  /** 与 src/lib/extract/lexicon.ts 的 DISEASES.length 一致（测试会校验） */
-  diseaseCount: 26,
+  /**
+   * 用户能“识别”的具体疾病数：词表 26 条里去掉「其他」这个兜底桶。
+   * 为什么不是 26：other 不是病名，它是「说不清的病」的收纳格，
+   * 界面上（DiseaseCheatSheet）本来就不展示，所以对外说 25 才与产品一致。
+   * 测试会校验：diseaseCount === DISEASES 里 code !== "other" 的条数。
+   */
+  diseaseCount: 25,
   /** FINDRISC / China-PAR / PLCOm2012 */
   riskModelCount: 3,
   /** 全部推理在本机 llama-server 上完成，代码里没有任何外部 API 调用 */

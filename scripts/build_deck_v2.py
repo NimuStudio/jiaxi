@@ -218,8 +218,10 @@ ICONS = os.path.join(ART, "icons")
 
 def new_slide(section, title, sub=None, icon=None):
     s = prs.slides.add_slide(BLANK)
-    s.shapes.add_picture(os.path.join(ART, "content-bg.png"), 0, 0,
-                         width=prs.slide_width, height=prs.slide_height)
+    bg_path = os.path.join(ART, f"content-bg-{section}.png")
+    if not os.path.exists(bg_path):
+        bg_path = os.path.join(ART, "content-bg.png")
+    s.shapes.add_picture(bg_path, 0, 0, width=prs.slide_width, height=prs.slide_height)
     rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
     nav_bar(s, section)
     tx = M
@@ -433,8 +435,7 @@ footer(s, 4)
 
 # ============ P5 产品① ============
 s = new_slide(1, "第一屏：一段话，直接变成一张家系图", icon="chat")
-rect(s, M, 2.1, 8.1, 4.35, fill=SURFACE, line=LINE)
-picture_fit(s, os.path.join(SHOTS, "02-chat.png"), M + 0.12, 2.2, 7.86, 4.15)
+picture_fit(s, os.path.join(ART, "shot-laptop-chat.png"), M - 0.05, 1.95, 8.35, 4.75)
 for i, (h1, h2) in enumerate([
     ("语音或文字输入", "不支持语音的浏览器自动隐藏入口，不留坏入口"),
     ("逐条回查原文", "抽出的每条病都能在用户原话里找到依据"),
@@ -449,14 +450,12 @@ footer(s, 5)
 
 # ============ P6 产品② ============
 s = new_slide(1, "第二屏：算清楚，哪一部分本就能拿回来", icon="gauge")
-rect(s, M, 2.1, 5.85, 3.9, fill=SURFACE, line=LINE)
-picture_fit(s, os.path.join(SHOTS, "03-risk.png"), M + 0.1, 2.18, 5.65, 3.76)
-tf = text_box(s, M, 6.08, 5.85, 0.35)
+picture_fit(s, os.path.join(ART, "shot-browser-risk.png"), M - 0.06, 1.98, 5.95, 4.05)
+tf = text_box(s, M, 6.10, 5.9, 0.35)
 para(tf, "可回收风险（FINDRISC）：把「可改」与「改不了」分开算", size=10.5, color=MUTED, first=True)
 
-rect(s, 6.95, 2.1, 5.6, 3.9, fill=SURFACE, line=LINE)
-picture_fit(s, os.path.join(SHOTS, "04-cvd.png"), 7.05, 2.18, 5.4, 3.76)
-tf = text_box(s, 6.95, 6.08, 5.6, 0.35)
+picture_fit(s, os.path.join(ART, "shot-browser-cvd.png"), 6.88, 1.98, 5.75, 4.05)
+tf = text_box(s, 6.88, 6.10, 5.75, 0.35)
 para(tf, "心血管风险（China-PAR）：改任一项实时重算，纯本地计算", size=10.5, color=MUTED, first=True)
 
 tf = text_box(s, M, 6.45, W, 0.35)

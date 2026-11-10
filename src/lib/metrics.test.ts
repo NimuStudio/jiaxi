@@ -9,8 +9,12 @@ import { METRICS } from "./metrics.ts";
  * 之前登录页写死「25 种疾病」「1.000 F1」，词表变成 26 种、F1 换过口径都没人发现。
  */
 describe("对外数字与实际一致", () => {
-  it("疾病种数 == 词表长度", () => {
-    expect(METRICS.diseaseCount).toBe(DISEASES.length);
+  it("疾病种数 == 词表里可识别的具体疾病（不含「其他」兜底桶）", () => {
+    expect(METRICS.diseaseCount).toBe(DISEASES.filter((d) => d.code !== "other").length);
+  });
+
+  it("词表总条目 = 具体疾病 + 「其他」1 条", () => {
+    expect(DISEASES.length).toBe(METRICS.diseaseCount + 1);
   });
 
   it("F1 文本与数值一致", () => {
