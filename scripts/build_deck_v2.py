@@ -952,6 +952,50 @@ para(tf, "系数逐项登记在 docs/references.md；越界只提示不拒绝，
      size=11, color=MUTED, line=1.35)
 footer(s, 12)
 
+# ============ AI 用在哪 / 不用在哪 ============
+s = new_slide(2, "AI 用在哪四件事上，其余刻意不用", icon="chip",
+              sub="模型只做「口语 → 结构」；凡是能确定性复算的，都不交给模型")
+
+USED = [
+    ("mic", "口语 → 结构化家系", "GBNF 约束解码，模型只能从词表里选；抽不出就留空"),
+    ("bulb", "模糊病名的兜底判断", "「心脏不好」这类说法先用词表最长命中，再交给模型补"),
+    ("chat", "Agent 主动追问", "模型决定调哪个工具（最多 4 步），缺什么问什么"),
+    ("route", "依据检索", "BM25 从知识库取证据，模型只负责把证据读成一句人话"),
+]
+NOT = [
+    ("chart", "三套风险方程", "系数是文献里的，一行行抄进代码并进回归测试"),
+    ("target", "分层与阈值判断", "分档线来自量表原文，不做「模型觉得」"),
+    ("reclaim", "可回收分解", "单纯加减，必须能被用户手工复算"),
+]
+
+rect(s, M, 2.02, 6.55, 3.95, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
+para(tf, "用 AI 的四件事", size=11, bold=True, color=PRIMARY, first=True)
+for i, (ic, h1, h2) in enumerate(USED):
+    y = 2.52 + i * 0.86
+    s.shapes.add_picture(icon_p(ic), Inches(M + 0.24), Inches(y), Inches(0.30), Inches(0.30))
+    tf = text_box(s, M + 0.64, y - 0.04, 5.6, 0.32)
+    para(tf, h1, size=11, bold=True, color=TEXT, first=True)
+    tf = text_box(s, M + 0.64, y + 0.28, 5.6, 0.5)
+    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.3)
+
+rect(s, 7.25, 2.02, 5.3, 3.95, fill=SURFACE, line=LINE)
+tf = text_box(s, 7.53, 2.14, 4.8, 0.3)
+para(tf, "刻意不用 AI 的三件事", size=11, bold=True, color=RECLAIM, first=True)
+for i, (ic, h1, h2) in enumerate(NOT):
+    y = 2.52 + i * 1.12
+    s.shapes.add_picture(icon_p(ic), Inches(7.50), Inches(y), Inches(0.30), Inches(0.30))
+    tf = text_box(s, 7.90, y - 0.04, 4.4, 0.32)
+    para(tf, h1, size=11, bold=True, color=TEXT, first=True)
+    tf = text_box(s, 7.90, y + 0.28, 4.4, 0.6)
+    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.3)
+
+rect(s, M, 6.14, W, 0.7, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.28, 6.24, W - 0.56, 0.5)
+para(tf, "判断标准只有一条：这件事换个人、换台机器，答案会不会变？会变才交给模型，不变的写进代码。",
+     size=11, bold=True, color=TEXT, first=True)
+footer(s, 12)
+
 # ============ P9 准确性 ============
 s = new_slide(3, "口语抽取：留出集 F1 从 0.877 到 1.000", icon="target",
               sub="每套留出集都是全新措辞、只跑一次；跑过即降级为开发集，不再对外报数")
@@ -1006,8 +1050,57 @@ para(tf, "机制：留出集只跑一次 · 每次评测自动落盘（commit + 
      size=9.5, color=TEXT, first=True)
 footer(s, 11)
 
+# ============ JEV / 决策协议 ============
+s = new_slide(3, "JEV：一次前向直接给判定，不让模型写一段话", icon="scales",
+              sub="接入的是 llama.cpp 的 /v1/systemone（TypeSafe 决策协议）：三原语 + 严格校验")
+
+prims = [
+    ("choice", "若干选项里选一个", '{"choice": "autosomal-dominant", "probabilities": {...}}'),
+    ("score", "在有序档位上打分", '{"score": 2.3, "probabilities": [0.1, 0.5, 0.4]}'),
+    ("noul", "判断一个命题真假", '{"noul": 0.87}'),
+]
+for i, (name, what, sample) in enumerate(prims):
+    y = 1.98 + i * 1.06
+    rect(s, M, y, 5.75, 0.96, fill=SURFACE, line=LINE)
+    tf = text_box(s, M + 0.22, y + 0.10, 2.4, 0.3)
+    para(tf, name, size=12, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, M + 1.55, y + 0.14, 4.0, 0.28)
+    para(tf, what, size=9.5, color=MUTED, first=True)
+    tf = text_box(s, M + 0.22, y + 0.50, 5.3, 0.36)
+    para(tf, sample, size=8, color=TEXT, first=True, latin="Consolas")
+
+rect(s, M, 5.18, 5.75, 1.2, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.24, 5.28, 5.3, 1.0)
+para(tf, "实测：18.5 GB 的 OpenJev-Q4 与 12 维结构模型，在同一批均衡样本上", size=9.5, first=True, line=1.45)
+para(tf, "40% vs 96%；单次延迟 6.3 秒 vs 不到 0.1 秒。", size=9.5, line=1.45)
+para(tf, "协议与管线是通的，只是这一题不该用它——下一页说为什么。", size=9.5, bold=True, color=RECLAIM, line=1.45)
+
+tf = text_box(s, 6.72, 1.98, 5.85, 0.3)
+para(tf, "怎么判断对方是不是决策模型", size=11, bold=True, color=PRIMARY, first=True)
+rect(s, 6.72, 2.32, 5.85, 0.92, fill=SURFACE, line=LINE)
+tf = text_box(s, 6.92, 2.42, 5.45, 0.78)
+para(tf, "判据是「有没有决策头」，不是名字。拿文本模型去调，服务端直接回 501：",
+     size=9, color=MUTED, first=True, line=1.3)
+para(tf, "This model is not a decision model", size=9, bold=True, color=DANGER, line=1.3, latin="Consolas")
+
+tf = text_box(s, 6.72, 3.40, 5.85, 0.3)
+para(tf, "我们做了哪些工程上的事", size=11, bold=True, color=PRIMARY, first=True)
+eng = [
+    ("typed client", "三原语各有请求/响应类型，字段不对在编译期就挡下"),
+    ("严格校验", "choice / score 概率和必须为 1（容差 0.02）；noul 落在 0–1"),
+    ("降级路径", "校验不过或超时 → 自动退回规则判定，界面上标「证据不足」"),
+    ("后端可切", "默认本机结构模型；INHERITANCE_BACKEND=model 才调决策模型"),
+]
+for i, (h1, h2) in enumerate(eng):
+    y = 3.74 + i * 0.68
+    tf = text_box(s, 6.72, y, 5.85, 0.26)
+    para(tf, h1, size=10, bold=True, color=TEXT, first=True)
+    tf = text_box(s, 6.72, y + 0.26, 5.85, 0.34)
+    para(tf, h2, size=9, color=MUTED, first=True, line=1.25)
+footer(s, 15)
+
 # ============ P10 判定选型 ============
-s = new_slide(3, "遗传模式判定：为什么最后没用大模型做这件事", icon="scales")
+s = new_slide(3, "同一批样本上的对比：为什么最后没用它", icon="scales")
 rows = [
     ("OpenJev-Q4（18.5 GB，通用决策模型）", "40%", "6.3 s", "隐性 / X 连锁 / 线粒体 三类全错"),
     ("结构逻辑回归（12 维特征，2.3 KB）", "96%", "< 0.1 s", "同一批均衡样本，每类 5 条"),
@@ -1452,23 +1545,26 @@ def flatten(presentation):
 
 
 NOTES = [
-    "开场 15 秒：家系做什么、为谁做。作品编号等待填。",
-    "目录：六个问题，一条主线。讲的时候不用逐条念，指一下结构即可。",
-    "痛点三层 + 右边给出关键论据：家族史在三套引擎里都有权重（FINDRISC 占 5/26 分）。",
-    "四步闭环，强调每一步都能复核。",
-    "第一屏演示：一段话 -> 家系图。若现场能跑，直接演示，不用截图。",
-    "第二屏：可回收风险把可改与改不了分账；China-PAR 实时重算。",
-    "现场动线：说一句 -> 点节点 -> 改一项 -> 看结论，两分半钟；卡住就翻截图页，别现场调试。",
-    "四层架构：模型只做把口语变成结构这一件事。",
-    "分层架构：五层，每层只依赖下一层；路径都是仓库里真实目录，被问到可以当场打开。",
-    "部署视图：一台电脑跑完全部；只有公网入口是可选的，断网也能完整演示。",
-    "三套引擎各管一段，都对齐原始文献。",
-    "准确性：六套留出集只跑一次，F1 0.877 -> 1.000；同时说明 ±10% 的置信区间。",
-    "判定选型：同一批样本 40% vs 96%，说明问题不在模型容量。",
-    "方法论：微调做了、A/B 否掉，所以不引入。负结果也是结果。",
-    "隐私合规：本机、不落盘、不诊断、不确定不显示。",
-    "差异化：四类现有方案各自缺什么。",
-    "落地价值：0 元推理成本、单机部署、三类场景。",
+    "开场 15 秒：家系做什么、为谁做。作品编号与省份等待填。",
+    "目录：六个问题一条主线。不要逐条念，指一下结构即可。",
+    "痛点三层；右边给出关键论据——家族史在三套引擎里都有权重（FINDRISC 占 5/26 分）。",
+    "一句真话：停顿两秒再翻页。这一页只用一句话把问题钉住。",
+    "四步闭环，强调每一步都能被用户复核。",
+    "第一屏：一段话直接长出家系图。能现场跑就直接演示，不用截图。",
+    "第二屏：可回收风险把「可改」与「改不了」分账；China-PAR 每改一项实时重算。",
+    "现场动线：两分钟四拍；抽取 0.11 秒，几乎没有等待，讲慢一点就行。卡住就翻截图页。",
+    "数据流：从输入到输出四段，模型只占「抽取与理解」那一格。",
+    "分层架构：五层，每层只依赖下一层；路径都是仓库真实目录，被问到可以当场打开。",
+    "部署视图：一台电脑跑完全部；公网入口是可选项，断网也能完整演示。",
+    "三套引擎各管一段，都对齐原始文献；越界只提示，落在建模人群外就不给数字。",
+    "AI 用在哪四件事、哪三件事刻意不用。判断标准一句话：换人换机器答案会不会变。",
+    "准确性：六套留出集只跑一次，F1 0.877 → 1.000；如实说 ±10% 的置信区间。",
+    "JEV：讲协议三原语、501 判据、我们的四条工程处理；实测 40% vs 96% 是下一页的引子。",
+    "判定选型：同一批样本 40% vs 96%，说明问题不在模型容量；默认走结构模型，决策模型可切。",
+    "方法论：微调做了、封存集 A/B 否掉，所以不引入。负结果也是结果。",
+    "隐私合规：本机、不落盘、不诊断、不确定就不显示。",
+    "差异化：四类现有做法各缺一环，最后一列是我们补的那一环。",
+    "落地：体积与耗时都是本机实测（1.7 秒启动 / 0.11 秒抽取 / 1.8 GB 显存）。",
     "团队：待填成员信息。",
     "结尾：留时间提问，主动提出可现场演示。",
 ]
