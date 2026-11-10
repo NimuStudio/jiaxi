@@ -28,11 +28,15 @@ PRIMARY = RGBColor(0x1A, 0x6F, 0xB5)
 PRIMARY_SOFT = RGBColor(0xEA, 0xF3, 0xFB)
 RECLAIM = RGBColor(0x0F, 0x7C, 0x8C)
 RECLAIM_SOFT = RGBColor(0xE6, 0xF4, 0xF6)
-DANGER = RGBColor(0xB4, 0x23, 0x18)
+DANGER = RGBColor(0xC0, 0x39, 0x2B)
 # 强调色：只用于「这页最重要的一句话/一个数字」，全篇控制在四种颜色的语义里
-AMBER = RGBColor(0xB2, 0x6A, 0x00)
-AMBER_SOFT = RGBColor(0xFD, 0xF2, 0xE0)
-RECLAIM_LINE = RGBColor(0x7F, 0xC3, 0xCB)
+# 一眼能看到重点：红只给「这页最重要的数字/结论」，其余一律让位给灰
+RED = RGBColor(0xC0, 0x39, 0x2B)
+RED_SOFT = RGBColor(0xFB, 0xEA, 0xE7)
+AMBER = RED          # 旧名保留，语义已改为「重点红」
+AMBER_SOFT = RED_SOFT
+DANGER_SOFT = RED_SOFT
+RECLAIM_LINE = RGBColor(0x8F, 0xC4, 0xCB)
 
 EA = "微软雅黑"
 CWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -402,10 +406,10 @@ tf = text_box(s, M, 3.15, 6.9, 1.4)
 para(tf, "把家族口述的病史，整理成一张家系图", size=20, color=WHITE, first=True, line=1.4)
 para(tf, "并算出你的风险里，有多少是「能拿回来的」", size=20, color=WHITE, line=1.4)
 
-rect(s, M, 4.85, 1.5, 0.05, fill=GLOW, radius=False)
 tf = text_box(s, M, 5.05, 6.9, 0.4)
-para(tf, "FINDRISC · China-PAR · PLCOm2012　|　100% 本机推理　|　口语留出集 F1 1.000",
-     size=10.5, color=RGBColor(0xB9, 0xD3, 0xE8), first=True)
+rich(tf, [("FINDRISC · China-PAR · PLCOm2012　|　100% 本机推理　|　口语留出集 ", False,
+           RGBColor(0xB9, 0xD3, 0xE8)), ("F1 1.000", True, RGBColor(0xFF, 0x9E, 0x91))],
+     size=10.5, first=True)
 
 info = [("作品编号", "【待填】"), ("省份", "【待填】"), ("团队", "【待填】")]
 for i, (k, v) in enumerate(info):
@@ -958,7 +962,11 @@ for i, (ic, name, what, inputs, specs, note) in enumerate(engines):
         tf = text_box(s, x + 0.28, y, 0.72, 0.26)
         para(tf, label, size=8.5, color=FAINT, first=True)
         tf = text_box(s, x + 0.96, y - 0.03, cw - 1.24, 0.34)
-        para(tf, value, size=9.5, color=TEXT, first=True, line=1.25)
+        # 三张卡里「输出」才是这页的重点：把它标红，其余压成常规字色
+        if label == "输出":
+            para(tf, value, size=10, bold=True, color=RED, first=True, line=1.25)
+        else:
+            para(tf, value, size=9.5, color=TEXT, first=True, line=1.25)
 
     tf = text_box(s, x + 0.28, 5.20, cw - 0.56, 0.36)
     para(tf, note, size=9, color=RECLAIM, first=True, line=1.3)
@@ -1064,7 +1072,7 @@ para(tf, "每一跳都对应一次具体改动，没有一次是「换个更大�
 # 右栏：一把抓住的四个数 + 每套留出集的真实构成（构建时现算）
 tf = text_box(s, 8.15, 1.92, 4.35, 0.3)
 rich(tf, [("6", True, PRIMARY), (" 套 · ", False, MUTED), ("180", True, PRIMARY),
-          (" 条 · ", False, MUTED), ("F1 1.000", True, RECLAIM),
+          (" 条 · ", False, MUTED), ("F1 1.000", True, RED),
           (" · ", False, FAINT), ("±10%", True, DANGER)], size=13, first=True)
 
 rows, tot = holdout_stats()
@@ -1166,14 +1174,14 @@ rich(tf, [("40%", True, MUTED), ("　它的失败很典型：隐性 / X 连锁 /
 rect(s, M + 0.24, 2.58, 5.1, 0.09, fill=RGBColor(0xE4, 0xE7, 0xEB), line=None, radius=False)
 rect(s, M + 0.24, 2.58, 5.1 * 0.40, 0.09, fill=RGBColor(0x8C, 0x9A, 0xA8), line=None, radius=False)
 
-rect(s, 6.55, 1.96, 6.0, 0.78, fill=RECLAIM_SOFT, line=LINE)
+rect(s, 6.55, 1.96, 6.0, 0.78, fill=RED_SOFT, line=RGBColor(0xE8, 0xB4, 0xAC))
 tf = text_box(s, 6.79, 2.04, 5.5, 0.62)
-rich(tf, [("我们的方案", True, RECLAIM), ("  12 维结构逻辑回归（2.3 KB）", False, RECLAIM)],
+rich(tf, [("我们的方案", True, RED), ("  12 维结构逻辑回归（2.3 KB）", False, MUTED)],
      size=9.5, first=True)
-rich(tf, [("96%", True, RECLAIM), ("　单次 0.005–0.07 秒，不需要 18 GB 权重", False, RECLAIM)],
+rich(tf, [("96%", True, RED), ("　单次 0.005–0.07 秒，不需要 18 GB 权重", False, MUTED)],
      size=12, line=1.3)
-rect(s, 6.79, 2.58, 5.5, 0.09, fill=RGBColor(0xC5, 0xE3, 0xE7), line=None, radius=False)
-rect(s, 6.79, 2.58, 5.5 * 0.96, 0.09, fill=RECLAIM, line=None, radius=False)
+rect(s, 6.79, 2.58, 5.5, 0.09, fill=RGBColor(0xF0, 0xD3, 0xCE), line=None, radius=False)
+rect(s, 6.79, 2.58, 5.5 * 0.96, 0.09, fill=RED, line=None, radius=False)
 
 # 逐类对照表
 rows = [
@@ -1184,7 +1192,7 @@ rows = [
     ("证据不足", "100%", "高"),
 ]
 rect(s, M, 2.92, 6.15, 0.32, fill=SURFACE, line=None)
-for h, hx, hc in [("类别", M + 0.16, MUTED), ("对照组", M + 2.35, MUTED), ("我们的方案", M + 4.45, RECLAIM)]:
+for h, hx, hc in [("类别", M + 0.16, MUTED), ("对照组", M + 2.35, FAINT), ("我们的方案", M + 4.45, RED)]:
     tf = text_box(s, hx, 2.95, 2.0, 0.26)
     para(tf, h, size=9, bold=True, color=hc, first=True)
 for i, (cat, jev, st) in enumerate(rows):
@@ -1193,10 +1201,10 @@ for i, (cat, jev, st) in enumerate(rows):
     para(tf, cat, size=9.5, color=TEXT, first=True)
     tf = text_box(s, M + 2.35, y, 2.0, 0.3)
     bad = jev.startswith("0%")
-    rich(tf, [("✗ " if bad else "✓ ", True, DANGER if bad else MUTED), (jev, False, DANGER if bad else MUTED)],
+    rich(tf, [("✗ " if bad else "✓ ", True, FAINT), (jev, False, FAINT)],
          size=9.5, first=True)
     tf = text_box(s, M + 4.45, y, 1.6, 0.3)
-    rich(tf, [("✓ ", True, RECLAIM), (st, False, RECLAIM)], size=9.5, first=True)
+    rich(tf, [("✓ ", True, RED), (st, False, RED)], size=9.5, first=True)
     if i < len(rows) - 1:
         rect(s, M + 0.16, y + 0.34, 5.8, 0.006, fill=LINE, radius=False)
 tf = text_box(s, M + 0.16, 5.56, 5.9, 0.3)
@@ -1289,9 +1297,9 @@ for gi, (label, b1, b2, hit1, hit2) in enumerate(pairs):
         para(tf, name, size=9.5, color=MUTED, first=True)
         rect(s, M + 1.95, y + 0.08, SCALE, 0.26, fill=RGBColor(0xEC, 0xF1, 0xF6), line=None, radius=False)
         rect(s, M + 1.95, y + 0.08, SCALE * float(val), 0.26,
-             fill=PRIMARY if bi == 0 else AMBER, line=None, radius=False)
+             fill=RGBColor(0xC2, 0xD6, 0xE9) if bi == 0 else RED, line=None, radius=False)
         tf = text_box(s, M + 1.95 + SCALE + 0.12, y + 0.04, 1.6, 0.3)
-        rich(tf, [(val, True, PRIMARY if bi == 0 else AMBER), ("  " + hit, False, MUTED)],
+        rich(tf, [(val, True, MUTED if bi == 0 else RED), ("  " + hit, False, FAINT)],
              size=10.5, first=True)
     if gi == 0:
         tf = text_box(s, M, base_y + 1.68, 6.4, 0.3)
@@ -1387,14 +1395,14 @@ para(tf, "具备几项（满分 6）", size=10, bold=True, color=PRIMARY, first=
 for j, (c, sc) in enumerate(zip(COLSX, SCORE)):
     y = 2.42 + j * 0.52
     tf = text_box(s, 9.55, y - 0.02, 3.2, 0.24)
-    para(tf, c, size=8, color=RECLAIM if j == 4 else MUTED, first=True)
+    para(tf, c, size=8, color=RED if j == 4 else MUTED, first=True)
     track_w = 2.45
     rect(s, 9.55, y + 0.22, track_w, 0.16, fill=RGBColor(0xEC, 0xF1, 0xF6), line=None, radius=False)
     rect(s, 9.55, y + 0.22, track_w * sc / 6.0, 0.16,
-         fill=RECLAIM if j == 4 else RGBColor(0xC2, 0xD6, 0xE9), line=None, radius=False)
+         fill=RED if j == 4 else RGBColor(0xC2, 0xD6, 0xE9), line=None, radius=False)
     tf = text_box(s, 9.55 + track_w + 0.10, y + 0.14, 0.6, 0.26)
     para(tf, ("6" if sc == 6 else (str(sc) if sc != int(sc) else str(int(sc)))),
-         size=9.5, bold=(j == 4), color=RECLAIM if j == 4 else MUTED, first=True)
+         size=9.5, bold=(j == 4), color=RED if j == 4 else MUTED, first=True)
 
 tf = text_box(s, 9.55, 5.14, 3.25, 0.5)
 para(tf, "四类做法平均 1.1 项，我们 6 项。", size=9.5, bold=True, color=TEXT, first=True, line=1.4)
