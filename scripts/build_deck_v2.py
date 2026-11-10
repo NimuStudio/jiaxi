@@ -123,8 +123,7 @@ def nav_bar(slide, active):
         w = 1.62 if on else 1.52
         tf = text_box(slide, x, 0.30, w, 0.32)
         para(tf, name, size=11 if on else 10.5, bold=on, color=PRIMARY if on else FAINT, first=True)
-        if on:
-            rect(slide, x, 0.62, w - 0.35, 0.045, fill=PRIMARY, radius=False)
+        # 当前栏目只用颜色与字重区分，不加下划线：装饰性色条容易被读成模板味
         x += w + 0.06
     rect(slide, M, 0.78, W, 0.012, fill=LINE, radius=False)
 
@@ -318,7 +317,6 @@ def new_slide(section, title, sub=None, icon=None):
     if not os.path.exists(bg_path):
         bg_path = art_path("content-bg")
     s.shapes.add_picture(bg_path, 0, 0, width=prs.slide_width, height=prs.slide_height)
-    rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
     nav_bar(s, section)
     tx = M
     if icon:
@@ -417,7 +415,6 @@ para(tf, "口述 → 家系图 → 风险 → 可回收", size=9.5, color=RGBCol
 s = prs.slides.add_slide(BLANK)
 s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
-rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
 tf = text_box(s, M, 1.1, 6, 0.5)
 para(tf, "目录  CONTENTS", size=12, bold=True, color=PRIMARY, first=True)
 tf = text_box(s, M, 1.55, 8, 0.7)
@@ -491,7 +488,6 @@ footer(s, 3)
 s = prs.slides.add_slide(BLANK)
 s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
-rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
 
 s.shapes.add_picture(icon_p("bulb"), Inches(M), Inches(1.92),
                      Inches(0.34), Inches(0.34))
@@ -500,12 +496,10 @@ para(tf, "一 句 真 话", size=11, bold=True, color=PRIMARY, first=True)
 tf = text_box(s, M, 2.50, 8.9, 2.4)
 para(tf, "「我爸 52 岁放了支架，爷爷糖尿病，", size=29, bold=True, color=TEXT, first=True, line=1.5)
 para(tf, "外公是脑溢血走的。」", size=29, bold=True, color=TEXT, line=1.5)
-rect(s, M, 5.20, 1.2, 0.05, fill=RECLAIM, radius=False)
-tf = text_box(s, M, 5.40, 8.6, 0.5)
+tf = text_box(s, M, 4.62, 8.6, 0.5)
 para(tf, "这三条，任何体检 App 都不会问。", size=14, color=MUTED, first=True)
 
 rect(s, 9.35, 2.50, 3.2, 1.95, fill=SURFACE, line=LINE)
-rect(s, 9.35, 2.50, 3.2, 0.06, fill=PRIMARY, radius=False)
 tf = text_box(s, 9.58, 2.66, 2.75, 1.7)
 para(tf, "这一句话的价值", size=10, bold=True, color=MUTED, first=True)
 rich(tf, [("5", True, PRIMARY), (" / 26", True, MUTED)], size=38)
@@ -540,7 +534,6 @@ cw = (W - 0.45) / 4
 for i, (ic, mark, h1, h2, h3) in enumerate(steps):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.2, cw, 2.5, fill=SURFACE, line=LINE)
-    rect(s, x, 2.2, cw, 0.06, fill=PRIMARY, radius=False)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
                          Inches(2.32), Inches(0.54), Inches(0.54))
     tf = text_box(s, x + cw - 0.62, 2.34, 0.42, 0.34, align=PP_ALIGN.RIGHT)
@@ -614,7 +607,6 @@ cw = (W - 0.45) / 4
 for i, (ic, when, what, how, line) in enumerate(beats):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.1, cw, 3.15, fill=SURFACE, line=LINE)
-    rect(s, x, 2.1, cw, 0.06, fill=PRIMARY, radius=False)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.20),
                          Inches(2.20), Inches(0.40), Inches(0.40))
     tf = text_box(s, x + 0.60, 2.26, cw - 0.82, 0.28)
@@ -930,7 +922,6 @@ cw = (W - 0.5) / 3
 for i, (ic, name, what, inputs, specs, note) in enumerate(engines):
     x = M + i * (cw + 0.25)
     rect(s, x, 2.05, cw, 3.55, fill=SURFACE, line=LINE)
-    rect(s, x, 2.05, cw, 0.06, fill=PRIMARY, radius=False)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
                          Inches(2.14), Inches(0.50), Inches(0.50))
     tf = text_box(s, x + 0.72, 2.20, cw - 1.0, 0.36)
@@ -1254,7 +1245,6 @@ footer(s, 15)
 s = prs.slides.add_slide(BLANK)
 s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
-rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
 tf = text_box(s, M, 1.75, 10, 0.36)
 para(tf, "家  系　Pedigree", size=12.5, bold=True, color=PRIMARY, first=True)
 tf = text_box(s, M, 2.15, 10.9, 1.1)
@@ -1262,7 +1252,6 @@ para(tf, "把家族史从一句话，变成能算、能改、能复算的东西"
      color=TEXT, first=True, line=1.25)
 tf = text_box(s, M, 3.35, 10, 0.45)
 para(tf, "谢谢聆听 · 欢迎提问", size=14, color=MUTED, first=True)
-rect(s, M, 3.95, 1.5, 0.05, fill=PRIMARY, radius=False)
 tf = text_box(s, M, 4.20, 11, 0.9)
 para(tf, "现场可演示：口述家族史 → 家系图 → 三套风险 → 可回收建议（全程本机，断网可用）",
      size=11, color=MUTED, first=True, line=1.5)
