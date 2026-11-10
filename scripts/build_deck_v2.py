@@ -215,6 +215,20 @@ def f1_chart(s, x, y, w, h, values, labels, notes):
 
 ICONS = os.path.join(ART, "icons")
 BRAND = os.path.join(ART, "brand")
+COLOR = os.path.join(ART, "color")
+
+
+def icon_p(name):
+    """图标解析顺序：彩色（Twemoji）> 自绘线框 > 品牌官方 logo。
+
+    为什么要彩色：投影尺寸下细线框图标容易被吃掉；Twemoji 是扁平彩色，
+    大面积色块在小尺寸也认得出。来源与许可见 docs/deck-assets-license.md。
+    """
+    for base in (COLOR, ICONS):
+        p = os.path.join(base, name + ".png")
+        if os.path.exists(p):
+            return p
+    return os.path.join(ICONS, name + ".png")
 
 
 def holdout_stats():
@@ -305,7 +319,7 @@ def new_slide(section, title, sub=None, icon=None):
     nav_bar(s, section)
     tx = M
     if icon:
-        path = os.path.join(ICONS, icon + ".png")
+        path = icon_p(icon)
         if os.path.exists(path):
             s.shapes.add_picture(path, Inches(M - 0.04), Inches(0.98), Inches(0.60), Inches(0.60))
             tx = M + 0.72
@@ -407,12 +421,12 @@ tf = text_box(s, M, 1.55, 8, 0.7)
 para(tf, "六个问题，一条主线", size=30, bold=True, first=True)
 
 toc = [
-    ("01", "tree", "项目背景", "家族史是免费的风险信号，却几乎没人用"),
+    ("01", "family", "项目背景", "家族史是免费的风险信号，却几乎没人用"),
     ("02", "flag", "方案与产品", "口述进、行动出；两屏演示完整闭环"),
     ("03", "chip", "技术路线", "数据流 / 分层架构 / 部署视图"),
     ("04", "target", "准确性与选型", "留出集 F1 1.000；判定为什么不用大模型"),
-    ("05", "trend", "价值与落地", "差异化、部署成本与实测性能"),
-    ("06", "team", "团队", "我们是谁，各自负责什么"),
+    ("05", "rocket", "价值与落地", "差异化、部署成本与实测性能"),
+    ("06", "busts", "团队", "我们是谁，各自负责什么"),
 ]
 for i, (num, ic, name, desc) in enumerate(toc):
     col = i % 2
@@ -420,7 +434,7 @@ for i, (num, ic, name, desc) in enumerate(toc):
     x = M + col * 5.95
     y = 2.45 + row * 1.32
     rect(s, x, y - 0.02, 0.52, 0.52, fill=PRIMARY_SOFT, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.07),
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.07),
                          Inches(y + 0.05), Inches(0.38), Inches(0.38))
     tf = text_box(s, x + 0.64, y - 0.06, 0.6, 0.32)
     para(tf, num, size=11, bold=True, color=PRIMARY, first=True)
@@ -431,17 +445,17 @@ for i, (num, ic, name, desc) in enumerate(toc):
 footer(s, 2)
 
 # ============ P3 项目背景 ============
-s = new_slide(0, "家族史是免费的风险信号，三套引擎都给它留了权重", icon="tree",
+s = new_slide(0, "家族史是免费的风险信号，三套引擎都给它留了权重", icon="family",
               sub="但用户手上的体检报告，从来没有家系图")
 items = [
-    ("report", "01", "体检报告只解读当次指标", "「未见异常」四个字，不看你父亲 52 岁放的支架。"),
+    ("receipt", "01", "体检报告只解读当次指标", "「未见异常」四个字，不看你父亲 52 岁放的支架。"),
     ("clipboard", "02", "医院问卷把家族史压成「有 / 无」", "谁、几岁发病、几个亲属——三件最关键的事全部丢掉。"),
     ("bulb", "03", "建议从不说「我这么改到底图什么」", "给建议却不复算，也不告诉你哪部分本就能拿回来。"),
 ]
 y = 2.15
 for ic, num, h1, h2 in items:
     rect(s, M, y - 0.02, 0.50, 0.50, fill=PRIMARY_SOFT, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.06),
+    s.shapes.add_picture(icon_p(ic), Inches(M + 0.06),
                          Inches(y + 0.02), Inches(0.40), Inches(0.40))
     tf = text_box(s, M + 0.62, y - 0.10, 0.5, 0.3)
     para(tf, num, size=10.5, bold=True, color=PRIMARY, first=True)
@@ -476,7 +490,7 @@ s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
 rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
 
-s.shapes.add_picture(os.path.join(ICONS, "chat.png"), Inches(M), Inches(1.92),
+s.shapes.add_picture(icon_p("bulb"), Inches(M), Inches(1.92),
                      Inches(0.34), Inches(0.34))
 tf = text_box(s, M + 0.48, 1.96, 6, 0.34)
 para(tf, "一 句 真 话", size=11, bold=True, color=PRIMARY, first=True)
@@ -500,7 +514,7 @@ flow = [("chat", "说一句话"), ("tree", "长出家系图"), ("target", "三�
 for i, (ic, label) in enumerate(flow):
     x = M + i * 2.75
     rect(s, x, 6.10, 2.45, 0.66, fill=SURFACE, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.16),
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.16),
                          Inches(6.27), Inches(0.30), Inches(0.30))
     tf = text_box(s, x + 0.56, 6.26, 1.75, 0.34)
     para(tf, label, size=10.5, color=TEXT, first=True)
@@ -515,16 +529,16 @@ s = new_slide(1, "口述进，行动出：四步闭环，每一步都能复核",
               sub="抽出来的每一条病，都能回查到用户原话")
 steps = [
     ("mic", "①", "口述", "语音或一句话描述家族病史，不用填表", "输出：结构化条目"),
-    ("tree", "②", "家系图", "自动结构化：谁、几岁发病、几个亲属", "输出：可点选回溯的家系图"),
+    ("family", "②", "家系图", "自动结构化：谁、几岁发病、几个亲属", "输出：可点选回溯的家系图"),
     ("chart", "③", "风险", "三套引擎分别算糖代谢、心血管、肺癌", "输出：三个百分比 + 分层"),
-    ("flag", "④", "可回收", "挑出可改的部分，给出这周就能做的一步", "输出：一份行动清单"),
+    ("seedling", "④", "可回收", "挑出可改的部分，给出这周就能做的一步", "输出：一份行动清单"),
 ]
 cw = (W - 0.45) / 4
 for i, (ic, mark, h1, h2, h3) in enumerate(steps):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.2, cw, 2.5, fill=SURFACE, line=LINE)
     rect(s, x, 2.2, cw, 0.06, fill=PRIMARY, radius=False)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
                          Inches(2.32), Inches(0.54), Inches(0.54))
     tf = text_box(s, x + cw - 0.62, 2.34, 0.42, 0.34, align=PP_ALIGN.RIGHT)
     para(tf, mark, size=13, bold=True, color=LINE2, first=True, align=PP_ALIGN.RIGHT)
@@ -547,7 +561,7 @@ para(tf, "不替代医生：所有判断写成「提示」，并给出模型置�
 footer(s, 4)
 
 # ============ P5 产品① ============
-s = new_slide(1, "第一屏：一段话，直接变成一张家系图", icon="chat")
+s = new_slide(1, "第一屏：一段话，直接变成一张家系图", icon="mic")
 picture_fit(s, os.path.join(ART, "shot-laptop-chat.png"), M - 0.05, 1.95, 8.35, 4.75)
 for i, (h1, h2) in enumerate([
     ("语音或文字输入", "不支持语音的浏览器自动隐藏入口，不留坏入口"),
@@ -562,7 +576,7 @@ for i, (h1, h2) in enumerate([
 footer(s, 5)
 
 # ============ P6 产品② ============
-s = new_slide(1, "第二屏：算清楚，哪一部分本就能拿回来", icon="gauge")
+s = new_slide(1, "第二屏：算清楚，哪一部分本就能拿回来", icon="chart")
 picture_fit(s, os.path.join(ART, "shot-browser-risk.png"), M - 0.06, 1.98, 5.95, 4.05)
 tf = text_box(s, M, 6.10, 5.9, 0.35)
 para(tf, "可回收风险（FINDRISC）：把「可改」与「改不了」分开算", size=10.5, color=MUTED, first=True)
@@ -577,16 +591,16 @@ para(tf, "界面上的每个数都能复算：China-PAR 对论文 Table 2 的 8 
 footer(s, 6)
 
 # ============ P7 现场动线 ============
-s = new_slide(1, "现场一走：四个动作，两分钟", icon="play",
+s = new_slide(1, "现场一走：四个动作，两分钟", icon="stopwatch",
               sub="网页与 PPT 交替；抽取单句 0.11 秒，几乎没有等待，讲慢一点就行")
 beats = [
-    ("chat", "0:00 – 0:30", "说一句",
+    ("mic", "0:00 – 0:30", "说一句",
      ["打开 /chat，照这句话念：", "「我爸 52 岁放了支架，", "爷爷糖尿病，外公脑溢血。」"],
      "您听我怎么说，它就怎么记。"),
-    ("tree", "0:30 – 1:00", "点节点",
+    ("family", "0:30 – 1:00", "点节点",
      ["图已经画好了——点父亲节点", "弹出「回查原话」"],
      "抽出来的每一条，都能回到你原话。"),
-    ("gauge", "1:00 – 1:30", "改一项",
+    ("chart", "1:00 – 1:30", "改一项",
      ["跳 /cvd，把 BMI 从 27 拖到 24", "三个数字同时重算"],
      "改一项，数字立刻变——这就是可回收。"),
     ("target", "1:30 – 2:00", "看结论",
@@ -598,7 +612,7 @@ for i, (ic, when, what, how, line) in enumerate(beats):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.1, cw, 3.15, fill=SURFACE, line=LINE)
     rect(s, x, 2.1, cw, 0.06, fill=PRIMARY, radius=False)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.20),
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.20),
                          Inches(2.20), Inches(0.40), Inches(0.40))
     tf = text_box(s, x + 0.60, 2.26, cw - 0.82, 0.28)
     para(tf, when, size=9.5, bold=True, color=PRIMARY, first=True)
@@ -622,7 +636,7 @@ para(tf, "不要在现场重启服务。启动脚本在桌面：启动家系演�
 footer(s, 7)
 
 # ============ P8 技术路线（真正的架构图） ============
-s = new_slide(2, "一张图看懂：数据怎么流动，模型只占哪一格", icon="chip",
+s = new_slide(2, "一张图看懂：数据怎么流动，模型只占哪一格", icon="dna",
               sub="从一句口述到一份行动方案，中间经过四段处理，全部在本机完成")
 
 COLS = [
@@ -651,7 +665,7 @@ for ci, (name, tone, items) in enumerate(COLS):
     for bi, (ic, item) in enumerate(items):
         y = top + bi * (box_h + box_gap)
         rect(s, x, y, col_w, box_h, fill=SURFACE, line=LINE2)
-        icon_path = os.path.join(ICONS, ic + ".png")
+        icon_path = icon_p(ic)
         if os.path.exists(icon_path):
             s.shapes.add_picture(icon_path, Inches(x + 0.12), Inches(y + 0.20),
                                  Inches(0.22), Inches(0.22))
@@ -669,7 +683,7 @@ for ci, (name, tone, items) in enumerate(COLS):
 # 底部：本机数据层（服务层与模型层写入）
 data_y = top + 3 * (box_h + box_gap) + 0.28
 rect(s, col_x[1], data_y, col_w * 2 + gap, 0.6, fill=PRIMARY_SOFT, line=LINE2)
-db_icon = os.path.join(ICONS, "db.png")
+db_icon = icon_p("desktop")
 if os.path.exists(db_icon):
     s.shapes.add_picture(db_icon, Inches(col_x[1] + 0.28), Inches(data_y + 0.17),
                          Inches(0.26), Inches(0.26))
@@ -701,7 +715,7 @@ footer(s, 7)
 
 # ============ P10 分层技术架构（模块级） ============
 s = new_slide(2, "代码怎么组织：五层，每层只依赖下一层",
-              icon="layers", sub="路径都是仓库里真实存在的目录；这页回答「你们的架构是什么」")
+              icon="chip", sub="路径都是仓库里真实存在的目录；这页回答「你们的架构是什么」")
 MONO = "Consolas"
 
 BANDS = [
@@ -737,7 +751,7 @@ for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
     tone = tone_of[bi]
     # 左侧层名
     rect(s, M, y, 1.38, band_h, fill=SURFACE, line=LINE2)
-    icon_path = os.path.join(ICONS, ic + ".png")
+    icon_path = icon_p(ic)
     if os.path.exists(icon_path):
         s.shapes.add_picture(icon_path, Inches(M + 0.12), Inches(y + 0.12), Inches(0.22), Inches(0.22))
     tf = text_box(s, M + 0.38, y + 0.10, 0.92, 0.28)
@@ -799,7 +813,7 @@ footer(s, 10)
 
 # ============ P9 部署视图 ============
 s = new_slide(2, "部署视图：一台电脑跑完全部，只有公网入口是可选项",
-              icon="layers", sub="评委常问的三件事——跑在哪、要不要联网、花多少钱")
+              icon="desktop", sub="评委常问的三件事——跑在哪、要不要联网、花多少钱")
 
 
 def dep_box(x, y, w, h, icon=None, title="", sub="", fill=SURFACE, brand=None):
@@ -811,7 +825,7 @@ def dep_box(x, y, w, h, icon=None, title="", sub="", fill=SURFACE, brand=None):
         if os.path.exists(cand):
             path = cand
     if path is None and icon:
-        cand = os.path.join(ICONS, icon + ".png")
+        cand = icon_p(icon)
         if os.path.exists(cand):
             path = cand
     if path:
@@ -891,9 +905,9 @@ for i, (big, label) in enumerate([("1 台", "实测显存 1.8 GB，单机即可�
 footer(s, 9)
 
 # ============ P8 三引擎 ============
-s = new_slide(2, "三套引擎，各管一段，都对齐原始文献", icon="calc")
+s = new_slide(2, "三套引擎，各管一段，都对齐原始文献", icon="heart")
 engines = [
-    ("drop", "FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史",
+    ("blood", "FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史",
      [("适用", "成人（年龄计入分值）"),
       ("输出", "0–26 分 · 五档 · 可回收拆分"),
       ("分档线", "≤6 / 7–11 / 12–14 / 15–20 / 21–26")],
@@ -903,7 +917,7 @@ engines = [
       ("输出", "10 年 ASCVD 风险 % + 分层"),
       ("校验", "论文 Table 2 八个验证点")],
      "家族史是独立系数，不是一个「有 / 无」开关"),
-    ("lung", "PLCOm2012", "肺癌 6 年风险", "吸烟量（包年）/ 戒烟年限 / 家族史",
+    ("lungs", "PLCOm2012", "肺癌 6 年风险", "吸烟量（包年）/ 戒烟年限 / 家族史",
      [("适用", "55–74 岁验证人群（计算 40–85）"),
       ("输出", "6 年肺癌风险 % + 筛查阈值"),
       ("边界", "只对曾吸烟者建模")],
@@ -914,7 +928,7 @@ for i, (ic, name, what, inputs, specs, note) in enumerate(engines):
     x = M + i * (cw + 0.25)
     rect(s, x, 2.05, cw, 3.55, fill=SURFACE, line=LINE)
     rect(s, x, 2.05, cw, 0.06, fill=PRIMARY, radius=False)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
                          Inches(2.14), Inches(0.50), Inches(0.50))
     tf = text_box(s, x + 0.72, 2.20, cw - 1.0, 0.36)
     para(tf, name, size=16, bold=True, color=PRIMARY, first=True)
@@ -999,7 +1013,7 @@ para(tf, "机制：留出集只跑一次 · 每次评测自动落盘（commit + 
 footer(s, 11)
 
 # ============ P10 判定选型 ============
-s = new_slide(3, "遗传模式判定：为什么最后没用大模型做这件事", icon="balance")
+s = new_slide(3, "遗传模式判定：为什么最后没用大模型做这件事", icon="scales")
 rows = [
     ("OpenJev-Q4（18.5 GB，通用决策模型）", "40%", "6.3 s", "隐性 / X 连锁 / 线粒体 三类全错"),
     ("结构逻辑回归（12 维特征，2.3 KB）", "96%", "< 0.1 s", "同一批均衡样本，每类 5 条"),
@@ -1039,7 +1053,7 @@ para(tf, "并列出缺什么让用户补一句（例如「母系亲属是否患�
 footer(s, 10)
 
 # ============ P11 微调 A/B ============
-s = new_slide(3, "我们真的微调了一次，然后被数据否掉", icon="flask")
+s = new_slide(3, "我们真的微调了一次，然后被数据否掉", icon="testtube")
 rows = [
     ("基线 + few-shot + 规则层", "1.000", "0.893", "0.943", "27/30"),
     ("微调 + 规则层", "1.000", "0.893", "0.943", "27/30"),
@@ -1076,17 +1090,17 @@ para(tf, "负结果也是结果：它证明提升空间在词表与规则，而�
 footer(s, 11)
 
 # ============ P12 隐私与合规 ============
-s = new_slide(4, "隐私与合规：写进代码的承诺", icon="lock")
+s = new_slide(4, "隐私与合规：写进代码的承诺", icon="shield")
 left = [
-    ("server", "100% 本机推理", "llama-server 跑在 127.0.0.1；代码里没有任何外部 API 调用"),
+    ("desktop", "100% 本机推理", "llama-server 跑在 127.0.0.1；代码里没有任何外部 API 调用"),
     ("shield", "数据不出机器", "家系与体检数字存在本机 MySQL；化验单图片只在内存里转 base64"),
-    ("clipboard", "不宣称诊断", "遗传模式等判断统一写「提示，不是诊断」，并显示置信度"),
-    ("target", "不确定就不显示", "置信度不足时退回「证据不足」并给出缺口追问，而不是硬给结论"),
+    ("warning", "不宣称诊断", "遗传模式等判断统一写「提示，不是诊断」，并显示置信度"),
+    ("question", "不确定就不显示", "置信度不足时退回「证据不足」并给出缺口追问，而不是硬给结论"),
 ]
 for i, (ic, h1, h2) in enumerate(left):
     y = 2.12 + i * 1.06
     rect(s, M, y - 0.02, 0.46, 0.46, fill=PRIMARY_SOFT, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.04),
+    s.shapes.add_picture(icon_p(ic), Inches(M + 0.04),
                          Inches(y + 0.02), Inches(0.38), Inches(0.38))
     tf = text_box(s, M + 0.58, y - 0.02, 6.2, 0.32)
     para(tf, h1, size=13.5, bold=True, color=PRIMARY, first=True)
@@ -1103,7 +1117,7 @@ for i, line in enumerate(["不埋点统计用户病史", "不上传任何图片�
 footer(s, 12)
 
 # ============ P13 差异化 ============
-s = new_slide(4, "同一件事，四种现有做法各自缺一环", icon="layers",
+s = new_slide(4, "同一件事，四种现有做法各自缺一环", icon="puzzle",
               sub="对照的是典型形态，不针对某一款具体产品")
 COLSX = ["体检解读 App", "医院问卷", "临床家系图", "通用健康 App", "家系"]
 ROWS = [
@@ -1158,14 +1172,14 @@ para(tf, "我们的四件事，都落在这张表的最后一列", size=9.5, bol
 footer(s, 17)
 
 # ============ P18 价值与落地（实测数字） ============
-s = new_slide(4, "落地：一台电脑跑完整个闭环，数字都是实测的", icon="trend",
+s = new_slide(4, "落地：一台电脑跑完整个闭环，数字都是实测的", icon="rocket",
               sub="以下体积与耗时在本机实测（RTX 5080 / 32 GB 内存），不是估算")
 rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
 para(tf, "要装什么（体积）", size=10.5, bold=True, color=PRIMARY, first=True)
 items = [
-    ("chip", None, "抽取模型 Qwen3-1.7B · Q4_K_M", "1.2 GB"),
-    ("server", None, "llama.cpp 运行时（CUDA 构建）", "202 MB"),
+    ("robot", None, "抽取模型 Qwen3-1.7B · Q4_K_M", "1.2 GB"),
+    ("package", None, "llama.cpp 运行时（CUDA 构建）", "202 MB"),
     ("camera", None, "视觉模型 + mmproj（可选）", "2.6 GB"),
     (None, "nextjs", "站点构建产物 .next", "120 MB"),
     (None, "nodejs", "依赖 node_modules", "419 MB"),
@@ -1177,7 +1191,7 @@ for i, (ic, brand, name, size) in enumerate(items):
         cand = os.path.join(BRAND, brand + ".png")
         p = cand if os.path.exists(cand) else None
     if p is None and ic:
-        cand = os.path.join(ICONS, ic + ".png")
+        cand = icon_p(ic)
         p = cand if os.path.exists(cand) else None
     if p:
         s.shapes.add_picture(p, Inches(M + 0.26), Inches(y - 0.05), Inches(0.34), Inches(0.34))
@@ -1211,7 +1225,7 @@ para(tf, "口径：本机实测（RTX 5080 / GPU 推理，多次取中位）；�
 footer(s, 18)
 
 # ============ P15 团队 ============
-s = new_slide(5, "团队：谁在负责哪一块", icon="team",
+s = new_slide(5, "团队：谁在负责哪一块", icon="busts",
               sub="【待填】请补充成员姓名、学校 / 单位、分工与代表成果")
 members = [("【成员 1】", "【角色】", "【负责模块】"), ("【成员 2】", "【角色】", "【负责模块】"),
            ("【成员 3】", "【角色】", "【负责模块】")]
@@ -1253,13 +1267,13 @@ para(tf, "代码与评测产物：留出集 6 套、每套 30 条，docs/eval-re
      size=11, color=MUTED, line=1.5)
 
 # 收尾的四件事，用图标条代替空话
-closing = [("tree", "家系图", "口述即可生成"), ("chip", "本机推理", "抽取 0.11 秒"),
-           ("lock", "数据不出机器", "无外部 API"), ("flag", "可执行的下一步", "这周就能做")]
+closing = [("family", "家系图", "口述即可生成"), ("chip", "本机推理", "抽取 0.11 秒"),
+           ("shield", "数据不出机器", "无外部 API"), ("flag", "可执行的下一步", "这周就能做")]
 cw2 = (W - 0.45) / 4
 for i, (ic, title, note) in enumerate(closing):
     x = M + i * (cw2 + 0.15)
     rect(s, x, 5.30, cw2, 1.15, fill=SURFACE, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
                          Inches(5.48), Inches(0.34), Inches(0.34))
     tf = text_box(s, x + 0.66, 5.44, cw2 - 0.86, 0.32)
     para(tf, title, size=11.5, bold=True, color=PRIMARY, first=True)
