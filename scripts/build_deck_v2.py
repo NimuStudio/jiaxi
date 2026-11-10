@@ -307,8 +307,8 @@ def new_slide(section, title, sub=None, icon=None):
     if icon:
         path = os.path.join(ICONS, icon + ".png")
         if os.path.exists(path):
-            s.shapes.add_picture(path, Inches(M + 0.02), Inches(1.03), Inches(0.46), Inches(0.46))
-            tx = M + 0.66
+            s.shapes.add_picture(path, Inches(M - 0.04), Inches(0.98), Inches(0.60), Inches(0.60))
+            tx = M + 0.72
     tf = text_box(s, tx, 1.02, 13.333 - tx - M, 0.62)
     para(tf, title, size=26, bold=True, first=True)
     if sub:
@@ -420,8 +420,8 @@ for i, (num, ic, name, desc) in enumerate(toc):
     x = M + col * 5.95
     y = 2.45 + row * 1.32
     rect(s, x, y - 0.02, 0.52, 0.52, fill=PRIMARY_SOFT, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.10),
-                         Inches(y + 0.08), Inches(0.32), Inches(0.32))
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.07),
+                         Inches(y + 0.05), Inches(0.38), Inches(0.38))
     tf = text_box(s, x + 0.64, y - 0.06, 0.6, 0.32)
     para(tf, num, size=11, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, x + 1.10, y - 0.10, 4.4, 0.4)
@@ -441,8 +441,8 @@ items = [
 y = 2.15
 for ic, num, h1, h2 in items:
     rect(s, M, y - 0.02, 0.50, 0.50, fill=PRIMARY_SOFT, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.10),
-                         Inches(y + 0.08), Inches(0.30), Inches(0.30))
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.06),
+                         Inches(y + 0.02), Inches(0.40), Inches(0.40))
     tf = text_box(s, M + 0.62, y - 0.10, 0.5, 0.3)
     para(tf, num, size=10.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, M + 0.62, y + 0.20, 6.4, 0.4)
@@ -524,8 +524,8 @@ for i, (ic, mark, h1, h2, h3) in enumerate(steps):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.2, cw, 2.5, fill=SURFACE, line=LINE)
     rect(s, x, 2.2, cw, 0.06, fill=PRIMARY, radius=False)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.25),
-                         Inches(2.36), Inches(0.42), Inches(0.42))
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
+                         Inches(2.32), Inches(0.54), Inches(0.54))
     tf = text_box(s, x + cw - 0.62, 2.34, 0.42, 0.34, align=PP_ALIGN.RIGHT)
     para(tf, mark, size=13, bold=True, color=LINE2, first=True, align=PP_ALIGN.RIGHT)
     tf = text_box(s, x + 0.25, 2.78, cw - 0.5, 0.4)
@@ -598,8 +598,8 @@ for i, (ic, when, what, how, line) in enumerate(beats):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.1, cw, 3.15, fill=SURFACE, line=LINE)
     rect(s, x, 2.1, cw, 0.06, fill=PRIMARY, radius=False)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
-                         Inches(2.24), Inches(0.30), Inches(0.30))
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.20),
+                         Inches(2.20), Inches(0.40), Inches(0.40))
     tf = text_box(s, x + 0.60, 2.26, cw - 0.82, 0.28)
     para(tf, when, size=9.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, x + 0.24, 2.52, cw - 0.48, 0.36)
@@ -914,8 +914,8 @@ for i, (ic, name, what, inputs, specs, note) in enumerate(engines):
     x = M + i * (cw + 0.25)
     rect(s, x, 2.05, cw, 3.55, fill=SURFACE, line=LINE)
     rect(s, x, 2.05, cw, 0.06, fill=PRIMARY, radius=False)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.26),
-                         Inches(2.20), Inches(0.36), Inches(0.36))
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
+                         Inches(2.14), Inches(0.50), Inches(0.50))
     tf = text_box(s, x + 0.72, 2.20, cw - 1.0, 0.36)
     para(tf, name, size=16, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, x + 0.28, 2.62, cw - 0.56, 0.3)
@@ -1086,8 +1086,8 @@ left = [
 for i, (ic, h1, h2) in enumerate(left):
     y = 2.12 + i * 1.06
     rect(s, M, y - 0.02, 0.46, 0.46, fill=PRIMARY_SOFT, line=LINE)
-    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.09),
-                         Inches(y + 0.07), Inches(0.28), Inches(0.28))
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.04),
+                         Inches(y + 0.02), Inches(0.38), Inches(0.38))
     tf = text_box(s, M + 0.58, y - 0.02, 6.2, 0.32)
     para(tf, h1, size=13.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, M + 0.58, y + 0.32, 6.2, 0.6)
@@ -1180,7 +1180,7 @@ for i, (ic, brand, name, size) in enumerate(items):
         cand = os.path.join(ICONS, ic + ".png")
         p = cand if os.path.exists(cand) else None
     if p:
-        s.shapes.add_picture(p, Inches(M + 0.28), Inches(y - 0.01), Inches(0.26), Inches(0.26))
+        s.shapes.add_picture(p, Inches(M + 0.26), Inches(y - 0.05), Inches(0.34), Inches(0.34))
     tf = text_box(s, M + 0.62, y, 4.3, 0.3)
     para(tf, name, size=9.5, color=TEXT, first=True)
     tf = text_box(s, 5.55, y, 1.05, 0.3, align=PP_ALIGN.RIGHT)
