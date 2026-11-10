@@ -551,26 +551,32 @@ steps = [
     ("chart", "③", "风险", "三套引擎分别算糖代谢、心血管、肺癌", "输出：三个百分比 + 分层"),
     ("reclaim", "④", "可回收", "挑出可改的部分，给出这周就能做的一步", "输出：一份行动清单"),
 ]
-cw = (W - 0.45) / 4
+# 改成横向流程带：一条时间轴 + 四个节点，和别页的等宽卡片拉开差别
+AXIS_Y = 2.86
+rect(s, M + 0.55, AXIS_Y, W - 1.1, 0.02, fill=LINE2, radius=False)
+cw = (W - 0.4) / 4
 for i, (ic, mark, h1, h2, h3) in enumerate(steps):
-    x = M + i * (cw + 0.15)
-    # 第 4 步是产品价值落点，用墨青底把它从三张白卡里区分出来
-    rect(s, x, 2.2, cw, 2.5, fill=RECLAIM_SOFT if i == 3 else SURFACE,
-         line=RECLAIM_LINE if i == 3 else LINE)
-    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
-                         Inches(2.32), Inches(0.54), Inches(0.54))
-    tf = text_box(s, x + cw - 0.62, 2.34, 0.42, 0.34, align=PP_ALIGN.RIGHT)
-    para(tf, mark, size=13, bold=True, color=LINE2, first=True, align=PP_ALIGN.RIGHT)
-    tf = text_box(s, x + 0.25, 2.78, cw - 0.5, 0.4)
-    para(tf, h1, size=16, bold=True, first=True)
-    tf = text_box(s, x + 0.25, 3.2, cw - 0.5, 1.0)
-    para(tf, h2, size=11, color=MUTED, first=True, line=1.4)
-    tf = text_box(s, x + 0.25, 4.15, cw - 0.5, 0.3)
-    para(tf, h3, size=10, color=PRIMARY, first=True)
-    if i < 3:
-        ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + cw + 0.005), Inches(3.3),
-                                Inches(0.14), Inches(0.2))
-        ar.fill.solid(); ar.fill.fore_color.rgb = LINE2; ar.line.fill.background(); ar.shadow.inherit = False
+    cx = M + 0.2 + cw * (i + 0.5)
+    hot = (i == 3)
+    # 节点：圆底 + 图标，第 4 个用墨青实心表示「落点」
+    dot = 0.66 if hot else 0.56
+    s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(cx - dot / 2), Inches(AXIS_Y + 0.01 - dot / 2),
+                       Inches(dot), Inches(dot))
+    oval = s.shapes[-1]
+    # 图标本身是墨青色，节点底不能用同色实心，否则图标看不见
+    oval.fill.solid(); oval.fill.fore_color.rgb = RECLAIM_SOFT if hot else SURFACE
+    oval.line.color.rgb = RECLAIM if hot else LINE2
+    oval.line.width = Pt(2.0) if hot else Pt(1.2)
+    oval.shadow.inherit = False
+    s.shapes.add_picture(icon_p(ic), Inches(cx - 0.15), Inches(AXIS_Y + 0.01 - 0.15),
+                         Inches(0.30), Inches(0.30))
+    tf = text_box(s, cx - cw / 2, AXIS_Y + 0.52, cw, 0.34, align=PP_ALIGN.CENTER)
+    para(tf, h1, size=15, bold=True, color=RECLAIM if hot else TEXT, first=True,
+         align=PP_ALIGN.CENTER)
+    tf = text_box(s, cx - cw / 2 + 0.06, AXIS_Y + 0.90, cw - 0.12, 0.9)
+    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.4, align=PP_ALIGN.CENTER)
+    tf = text_box(s, cx - cw / 2 + 0.06, AXIS_Y + 1.90, cw - 0.12, 0.3)
+    para(tf, h3, size=9, color=PRIMARY, first=True, align=PP_ALIGN.CENTER)
 
 rect(s, M, 5.05, W, 1.3, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.3, 5.18, W - 0.6, 1.05)
@@ -1164,24 +1170,28 @@ s = new_slide(3, "这一页是**对照实验**：同一个任务，两种做法�
               sub="同一批均衡样本（每类 5 条）、同一份输入。左边是对照组，右边是我们的方案")
 
 # 顶部：一句话把两个数字的身份说清楚
-rect(s, M, 1.96, 5.55, 0.78, fill=SURFACE, line=LINE)
-tf = text_box(s, M + 0.24, 2.04, 5.1, 0.62)
-rich(tf, [("对照组", True, MUTED), ("  通用决策模型 OpenJev-Q4（18.5 GB）", False, MUTED)],
-     size=9.5, first=True)
-rich(tf, [("40%", True, MUTED), ("　它的失败很典型：隐性 / X 连锁 / 线粒体三类全判错", False, MUTED)],
-     size=12, line=1.3)
+rect(s, M, 1.96, 5.55, 0.90, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.24, 2.00, 5.1, 0.3)
+para(tf, "对照组 · 通用决策模型 OpenJev-Q4（18.5 GB）", size=9, color=MUTED, first=True)
+tf = text_box(s, M + 0.24, 2.18, 2.3, 0.52)
+para(tf, "40%", size=28, bold=True, color=RGBColor(0x8C, 0x9A, 0xA8), first=True)
+tf = text_box(s, M + 1.95, 2.26, 3.4, 0.6)
+para(tf, "隐性 / X 连锁 / 线粒体", size=8.5, color=MUTED, first=True, line=1.3)
+para(tf, "三类全判错", size=8.5, color=MUTED, line=1.3)
 # 比例条：让 40% 与 96% 在视觉上先分出强弱
-rect(s, M + 0.24, 2.58, 5.1, 0.09, fill=RGBColor(0xE4, 0xE7, 0xEB), line=None, radius=False)
-rect(s, M + 0.24, 2.58, 5.1 * 0.40, 0.09, fill=RGBColor(0x8C, 0x9A, 0xA8), line=None, radius=False)
+rect(s, M + 0.24, 2.72, 5.1, 0.07, fill=RGBColor(0xE4, 0xE7, 0xEB), line=None, radius=False)
+rect(s, M + 0.24, 2.72, 5.1 * 0.40, 0.07, fill=RGBColor(0x8C, 0x9A, 0xA8), line=None, radius=False)
 
-rect(s, 6.55, 1.96, 6.0, 0.78, fill=RED_SOFT, line=RGBColor(0xE8, 0xB4, 0xAC))
-tf = text_box(s, 6.79, 2.04, 5.5, 0.62)
-rich(tf, [("我们的方案", True, RED), ("  12 维结构逻辑回归（2.3 KB）", False, MUTED)],
-     size=9.5, first=True)
-rich(tf, [("96%", True, RED), ("　单次 0.005–0.07 秒，不需要 18 GB 权重", False, MUTED)],
-     size=12, line=1.3)
-rect(s, 6.79, 2.58, 5.5, 0.09, fill=RGBColor(0xF0, 0xD3, 0xCE), line=None, radius=False)
-rect(s, 6.79, 2.58, 5.5 * 0.96, 0.09, fill=RED, line=None, radius=False)
+rect(s, 6.55, 1.96, 6.0, 0.90, fill=RED_SOFT, line=RGBColor(0xE8, 0xB4, 0xAC))
+tf = text_box(s, 6.79, 2.00, 5.5, 0.3)
+para(tf, "我们的方案 · 12 维结构逻辑回归（2.3 KB）", size=9, color=MUTED, first=True)
+tf = text_box(s, 6.79, 2.10, 2.6, 0.70)
+para(tf, "96%", size=34, bold=True, color=RED, first=True)
+tf = text_box(s, 8.55, 2.24, 3.8, 0.6)
+para(tf, "同一批样本、同一份输入", size=8.5, color=MUTED, first=True, line=1.3)
+para(tf, "单次 0.005–0.07 秒，无需 18 GB 权重", size=8.5, color=MUTED, line=1.3)
+rect(s, 6.79, 2.72, 5.5, 0.07, fill=RGBColor(0xF0, 0xD3, 0xCE), line=None, radius=False)
+rect(s, 6.79, 2.72, 5.5 * 0.96, 0.07, fill=RED, line=None, radius=False)
 
 # 逐类对照表
 rows = [
