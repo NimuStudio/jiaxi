@@ -216,6 +216,38 @@ def f1_chart(s, x, y, w, h, values, labels, notes):
 ICONS = os.path.join(ART, "icons")
 
 
+def outline_word(slide, text, x, y, w, h, size=140, color="FFFFFF", alpha=20,
+                 spc=0.14, line_w=1.15):
+    """描边大字：与网站开屏那层 PEDIGREE 同款处理（描边、透明填充、宽字距）。
+
+    用作页面肌理而不是标题——所以只描边、不给填充，
+    并且故意让下半部分被页面底边裁掉，读起来像地面上的暗纹。
+    """
+    from lxml import etree
+    A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+    tf = text_box(slide, x, y, w, h, align=PP_ALIGN.CENTER)
+    p = tf.paragraphs[0]
+    p.alignment = PP_ALIGN.CENTER
+    r = p.add_run()
+    r.text = text
+    set_font(r, size, True, RGBColor(0xFF, 0xFF, 0xFF), latin="Arial")
+    rPr = r._r.get_or_add_rPr()
+    rPr.set("spc", str(int(spc * size * 100)))
+    for tag in ("solidFill", "ln"):
+        for el in rPr.findall(A + tag):
+            rPr.remove(el)
+    # 先放描边，再放 noFill（顺序无关，但 noFill 覆盖填充）
+    ln = etree.SubElement(rPr, A + "ln")
+    ln.set("w", str(int(line_w * 12700)))
+    sf = etree.SubElement(ln, A + "solidFill")
+    clr = etree.SubElement(sf, A + "srgbClr")
+    clr.set("val", color)
+    al = etree.SubElement(clr, A + "alpha")
+    al.set("val", str(int(alpha * 1000)))
+    etree.SubElement(rPr, A + "noFill")
+    return tf
+
+
 def new_slide(section, title, sub=None, icon=None):
     s = prs.slides.add_slide(BLANK)
     bg_path = os.path.join(ART, f"content-bg-{section}.png")
