@@ -1130,10 +1130,26 @@ for i, (h1, h2) in enumerate(eng):
     para(tf, h2, size=9, color=MUTED, first=True, line=1.25)
 footer(s, 15)
 
-# ============ JEV 实测：40% 与那三个坑 ============
-s = new_slide(3, "实测：18.5 GB 的决策模型拿了 40%，输在「没有遗传学先验」", icon="chart",
-              sub="同一批均衡样本（每类 5 条），同一份输入，逐类看差距在哪")
+# ============ 对照实验：通用决策模型 vs 我们的结构模型 ============
+s = new_slide(3, "这一页是对照实验：同一个任务，两种做法谁更合适", icon="chart",
+              sub="同一批均衡样本（每类 5 条）、同一份输入。左边是对照组，右边是我们的方案")
 
+# 顶部：一句话把两个数字的身份说清楚
+rect(s, M, 1.96, 5.55, 0.78, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.24, 2.04, 5.1, 0.62)
+rich(tf, [("对照组", True, MUTED), ("  通用决策模型 OpenJev-Q4（18.5 GB）", False, MUTED)],
+     size=9.5, first=True)
+rich(tf, [("40%", True, MUTED), ("　它的失败很典型：隐性 / X 连锁 / 线粒体三类全判错", False, MUTED)],
+     size=12, line=1.3)
+
+rect(s, 6.55, 1.96, 6.0, 0.78, fill=RECLAIM_SOFT, line=LINE)
+tf = text_box(s, 6.79, 2.04, 5.5, 0.62)
+rich(tf, [("我们的方案", True, RECLAIM), ("  12 维结构逻辑回归（2.3 KB）", False, RECLAIM)],
+     size=9.5, first=True)
+rich(tf, [("96%", True, RECLAIM), ("　单次 0.005–0.07 秒，不需要 18 GB 权重", False, RECLAIM)],
+     size=12, line=1.3)
+
+# 逐类对照表
 rows = [
     ("常染色体显性", "100%", "100%"),
     ("常染色隐性", "0%（全判证据不足）", "高"),
@@ -1141,52 +1157,48 @@ rows = [
     ("线粒体", "0%（5/5 判成显性）", "高"),
     ("证据不足", "100%", "高"),
 ]
-rect(s, M, 2.02, 6.15, 0.34, fill=PRIMARY_SOFT, line=None)
-heads = [("类别", M + 0.16), ("OpenJev-Q4", M + 2.55), ("结构模型", M + 4.55)]
-for h, hx in heads:
-    tf = text_box(s, hx, 2.06, 2.0, 0.26)
-    para(tf, h, size=9, bold=True, color=MUTED, first=True)
+rect(s, M, 2.92, 6.15, 0.32, fill=SURFACE, line=None)
+for h, hx, hc in [("类别", M + 0.16, MUTED), ("对照组", M + 2.35, MUTED), ("我们的方案", M + 4.45, RECLAIM)]:
+    tf = text_box(s, hx, 2.95, 2.0, 0.26)
+    para(tf, h, size=9, bold=True, color=hc, first=True)
 for i, (cat, jev, st) in enumerate(rows):
-    y = 2.42 + i * 0.46
-    tf = text_box(s, M + 0.16, y, 2.35, 0.3)
+    y = 3.30 + i * 0.44
+    tf = text_box(s, M + 0.16, y, 2.2, 0.3)
     para(tf, cat, size=9.5, color=TEXT, first=True)
-    tf = text_box(s, M + 2.55, y, 1.9, 0.3)
-    para(tf, jev, size=9.5, bold=True, color=DANGER if jev.startswith("0%") else TEXT, first=True)
-    tf = text_box(s, M + 4.55, y, 1.5, 0.3)
-    para(tf, st, size=9.5, color=RECLAIM, first=True)
+    tf = text_box(s, M + 2.35, y, 2.0, 0.3)
+    para(tf, jev, size=9.5, bold=True, color=DANGER if jev.startswith("0%") else MUTED, first=True)
+    tf = text_box(s, M + 4.45, y, 1.6, 0.3)
+    para(tf, st, size=9.5, bold=True, color=RECLAIM, first=True)
     if i < len(rows) - 1:
-        rect(s, M + 0.16, y + 0.36, 5.8, 0.006, fill=LINE, radius=False)
+        rect(s, M + 0.16, y + 0.34, 5.8, 0.006, fill=LINE, radius=False)
+tf = text_box(s, M + 0.16, 5.56, 5.9, 0.3)
+para(tf, "ECE 0.401 vs —：对照组不只是判错，连「自己不确定」都没校准出来。", size=8.5, color=MUTED, first=True)
 
-rect(s, M, 4.86, 6.15, 0.62, fill=SURFACE, line=LINE)
-tf = text_box(s, M + 0.18, 4.94, 5.8, 0.5)
-rich(tf, [("总体  ", True, MUTED), ("40%", True, DANGER), ("  vs  ", False, MUTED),
-          ("96%", True, RECLAIM), ("     单次延迟 6.3 s vs 0.005–0.07 s     ECE 0.401", False, MUTED)],
-     size=10.5, first=True)
-
-tf = text_box(s, 6.95, 2.02, 5.6, 0.3)
-para(tf, "调参踩到的三个坑（都写进了代码注释）", size=11, bold=True, color=PRIMARY, first=True)
+# 右：三个调参坑
+tf = text_box(s, 6.95, 2.92, 5.6, 0.3)
+para(tf, "为了让对照组发挥好，我们踩过这三个坑", size=10.5, bold=True, color=PRIMARY, first=True)
 pits = [
-    ("01", "内部代码直接喂模型", "\"myocardial-infarction\" 判不出来，必须翻成「心肌梗死」"),
-    ("02", "指令里夹 JSON 措辞", "「onsetAge 可为 null」让同一家系的显性概率从 66% 掉到 48%"),
-    ("03", "选项描述填了判据", "给每个模式配「每代都有患者…」等于提前告诉答案，显性概率掉到 40%"),
+    ("01", "内部代码直接喂模型", "内部编码 myocardial-infarction 喂进去判不出来，必须翻成「心肌梗死」"),
+    ("02", "指令里夹 JSON 措辞", "「onsetAge 可为 null」让显性概率从 66% 掉到 48%"),
+    ("03", "选项描述填了判据", "配「每代都有患者…」等于提前告诉答案，显性掉到 40%"),
 ]
 for i, (num, h1, h2) in enumerate(pits):
-    y = 2.40 + i * 1.02
-    rect(s, 6.95, y, 5.6, 0.92, fill=SURFACE, line=LINE)
-    tf = text_box(s, 7.10, y + 0.10, 0.6, 0.3)
-    para(tf, num, size=10, bold=True, color=DANGER, first=True)
-    tf = text_box(s, 7.62, y + 0.08, 4.75, 0.3)
-    para(tf, h1, size=10, bold=True, color=TEXT, first=True)
-    tf = text_box(s, 7.62, y + 0.38, 4.75, 0.5)
-    para(tf, h2, size=8.5, color=MUTED, first=True, line=1.3)
+    y = 3.28 + i * 0.82
+    rect(s, 6.95, y, 5.6, 0.74, fill=SURFACE, line=LINE)
+    tf = text_box(s, 7.10, y + 0.06, 0.6, 0.28)
+    para(tf, num, size=9.5, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, 7.62, y + 0.05, 4.8, 0.26)
+    para(tf, h1, size=9.5, bold=True, color=TEXT, first=True)
+    tf = text_box(s, 7.62, y + 0.32, 4.8, 0.38)
+    para(tf, h2, size=8, color=MUTED, first=True, line=1.25)
 
-rect(s, M, 5.62, W, 0.98, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, M + 0.28, 5.72, W - 0.56, 0.8)
-para(tf, "还试过用文本模型的 logprobs 打分（分诊 LoRA）：它给隐性 71%，而两代男性发病更像显性——判不可信，",
-     size=10, first=True, line=1.35)
-para(tf, "于是门槛抬到 0.8 且结果不进界面。结论：通用决策模型不知道家系结构意味着什么，12 维特征就够了。",
-     size=10, color=MUTED, line=1.35)
-footer(s, 16)
+rect(s, M, 5.90, W, 0.92, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.26, 6.00, W - 0.52, 0.75)
+para(tf, "这不是「我们的模型只有 40%」——40% 是通用决策模型的表现。我们把它完整接进来了（协议 / 校验 / 降级），它现在是可切换的对照后端。",
+     size=10, bold=True, color=TEXT, first=True, line=1.35)
+para(tf, "结论只有一句：遗传模式由家系结构决定，12 维特征就够了，通用决策模型不知道结构意味着什么。",
+     size=9.5, color=MUTED, line=1.35)
+footer(s, 17)
 
 # ============ 判定链路（产品里怎么用） ============
 s = new_slide(3, "产品里的一条链路：从五个概率，到一句用户看得懂的话", icon="route",
