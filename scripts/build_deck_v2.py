@@ -569,8 +569,8 @@ for i, (big, label, desc) in enumerate(cards):
     tf = text_box(s, x + 0.3, 3.38, cw - 0.6, 1.0)
     para(tf, desc, size=10.5, color=MUTED, first=True, line=1.4)
 
-rect(s, M, 4.85, W, 1.55, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, M + 0.3, 4.98, W - 0.6, 1.3)
+rect(s, M, 4.9, W, 1.18, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.3, 5.02, W - 0.6, 1.0)
 para(tf, "下一步：把口语留出集扩到 100 条（当前 30 条，置信区间约 ±10%）· 引入医生复核试点 · 补姻亲与曾祖辈的关系支持",
      size=11.5, first=True, line=1.45)
 para(tf, "更长远：把「可回收」从建议升级为可追踪的行动记录，让用户看到半年后复算的数字变化。",
