@@ -44,7 +44,9 @@ export async function POST(request: Request) {
   // 一次判定在本机是数百毫秒到数秒的推理，不限流等于给匿名调用方一个放大器。
   // 登录用户按 user id 计，未登录按 IP 计：反代后面所有人的 x-forwarded-for 可能是同一个值，
   // 只按 IP 计会把不相干的用户一起限死。
-  const user = await currentUser(request);
+  // 读会话要查 MySQL：数据库没起来时 currentUser 会抛，限流这一段不能被它带崩
+  //（演示机的启动脚本里 MySQL 失败只警告不中止，所以这条路径是真实可达的）
+  const user = await currentUser(request).catch(() => null);
   const bucketKey = user ? `decision:user:${user.id}` : `decision:ip:${clientIp(request)}`;
   if (!allow(bucketKey, user ? 60 : 20, 10 * 60 * 1000)) {
     return NextResponse.json({ error: "请求过于频繁，请稍后再试" }, { status: 429 });

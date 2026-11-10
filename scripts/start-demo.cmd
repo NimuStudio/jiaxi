@@ -35,6 +35,14 @@ if errorlevel 1 (
     echo   已在运行
 )
 
+if not exist "%MODEL%" (
+    echo   [错误] 找不到抽取模型文件：
+    echo          %MODEL%
+    echo          它来自微调前的基座量化版；不要指向 extract-Q4_K_M.gguf
+    echo          （那是微调对照实验的产物，A/B 实测无增益，未采用）
+    echo   跳过 llama-server：AI 抽取不可用，其余功能不受影响。
+    goto skip_llama
+)
 echo [2/5] 本地推理 llama-server（8080）...
 netstat -ano | findstr ":8080 " | findstr "LISTENING" >nul
 if errorlevel 1 (
@@ -45,6 +53,9 @@ if errorlevel 1 (
     echo   已在运行
 )
 
+:skip_llama
+REM 决策后端（遗传模式判定）默认用编译进包里的结构模型（2.3KB），无需额外起服务。
+REM 只有要做 OpenJev 对比时才另起 8086 并设 INHERITANCE_BACKEND=model。
 echo [3/5] 视觉模型 llama-server（8082，化验单识别，可选）...
 if not exist "%VLM%" goto skip_vlm
 if not exist "%VLM_MODEL%" goto skip_vlm

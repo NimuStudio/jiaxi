@@ -1,16 +1,23 @@
-extract+ui: 修 v8 最后一条失败（留出集 v9 满分）；对外数字收敛到单一来源并加校验
+fix(api)+scripts: 决策接口容错 MySQL 不可用；启动脚本补模型存在性检查
 
-## 数据
-- v8 唯一失败「我叔做过两次支架」：词表加裸「支架」兜住所有变体（做过两次/下了三个…）
-  代价是领域外可能误命中，但在家族病史语境里几乎只指心脏支架，且下游还有「必须能回查原文」
-- 全新留出集 v9（30 条，只跑一次）：P 1.000 / R 1.000 / F1 1.000 / 年龄 1.000 / 完全匹配 30/30
-  干净留出集轨迹：v2 0.877 → v3 0.868 → v5 0.912 → v7 0.966 → v8 0.982 → v9 1.000
+## 代码（上一轮引入的风险）
+决策接口为了按用户限流调用了 currentUser，而它要查 MySQL；
+数据库没起来时 currentUser 会抛，限流那段没有保护 → 整个接口 500。
+演示机的启动脚本对 MySQL 失败只警告不中止，所以这条路径真实可达。
+改为 currentUser(request).catch(() => null)。
 
-## 防幻视：对外数字单一来源
-- 新增 src/lib/metrics.ts：疾病种数 / 风险模型数 / 本机推理比例 / 抽取 F1 与其评测集名
-  登录页统计条与竖排 colophon 全部改成从 METRICS 取值，不再手写数字
-- 新增 src/lib/metrics.test.ts：校验 diseaseCount == DISEASES.length、
-  F1 文本与数值一致、F1 与 docs/eval-results 下最近一份留出集产物一致（容差 0.001）
-  做了反向验证：把 F1 改成 0.95，测试立刻失败（0.05 > 0.001）
+## 启动脚本 scripts/start-demo.cmd
+- 增加模型文件存在性检查：找不到 %MODEL% 时打印明确提示并 goto skip_llama，
+  不再让 llama-server 在最小化窗口里静默失败。提示里点名「不要指向 extract-Q4_K_M.gguf」
+  （微调对照产物，A/B 实测无增益，未采用）。
+- 补一行说明：决策后端默认用编译进包里的结构模型，无需额外起服务；
+  只有做 OpenJev 对比时才另起 8086 并设 INHERITANCE_BACKEND=model。
 
-237 passed / tsc 0 / build 通过
+## 注意
+两个 .cmd 是 GBK + CRLF，用 UTF-8 编辑会把中文写坏（本次用 Python 按 GBK 读写）。
+改后用最小复现验证了两个分支：缺文件时正确跳到 :skip_llama 并跳过启动段；
+文件存在时正常走启动段并落到后续步骤。
+
+## 其它
+- 删除微调中间产物（extract-f16.gguf 3.3G、merged-extract 3.4G，均可再生成），释放约 6.4G
+- ml/out 已在 .gitignore 中，权重不入库
