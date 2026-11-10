@@ -434,19 +434,22 @@ footer(s, 2)
 s = new_slide(0, "家族史是免费的风险信号，三套引擎都给它留了权重", icon="tree",
               sub="但用户手上的体检报告，从来没有家系图")
 items = [
-    ("01", "体检报告只解读当次指标", "「未见异常」四个字，不看你父亲 52 岁放的支架。"),
-    ("02", "医院问卷把家族史压成「有 / 无」", "谁、几岁发病、几个亲属——三件最关键的事全部丢掉。"),
-    ("03", "建议从不说「我这么改到底图什么」", "给建议却不复算，也不告诉你哪部分本就能拿回来。"),
+    ("report", "01", "体检报告只解读当次指标", "「未见异常」四个字，不看你父亲 52 岁放的支架。"),
+    ("clipboard", "02", "医院问卷把家族史压成「有 / 无」", "谁、几岁发病、几个亲属——三件最关键的事全部丢掉。"),
+    ("bulb", "03", "建议从不说「我这么改到底图什么」", "给建议却不复算，也不告诉你哪部分本就能拿回来。"),
 ]
-y = 2.2
-for num, h1, h2 in items:
-    tf = text_box(s, M, y, 0.7, 0.35)
-    para(tf, num, size=13, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, M + 0.72, y - 0.05, 6.4, 0.4)
-    para(tf, h1, size=15.5, bold=True, first=True)
-    tf = text_box(s, M + 0.72, y + 0.36, 6.4, 0.6)
-    para(tf, h2, size=11.5, color=MUTED, first=True, line=1.35)
-    y += 1.32
+y = 2.15
+for ic, num, h1, h2 in items:
+    rect(s, M, y - 0.02, 0.50, 0.50, fill=PRIMARY_SOFT, line=LINE)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.10),
+                         Inches(y + 0.08), Inches(0.30), Inches(0.30))
+    tf = text_box(s, M + 0.62, y - 0.10, 0.5, 0.3)
+    para(tf, num, size=10.5, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, M + 0.62, y + 0.20, 6.4, 0.4)
+    para(tf, h1, size=15, bold=True, first=True)
+    tf = text_box(s, M + 0.62, y + 0.60, 6.4, 0.6)
+    para(tf, h2, size=11, color=MUTED, first=True, line=1.35)
+    y += 1.38
 
 # 右侧：临床家系示意图（把「用户嘴上的三句话」画成医生本子里的那张图）
 rect(s, 6.95, 1.95, 5.6, 3.45, fill=SURFACE, line=LINE)
@@ -511,17 +514,20 @@ for i, (ic, label) in enumerate(flow):
 s = new_slide(1, "口述进，行动出：四步闭环，每一步都能复核", icon="flag",
               sub="抽出来的每一条病，都能回查到用户原话")
 steps = [
-    ("①", "口述", "语音或一句话描述家族病史，不用填表", "输出：结构化条目"),
-    ("②", "家系图", "自动结构化：谁、几岁发病、几个亲属", "输出：可点选回溯的家系图"),
-    ("③", "风险", "三套引擎分别算糖代谢、心血管、肺癌", "输出：三个百分比 + 分层"),
-    ("④", "可回收", "挑出可改的部分，给出这周就能做的一步", "输出：一份行动清单"),
+    ("mic", "①", "口述", "语音或一句话描述家族病史，不用填表", "输出：结构化条目"),
+    ("tree", "②", "家系图", "自动结构化：谁、几岁发病、几个亲属", "输出：可点选回溯的家系图"),
+    ("chart", "③", "风险", "三套引擎分别算糖代谢、心血管、肺癌", "输出：三个百分比 + 分层"),
+    ("flag", "④", "可回收", "挑出可改的部分，给出这周就能做的一步", "输出：一份行动清单"),
 ]
 cw = (W - 0.45) / 4
-for i, (mark, h1, h2, h3) in enumerate(steps):
+for i, (ic, mark, h1, h2, h3) in enumerate(steps):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.2, cw, 2.5, fill=SURFACE, line=LINE)
-    tf = text_box(s, x + 0.25, 2.33, cw - 0.5, 0.4)
-    para(tf, mark, size=19, bold=True, color=PRIMARY, first=True)
+    rect(s, x, 2.2, cw, 0.06, fill=PRIMARY, radius=False)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.25),
+                         Inches(2.36), Inches(0.42), Inches(0.42))
+    tf = text_box(s, x + cw - 0.62, 2.34, 0.42, 0.34, align=PP_ALIGN.RIGHT)
+    para(tf, mark, size=13, bold=True, color=LINE2, first=True, align=PP_ALIGN.RIGHT)
     tf = text_box(s, x + 0.25, 2.78, cw - 0.5, 0.4)
     para(tf, h1, size=16, bold=True, first=True)
     tf = text_box(s, x + 0.25, 3.2, cw - 0.5, 1.0)
@@ -574,24 +580,27 @@ footer(s, 6)
 s = new_slide(1, "现场一走：四个动作，两分钟", icon="play",
               sub="网页与 PPT 交替；抽取单句 0.11 秒，几乎没有等待，讲慢一点就行")
 beats = [
-    ("0:00 – 0:30", "说一句",
+    ("chat", "0:00 – 0:30", "说一句",
      ["打开 /chat，照这句话念：", "「我爸 52 岁放了支架，", "爷爷糖尿病，外公脑溢血。」"],
      "您听我怎么说，它就怎么记。"),
-    ("0:30 – 1:00", "点节点",
+    ("tree", "0:30 – 1:00", "点节点",
      ["图已经画好了——点父亲节点", "弹出「回查原话」"],
      "抽出来的每一条，都能回到你原话。"),
-    ("1:00 – 1:30", "改一项",
+    ("gauge", "1:00 – 1:30", "改一项",
      ["跳 /cvd，把 BMI 从 27 拖到 24", "三个数字同时重算"],
      "改一项，数字立刻变——这就是可回收。"),
-    ("1:30 – 2:00", "看结论",
+    ("target", "1:30 – 2:00", "看结论",
      ["回 /risk，指着 33% 与那 7 分", "再说 4% 是「全部达标后」的余量"],
      "这一部分，是这周就能拿回来的。"),
 ]
 cw = (W - 0.45) / 4
-for i, (when, what, how, line) in enumerate(beats):
+for i, (ic, when, what, how, line) in enumerate(beats):
     x = M + i * (cw + 0.15)
     rect(s, x, 2.1, cw, 3.15, fill=SURFACE, line=LINE)
-    tf = text_box(s, x + 0.24, 2.22, cw - 0.48, 0.28)
+    rect(s, x, 2.1, cw, 0.06, fill=PRIMARY, radius=False)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
+                         Inches(2.24), Inches(0.30), Inches(0.30))
+    tf = text_box(s, x + 0.60, 2.26, cw - 0.82, 0.28)
     para(tf, when, size=9.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, x + 0.24, 2.52, cw - 0.48, 0.36)
     para(tf, what, size=15, bold=True, first=True)
@@ -884,30 +893,32 @@ footer(s, 9)
 # ============ P8 三引擎 ============
 s = new_slide(2, "三套引擎，各管一段，都对齐原始文献", icon="calc")
 engines = [
-    ("FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史",
+    ("drop", "FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史",
      [("适用", "成人（年龄计入分值）"),
       ("输出", "0–26 分 · 五档 · 可回收拆分"),
       ("分档线", "≤6 / 7–11 / 12–14 / 15–20 / 21–26")],
      "腰围单独计分，不是 2003 原文的旧版量表"),
-    ("China-PAR", "心血管 10 年风险", "血压 / 血脂 / 吸烟 / 糖尿病 / 家族史",
+    ("heart", "China-PAR", "心血管 10 年风险", "血压 / 血脂 / 吸烟 / 糖尿病 / 家族史",
      [("适用", "35–74 岁（越界只提示）"),
       ("输出", "10 年 ASCVD 风险 % + 分层"),
       ("校验", "论文 Table 2 八个验证点")],
      "家族史是独立系数，不是一个「有 / 无」开关"),
-    ("PLCOm2012", "肺癌 6 年风险", "吸烟量（包年）/ 戒烟年限 / 家族史",
+    ("lung", "PLCOm2012", "肺癌 6 年风险", "吸烟量（包年）/ 戒烟年限 / 家族史",
      [("适用", "55–74 岁验证人群（计算 40–85）"),
       ("输出", "6 年肺癌风险 % + 筛查阈值"),
       ("边界", "只对曾吸烟者建模")],
      "非吸烟者不在建模人群里，直接不给数字"),
 ]
 cw = (W - 0.5) / 3
-for i, (name, what, inputs, specs, note) in enumerate(engines):
+for i, (ic, name, what, inputs, specs, note) in enumerate(engines):
     x = M + i * (cw + 0.25)
     rect(s, x, 2.05, cw, 3.55, fill=SURFACE, line=LINE)
     rect(s, x, 2.05, cw, 0.06, fill=PRIMARY, radius=False)
-    tf = text_box(s, x + 0.28, 2.20, cw - 0.56, 0.36)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.26),
+                         Inches(2.20), Inches(0.36), Inches(0.36))
+    tf = text_box(s, x + 0.72, 2.20, cw - 1.0, 0.36)
     para(tf, name, size=16, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, x + 0.28, 2.58, cw - 0.56, 0.3)
+    tf = text_box(s, x + 0.28, 2.62, cw - 0.56, 0.3)
     para(tf, what, size=12, bold=True, first=True)
     tf = text_box(s, x + 0.28, 2.94, cw - 0.56, 0.72)
     para(tf, "输入：" + inputs, size=9.5, color=MUTED, first=True, line=1.35)
@@ -1067,16 +1078,19 @@ footer(s, 11)
 # ============ P12 隐私与合规 ============
 s = new_slide(4, "隐私与合规：写进代码的承诺", icon="lock")
 left = [
-    ("100% 本机推理", "llama-server 跑在 127.0.0.1；代码里没有任何外部 API 调用"),
-    ("数据不出机器", "家系与体检数字存在本机 MySQL；化验单图片只在内存里转 base64"),
-    ("不宣称诊断", "遗传模式等判断统一写「提示，不是诊断」，并显示置信度"),
-    ("不确定就不显示", "置信度不足时退回「证据不足」并给出缺口追问，而不是硬给结论"),
+    ("server", "100% 本机推理", "llama-server 跑在 127.0.0.1；代码里没有任何外部 API 调用"),
+    ("shield", "数据不出机器", "家系与体检数字存在本机 MySQL；化验单图片只在内存里转 base64"),
+    ("clipboard", "不宣称诊断", "遗传模式等判断统一写「提示，不是诊断」，并显示置信度"),
+    ("target", "不确定就不显示", "置信度不足时退回「证据不足」并给出缺口追问，而不是硬给结论"),
 ]
-for i, (h1, h2) in enumerate(left):
-    y = 2.15 + i * 1.1
-    tf = text_box(s, M, y, 6.5, 0.32)
+for i, (ic, h1, h2) in enumerate(left):
+    y = 2.12 + i * 1.06
+    rect(s, M, y - 0.02, 0.46, 0.46, fill=PRIMARY_SOFT, line=LINE)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(M + 0.09),
+                         Inches(y + 0.07), Inches(0.28), Inches(0.28))
+    tf = text_box(s, M + 0.58, y - 0.02, 6.2, 0.32)
     para(tf, h1, size=13.5, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, M, y + 0.32, 6.5, 0.65)
+    tf = text_box(s, M + 0.58, y + 0.32, 6.2, 0.6)
     para(tf, h2, size=10.5, color=MUTED, first=True, line=1.35)
 
 rect(s, 7.6, 2.1, 4.95, 3.75, fill=SURFACE, line=LINE)
@@ -1150,20 +1164,29 @@ rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
 para(tf, "要装什么（体积）", size=10.5, bold=True, color=PRIMARY, first=True)
 items = [
-    ("抽取模型 Qwen3-1.7B · Q4_K_M", "1.2 GB"),
-    ("llama.cpp 运行时（CUDA 构建）", "202 MB"),
-    ("视觉模型 + mmproj（可选）", "2.6 GB"),
-    ("站点构建产物 .next", "120 MB"),
-    ("依赖 node_modules", "419 MB"),
+    ("chip", None, "抽取模型 Qwen3-1.7B · Q4_K_M", "1.2 GB"),
+    ("server", None, "llama.cpp 运行时（CUDA 构建）", "202 MB"),
+    ("camera", None, "视觉模型 + mmproj（可选）", "2.6 GB"),
+    (None, "nextjs", "站点构建产物 .next", "120 MB"),
+    (None, "nodejs", "依赖 node_modules", "419 MB"),
 ]
-for i, (name, size) in enumerate(items):
-    y = 2.52 + i * 0.56
-    tf = text_box(s, M + 0.28, y, 4.5, 0.3)
+for i, (ic, brand, name, size) in enumerate(items):
+    y = 2.46 + i * 0.58
+    p = None
+    if brand:
+        cand = os.path.join(BRAND, brand + ".png")
+        p = cand if os.path.exists(cand) else None
+    if p is None and ic:
+        cand = os.path.join(ICONS, ic + ".png")
+        p = cand if os.path.exists(cand) else None
+    if p:
+        s.shapes.add_picture(p, Inches(M + 0.28), Inches(y - 0.01), Inches(0.26), Inches(0.26))
+    tf = text_box(s, M + 0.62, y, 4.3, 0.3)
     para(tf, name, size=9.5, color=TEXT, first=True)
     tf = text_box(s, 5.55, y, 1.05, 0.3, align=PP_ALIGN.RIGHT)
     para(tf, size, size=10, bold=True, color=PRIMARY, first=True, align=PP_ALIGN.RIGHT)
     if i < len(items) - 1:
-        rect(s, M + 0.28, y + 0.40, 6.0, 0.008, fill=LINE, radius=False)
+        rect(s, M + 0.28, y + 0.42, 6.0, 0.008, fill=LINE, radius=False)
 
 tf = text_box(s, 7.65, 2.02, 4.9, 0.3)
 para(tf, "要等多久（实测）", size=10.5, bold=True, color=PRIMARY, first=True)

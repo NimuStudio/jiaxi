@@ -183,4 +183,97 @@ d.arc((260, 430, 764, 630), start=0, end=180, fill=INK, width=LW)
 d.ellipse((260, 200, 764, 400), outline=INK, width=LW)
 save(img, "db.png")
 
+# --- heart（心血管）---
+img, d = canvas()
+d.polygon([(512, 820), (232, 540), (232, 380), (352, 260), (512, 400), (672, 260), (792, 380), (792, 540)],
+          fill=PALE, outline=INK)
+d.line([(512, 820), (232, 540)], fill=INK, width=LW, joint="curve")
+d.line([(512, 820), (792, 540)], fill=INK, width=LW, joint="curve")
+save(img, "heart.png")
+
+# --- lung（肺癌）---
+img, d = canvas()
+rrect(d, (150, 300, 470, 830), 120, fill=PALE)
+rrect(d, (554, 300, 874, 830), 120, fill=PALE)
+line(d, (512, 170), (512, 420))
+line(d, (300, 420), (512, 420)); line(d, (512, 420), (724, 420))
+line(d, (512, 420), (512, 620))
+save(img, "lung.png")
+
+# --- drop（血糖）---
+img, d = canvas()
+d.polygon([(512, 150), (300, 520), (512, 860), (724, 520)], fill=PALE, outline=INK)
+d.line([(512, 150), (300, 520)], fill=INK, width=LW, joint="curve")
+d.line([(300, 520), (512, 860)], fill=INK, width=LW, joint="curve")
+d.line([(512, 860), (724, 520)], fill=INK, width=LW, joint="curve")
+d.line([(724, 520), (512, 150)], fill=INK, width=LW, joint="curve")
+save(img, "drop.png")
+
+# --- report（体检报告）---
+img, d = canvas()
+rrect(d, (250, 150, 774, 874), 40, fill=PALE)
+for y, w in ((330, 300), (450, 380), (570, 240), (690, 340)):
+    line(d, (330, y), (330 + w, y))
+save(img, "report.png")
+
+# --- clipboard（问卷）---
+img, d = canvas()
+rrect(d, (230, 240, 794, 874), 40, fill=PALE)
+rrect(d, (400, 160, 624, 300), 30)
+for i, y in enumerate((450, 570, 690)):
+    d.rectangle((330, y - 34, 398, y + 34), fill=INK)
+    line(d, (440, y), (700, y))
+save(img, "clipboard.png")
+
+# --- bulb（建议）：灯泡 = 圆 + 颈部 + 两条底纹（画成钥匙孔过，重画）---
+img, d = canvas()
+d.ellipse((292, 140, 732, 580), fill=PALE, outline=INK, width=LW)
+line(d, (430, 580), (430, 660)); line(d, (594, 580), (594, 660))
+d.arc((430, 600, 594, 720), start=0, end=180, fill=INK, width=LW)
+line(d, (452, 700), (572, 700))
+line(d, (470, 780), (554, 780))
+save(img, "bulb.png")
+
+# --- shield（隐私）---
+img, d = canvas()
+d.polygon([(512, 140), (820, 280), (820, 520), (512, 880), (204, 520), (204, 280)],
+          fill=PALE, outline=INK)
+d.line([(512, 140), (204, 280)], fill=INK, width=LW)
+d.line([(512, 140), (820, 280)], fill=INK, width=LW)
+d.line([(204, 520), (512, 880)], fill=INK, width=LW)
+d.line([(820, 520), (512, 880)], fill=INK, width=LW)
+line(d, (360, 500), (470, 610)); line(d, (470, 610), (680, 380))
+save(img, "shield.png")
+
+# --- clock（耗时）---
+img, d = canvas()
+d.ellipse((170, 170, 854, 854), fill=PALE, outline=INK, width=LW)
+line(d, (512, 512), (512, 300))
+line(d, (512, 512), (680, 600))
+save(img, "clock.png")
+
+# --- server（服务）---
+img, d = canvas()
+rrect(d, (180, 170, 844, 440), 40, fill=PALE)
+rrect(d, (180, 560, 844, 830), 40, fill=PALE)
+d.ellipse((290, 280, 350, 340), fill=INK)
+d.ellipse((290, 670, 350, 730), fill=INK)
+line(d, (420, 310), (700, 310)); line(d, (420, 700), (700, 700))
+save(img, "server.png")
+
+# --- chart（指标）---
+img, d = canvas()
+line(d, (220, 840), (860, 840)); line(d, (220, 200), (220, 840))
+for i, h in enumerate((150, 260, 210, 380, 300, 460)):
+    x = 280 + i * 96
+    d.rectangle((x, 840 - h, x + 62, 840), fill=PALE, outline=INK, width=LW)
+save(img, "chart.png")
+
+# --- folder（素材）---
+img, d = canvas()
+d.polygon([(180, 300), (440, 300), (500, 380), (844, 380), (844, 800), (180, 800)],
+          fill=PALE, outline=INK)
+line(d, (180, 300), (180, 800)); line(d, (844, 380), (844, 800)); line(d, (180, 800), (844, 800))
+save(img, "folder.png")
+
 print("双色图标 ->", OUT, len(os.listdir(OUT)), "个")
