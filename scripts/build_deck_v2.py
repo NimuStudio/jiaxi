@@ -928,106 +928,103 @@ for i, (big, label) in enumerate([("1 台", "实测显存 1.8 GB，单机即可�
     rich(tf, [(big + "  ", True, PRIMARY), (label, False, MUTED)], size=11, first=True)
 footer(s, 9)
 
-# ============ P8 三引擎 ============
-s = new_slide(2, "三套引擎，各管一段，**都对齐原始文献**", icon="heart")
-engines = [
-    ("blood", "FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史",
-     [("适用", "成人（年龄计入分值）"),
-      ("输出", "0–26 分 · 五档 · 可回收拆分"),
-      ("分档线", "≤6 / 7–11 / 12–14 / 15–20 / 21–26")],
-     "腰围单独计分，不是 2003 原文的旧版量表"),
-    ("heart", "China-PAR", "心血管 10 年风险", "血压 / 血脂 / 吸烟 / 糖尿病 / 家族史",
-     [("适用", "35–74 岁（越界只提示）"),
-      ("输出", "10 年 ASCVD 风险 % + 分层"),
-      ("校验", "论文 Table 2 八个验证点")],
-     "家族史是独立系数，不是一个「有 / 无」开关"),
-    ("lungs", "PLCOm2012", "肺癌 6 年风险", "吸烟量（包年）/ 戒烟年限 / 家族史",
-     [("适用", "55–74 岁验证人群（计算 40–85）"),
-      ("输出", "6 年肺癌风险 % + 筛查阈值"),
-      ("边界", "只对曾吸烟者建模")],
-     "非吸烟者不在建模人群里，直接不给数字"),
+# ============ P8 三引擎：三列对照板（不是三张卡片） ============
+s = new_slide(2, "三套引擎，各管一段，**都对齐原始文献**", icon="heart",
+              sub="同一套口径：人群边界写死、系数逐项登记、越界只提示不给数字")
+ENG = [
+    ("blood", "FINDRISC", "糖代谢", "年龄 / BMI / 腰围 / 用药 / 家族史", "成人（年龄计入分值）",
+     "0–26 分 · 五档 · 可回收拆分", "腰围单独计分，不是 2003 原文的旧版量表"),
+    ("heart", "China-PAR", "心血管 10 年", "血压 / 血脂 / 吸烟 / 糖尿病 / 家族史", "35–74 岁（越界只提示）",
+     "10 年 ASCVD 风险 % + 分层", "家族史是独立系数；论文 Table 2 八个验证点"),
+    ("lungs", "PLCOm2012", "肺癌 6 年", "吸烟量（包年）/ 戒烟年限 / 家族史", "55–74 岁验证人群（可算 40–85）",
+     "6 年肺癌风险 % + 筛查阈值", "只对曾吸烟者建模，非吸烟者直接不给数字"),
 ]
-cw = (W - 0.5) / 3
-for i, (ic, name, what, inputs, specs, note) in enumerate(engines):
-    x = M + i * (cw + 0.25)
-    rect(s, x, 2.05, cw, 3.55, fill=SURFACE, line=LINE)
-    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
-                         Inches(2.14), Inches(0.50), Inches(0.50))
-    tf = text_box(s, x + 0.72, 2.20, cw - 1.0, 0.36)
-    para(tf, name, size=16, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, x + 0.28, 2.62, cw - 0.56, 0.3)
-    para(tf, what, size=12, bold=True, first=True)
-    tf = text_box(s, x + 0.28, 2.94, cw - 0.56, 0.72)
-    para(tf, "输入：" + inputs, size=9.5, color=MUTED, first=True, line=1.35)
+LW2 = 1.85
+CW3 = (W - LW2) / 3
+# 表头：三列引擎名，无边框，只靠规则线分隔
+for i, (ic, name, what, *_rest) in enumerate(ENG):
+    x = M + LW2 + i * CW3
+    s.shapes.add_picture(icon_p(ic), Inches(x), Inches(1.98), Inches(0.40), Inches(0.40))
+    tf = text_box(s, x + 0.52, 2.00, CW3 - 0.6, 0.34)
+    para(tf, name, size=15, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, x + 0.52, 2.34, CW3 - 0.6, 0.28)
+    para(tf, what, size=9.5, color=MUTED, first=True)
+rect(s, M, 2.72, W, 0.012, fill=LINE2, radius=False)
 
-    rect(s, x + 0.28, 3.72, cw - 0.56, 0.012, fill=LINE, radius=False)
-
-    # 规格行：把卡片中段的空白用真实参数填掉，而不是留空
-    for j, (label, value) in enumerate(specs):
-        y = 3.86 + j * 0.44
-        tf = text_box(s, x + 0.28, y, 0.72, 0.26)
-        para(tf, label, size=8.5, color=FAINT, first=True)
-        tf = text_box(s, x + 0.96, y - 0.03, cw - 1.24, 0.34)
-        # 三张卡里「输出」才是这页的重点：把它标红，其余压成常规字色
+ROWS_DEF = [("输入", 3), ("适用人群", 4), ("输出", 5), ("边界与校验", 6)]
+for ri, (label, vi) in enumerate(ROWS_DEF):
+    y = 2.86 + ri * 0.80
+    tf = text_box(s, M, y + 0.04, LW2 - 0.15, 0.3)
+    para(tf, label, size=8.5, color=FAINT, first=True)
+    for i, eng in enumerate(ENG):
+        x = M + LW2 + i * CW3
+        val = eng[vi]
+        tf = text_box(s, x, y, CW3 - 0.30, 0.78)
         if label == "输出":
-            para(tf, value, size=10, bold=True, color=RED, first=True, line=1.25)
+            para(tf, val, size=11.5, bold=True, color=RED, first=True, line=1.3)
+        elif label == "边界与校验":
+            para(tf, val, size=9, color=RECLAIM, first=True, line=1.3)
+        elif label == "输入":
+            para(tf, val, size=8.5, color=MUTED, first=True, line=1.3)
         else:
-            para(tf, value, size=9.5, color=TEXT, first=True, line=1.25)
+            para(tf, val, size=9.5, color=TEXT, first=True, line=1.3)
+    if ri < len(ROWS_DEF) - 1:
+        rect(s, M, y + 0.68, W, 0.008, fill=LINE, radius=False)
 
-    tf = text_box(s, x + 0.28, 5.20, cw - 0.56, 0.36)
-    para(tf, note, size=9, color=RECLAIM, first=True, line=1.3)
-
-rect(s, M, 5.80, W, 0.98, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, M + 0.28, 5.90, W - 0.56, 0.8)
-para(tf, "为什么不用云端大模型算风险：确定性计算可复算、可审计，换任何模型结论都不变；模型只负责把口语变成结构。",
-     size=11, first=True, line=1.35)
-para(tf, "系数逐项登记在 docs/references.md；越界只提示不拒绝，落在建模人群之外（如非吸烟者）时直接不给数字。",
-     size=11, color=MUTED, line=1.35)
+rect(s, M, 6.10, W, 0.66, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.26, 6.18, W - 0.52, 0.52)
+para(tf, "为什么风险计算不交给模型：确定性计算可复算、可审计，换任何模型结论都不变；模型只负责把口语变成结构。",
+     size=10.5, bold=True, color=TEXT, first=True, line=1.3)
 footer(s, 12)
 
-# ============ AI 用在哪 / 不用在哪 ============
+# ============ AI 用在哪 / 不用在哪：以一条分界线划开 ============
 s = new_slide(2, "AI 用在哪四件事上，**其余刻意不用**", icon="chip",
-              sub="模型只做「口语 → 结构」；凡是能确定性复算的，都不交给模型")
+              sub="上面是模型的地盘，下面是确定性代码的地盘——这条线就是我们的取舍")
 
 USED = [
-    ("mic", "口语 → 结构化家系", "GBNF 约束解码，模型只能从词表里选；抽不出就留空"),
-    ("bulb", "模糊病名的兜底判断", "「心脏不好」这类说法先用词表最长命中，再交给模型补"),
-    ("chat", "Agent 主动追问", "模型决定调哪个工具（最多 4 步），缺什么问什么"),
-    ("route", "依据检索", "BM25 从知识库取证据，模型只负责把证据读成一句人话"),
+    ("mic", "口语 → 结构化家系", "GBNF 约束解码，只能从词表里选"),
+    ("bulb", "模糊病名兜底", "词表最长命中之后，再交给模型补"),
+    ("chat", "Agent 主动追问", "模型决定调哪个工具，最多 4 步"),
+    ("route", "依据检索与转述", "BM25 取证据，模型把证据读成一句人话"),
 ]
+CW4 = (W - 0.45) / 4
+for i, (ic, h1, h2) in enumerate(USED):
+    x = M + i * (CW4 + 0.15)
+    s.shapes.add_picture(icon_p(ic), Inches(x), Inches(2.02), Inches(0.34), Inches(0.34))
+    tf = text_box(s, x, 2.44, CW4, 0.28)
+    para(tf, h1, size=10.5, bold=True, color=TEXT, first=True)
+    tf = text_box(s, x, 2.74, CW4 - 0.10, 0.66)
+    para(tf, h2, size=8.5, color=MUTED, first=True, line=1.35)
+
+# 分界线：一条细虚线 + 两端标签，上面归模型、下面归代码
+LINE_Y = 3.62
+for k in range(26):
+    rect(s, M + k * (W / 26), LINE_Y, (W / 26) * 0.55, 0.014, fill=LINE2, radius=False)
+tf = text_box(s, M, LINE_Y - 0.30, 6.0, 0.26)
+para(tf, "↑ 模型做的", size=8.5, bold=True, color=PRIMARY, first=True)
+tf = text_box(s, M + W - 3.2, LINE_Y + 0.06, 3.2, 0.26, align=PP_ALIGN.RIGHT)
+para(tf, "确定性代码做的 ↓", size=8.5, bold=True, color=RECLAIM, first=True, align=PP_ALIGN.RIGHT)
+
 NOT = [
-    ("chart", "三套风险方程", "系数是文献里的，一行行抄进代码并进回归测试"),
-    ("target", "分层与阈值判断", "分档线来自量表原文，不做「模型觉得」"),
+    ("chart", "三套风险方程", "系数来自文献，一行行抄进代码并进回归测试"),
+    ("target", "分层与阈值", "分档线照量表原文，不做「模型觉得」"),
     ("reclaim", "可回收分解", "单纯加减，必须能被用户手工复算"),
 ]
-
-rect(s, M, 2.02, 6.55, 3.95, fill=SURFACE, line=LINE)
-tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
-para(tf, "用 AI 的四件事", size=11, bold=True, color=PRIMARY, first=True)
-for i, (ic, h1, h2) in enumerate(USED):
-    y = 2.52 + i * 0.86
-    s.shapes.add_picture(icon_p(ic), Inches(M + 0.24), Inches(y), Inches(0.30), Inches(0.30))
-    tf = text_box(s, M + 0.64, y - 0.04, 5.6, 0.32)
-    para(tf, h1, size=11, bold=True, color=TEXT, first=True)
-    tf = text_box(s, M + 0.64, y + 0.28, 5.6, 0.5)
-    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.3)
-
-rect(s, 7.25, 2.02, 5.3, 3.95, fill=SURFACE, line=LINE)
-tf = text_box(s, 7.53, 2.14, 4.8, 0.3)
-para(tf, "刻意不用 AI 的三件事", size=11, bold=True, color=RECLAIM, first=True)
+CW3b = (W - 0.30) / 3
 for i, (ic, h1, h2) in enumerate(NOT):
-    y = 2.52 + i * 1.12
-    s.shapes.add_picture(icon_p(ic), Inches(7.50), Inches(y), Inches(0.30), Inches(0.30))
-    tf = text_box(s, 7.90, y - 0.04, 4.4, 0.32)
-    para(tf, h1, size=11, bold=True, color=TEXT, first=True)
-    tf = text_box(s, 7.90, y + 0.28, 4.4, 0.6)
-    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.3)
+    x = M + i * (CW3b + 0.15)
+    rect(s, x, 4.06, CW3b, 1.02, fill=RECLAIM_SOFT, line=RECLAIM_LINE)
+    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22), Inches(4.24), Inches(0.32), Inches(0.32))
+    tf = text_box(s, x + 0.66, 4.20, CW3b - 0.9, 0.28)
+    para(tf, h1, size=10.5, bold=True, color=RECLAIM, first=True)
+    tf = text_box(s, x + 0.22, 4.62, CW3b - 0.44, 0.4)
+    para(tf, h2, size=8.5, color=MUTED, first=True, line=1.3)
 
-rect(s, M, 6.14, W, 0.7, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, M + 0.28, 6.24, W - 0.56, 0.5)
+rect(s, M, 5.34, W, 0.72, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.28, 5.44, W - 0.56, 0.56)
 para(tf, "判断标准只有一条：这件事换个人、换台机器，答案会不会变？会变才交给模型，不变的写进代码。",
-     size=11, bold=True, color=TEXT, first=True)
-footer(s, 12)
+     size=11, bold=True, color=TEXT, first=True, line=1.3)
+footer(s, 13)
 
 # ============ AI 的三道保险 ============
 s = new_slide(2, "让模型不跑偏的**三道保险**：语法、兜底、评测", icon="route",
