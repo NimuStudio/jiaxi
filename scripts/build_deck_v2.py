@@ -744,7 +744,9 @@ def add_entrance(slide, groups, dur=400):
 
             leafKids = etree.SubElement(ctnLeaf, P + "childTnLst")
 
-            # 1) 先把不透明度设为 0（否则淡入前会先闪一下）
+            # 1) 只置「可见」，绝不预先设 opacity=0
+            #    上一版把 opacity 置 0 再淡入，结果淡入没生效时整页停在全透明——
+            #    放映时看起来就是「一片空白」。visibility 即使动画失效也无害。
             setEl = etree.SubElement(leafKids, P + "set")
             cBhvr = etree.SubElement(setEl, P + "cBhvr")
             ctnSet = etree.SubElement(cBhvr, P + "cTn")
@@ -755,16 +757,18 @@ def add_entrance(slide, groups, dur=400):
             spTgt = etree.SubElement(tgt, P + "spTgt")
             spTgt.set("spid", str(spid))
             attrs = etree.SubElement(cBhvr, P + "attrNameLst")
-            etree.SubElement(attrs, P + "attrName").text = "style.opacity"
+            etree.SubElement(attrs, P + "attrName").text = "style.visibility"
             to = etree.SubElement(setEl, P + "to")
-            etree.SubElement(to, P + "strVal").set("val", "0")
+            etree.SubElement(to, P + "strVal").set("val", "visible")
 
             # 2) 淡入
             eff = etree.SubElement(leafKids, P + "animEffect")
             eff.set("transition", "in"); eff.set("filter", "fade")
             cb2 = etree.SubElement(eff, P + "cBhvr")
             ctn2 = etree.SubElement(cb2, P + "cTn")
-            ctn2.set("id", cid()); ctn2.set("dur", str(dur))
+            ctn2.set("id", cid()); ctn2.set("dur", str(dur)); ctn2.set("fill", "hold")
+            st2 = etree.SubElement(ctn2, P + "stCondLst")
+            etree.SubElement(st2, P + "cond").set("delay", "0")
             tgt2 = etree.SubElement(cb2, P + "tgtEl")
             etree.SubElement(tgt2, P + "spTgt").set("spid", str(spid))
 
@@ -784,8 +788,11 @@ def animate_all(presentation, max_groups=3):
     第 1 组随页面自动出现（标题 + 副标题），其余每组一次点击。
     一页最多按两次 —— 8~10 分钟的答辩不该把时间花在按空格上。
     """
+    mode = os.environ.get("DECK_ANIM", "transitions")
     for idx, slide in enumerate(presentation.slides):
         add_transition(slide, "fade")
+        if mode != "entrance":
+            continue
         picked = []
         for shp in slide.shapes:
             try:
