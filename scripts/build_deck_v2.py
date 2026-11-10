@@ -216,6 +216,43 @@ def f1_chart(s, x, y, w, h, values, labels, notes):
 ICONS = os.path.join(ART, "icons")
 
 
+def holdout_stats():
+    """留出集构成：直接读 data/eval/*.jsonl 现算，避免把数字手抄进 PPT 后失效。"""
+    import json
+    import re
+    import statistics as st
+    base = os.path.join(CWD, "data", "eval")
+    sets = [("v2", "colloquial-holdout-v2"), ("v3", "colloquial-holdout-v3"),
+            ("v5", "colloquial-holdout-v5"), ("v7", "colloquial-holdout-v7"),
+            ("v8", "colloquial-holdout-v8"), ("v9", "colloquial-holdout-v9")]
+    CONT = re.compile("也是|都有|都高|也高|也痛风|也一样")
+    NEG = re.compile("没病|没问题|没事|健康|身体(挺|还|好)|没查|身体好")
+    AGE = re.compile("岁")
+    rows, tot = [], [0, 0, 0, 0, 0]
+    for tag, name in sets:
+        path = os.path.join(base, name + ".jsonl")
+        if not os.path.exists(path):
+            continue
+        n = chars = rels = age = neg = cont = multi = 0
+        for line in open(path, encoding="utf-8"):
+            if not line.strip():
+                continue
+            r = json.loads(line)
+            t = r["input"]
+            n += 1
+            chars += len(t)
+            rs = {q.get("relation") for q in (r.get("expected") or []) if q.get("relation")}
+            rels += len(rs)
+            age += 1 if AGE.search(t) else 0
+            neg += 1 if NEG.search(t) else 0
+            cont += 1 if CONT.search(t) else 0
+            multi += 1 if len(r.get("expected") or []) > 1 else 0
+        rows.append((tag, n, round(chars / n, 1), round(rels / n, 1), age, neg, cont, multi))
+        for i, v in enumerate((n, age, neg, cont, multi)):
+            tot[i] += v
+    return rows, tot
+
+
 def art_path(name):
     """背景是大图、按 JPEG 存（体积小一个数量级）；图标与截图带透明通道仍是 PNG。"""
     for ext in (".jpg", ".png"):
@@ -854,13 +891,40 @@ tf = text_box(s, M, 6.02, 7.1, 0.4)
 para(tf, "每一跳都对应一次具体改动，没有一次是「换个更大的模型」。", size=10.5,
      bold=True, color=RECLAIM, first=True)
 
-stats = [("6", " 套", "留出集，全部全新措辞"),
-         ("30", " 条", "每套样本，只跑一次"),
-         ("±10", " %", "置信区间（30 条）"),
-         ("1.000", "", "四项指标全部满分")]
-for i, (big, unit, label) in enumerate(stats):
-    color = DANGER if i == 2 else (RECLAIM if i == 3 else PRIMARY)
-    stat_card(s, 8.15, 1.98 + i * 1.02, 4.35, 0.86, big, unit, label, color, compact=True)
+# 右栏：一把抓住的四个数 + 每套留出集的真实构成（构建时现算）
+tf = text_box(s, 8.15, 1.92, 4.35, 0.3)
+rich(tf, [("6", True, PRIMARY), (" 套 · ", False, MUTED), ("180", True, PRIMARY),
+          (" 条 · ", False, MUTED), ("F1 1.000", True, RECLAIM),
+          (" · ", False, FAINT), ("±10%", True, DANGER)], size=13, first=True)
+
+rows, tot = holdout_stats()
+tbl = s.shapes.add_table(len(rows) + 1, 6, Inches(8.15), Inches(2.34),
+                         Inches(4.35), Inches(0.4 * (len(rows) + 1))).table
+for j, wd in enumerate([0.62, 0.82, 0.72, 0.7, 0.7, 0.7]):
+    tbl.columns[j].width = Inches(wd)
+heads = ["集", "字数", "亲属", "年龄", "否定", "续句"]
+for j, h in enumerate(heads):
+    cell = tbl.cell(0, j); cell.text = ""
+    para(cell.text_frame, h, size=8, bold=True, color=MUTED, first=True,
+         align=PP_ALIGN.CENTER)
+    cell.fill.solid(); cell.fill.fore_color.rgb = PRIMARY_SOFT
+for i, (tag, n, chars, rels, age, neg, cont, multi) in enumerate(rows, start=1):
+    vals = [tag, f"{chars}", f"{rels}", str(age), str(neg), str(cont)]
+    for j, v in enumerate(vals):
+        cell = tbl.cell(i, j); cell.text = ""
+        para(cell.text_frame, v, size=8.5, bold=(j == 0),
+             color=TEXT if j else PRIMARY, first=True, align=PP_ALIGN.CENTER)
+        cell.fill.solid(); cell.fill.fore_color.rgb = SURFACE
+for row in tbl.rows:
+    row.height = Inches(0.34)
+    for cell in row.cells:
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+        cell.margin_top = Inches(0.01); cell.margin_bottom = Inches(0.01)
+
+tf = text_box(s, 8.15, 4.92, 4.35, 0.9)
+para(tf, f"六套合计 180 条：含年龄 {tot[1]}、否定句 {tot[2]}、续句 {tot[3]}、多人句 {tot[4]}。",
+     size=9, color=MUTED, first=True, line=1.35)
+para(tf, "不是同一模板换词——每套都独立覆盖了否定、续句与多人场景。", size=9, color=MUTED, line=1.35)
 
 rect(s, M, 6.42, W, 0.42, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.24, 6.47, W - 0.48, 0.3)
