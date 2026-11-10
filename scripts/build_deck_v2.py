@@ -1162,6 +1162,9 @@ rich(tf, [("对照组", True, MUTED), ("  通用决策模型 OpenJev-Q4（18.5 G
      size=9.5, first=True)
 rich(tf, [("40%", True, MUTED), ("　它的失败很典型：隐性 / X 连锁 / 线粒体三类全判错", False, MUTED)],
      size=12, line=1.3)
+# 比例条：让 40% 与 96% 在视觉上先分出强弱
+rect(s, M + 0.24, 2.58, 5.1, 0.09, fill=RGBColor(0xE4, 0xE7, 0xEB), line=None, radius=False)
+rect(s, M + 0.24, 2.58, 5.1 * 0.40, 0.09, fill=RGBColor(0x8C, 0x9A, 0xA8), line=None, radius=False)
 
 rect(s, 6.55, 1.96, 6.0, 0.78, fill=RECLAIM_SOFT, line=LINE)
 tf = text_box(s, 6.79, 2.04, 5.5, 0.62)
@@ -1169,6 +1172,8 @@ rich(tf, [("我们的方案", True, RECLAIM), ("  12 维结构逻辑回归（2.3
      size=9.5, first=True)
 rich(tf, [("96%", True, RECLAIM), ("　单次 0.005–0.07 秒，不需要 18 GB 权重", False, RECLAIM)],
      size=12, line=1.3)
+rect(s, 6.79, 2.58, 5.5, 0.09, fill=RGBColor(0xC5, 0xE3, 0xE7), line=None, radius=False)
+rect(s, 6.79, 2.58, 5.5 * 0.96, 0.09, fill=RECLAIM, line=None, radius=False)
 
 # 逐类对照表
 rows = [
@@ -1187,9 +1192,11 @@ for i, (cat, jev, st) in enumerate(rows):
     tf = text_box(s, M + 0.16, y, 2.2, 0.3)
     para(tf, cat, size=9.5, color=TEXT, first=True)
     tf = text_box(s, M + 2.35, y, 2.0, 0.3)
-    para(tf, jev, size=9.5, bold=True, color=DANGER if jev.startswith("0%") else MUTED, first=True)
+    bad = jev.startswith("0%")
+    rich(tf, [("✗ " if bad else "✓ ", True, DANGER if bad else MUTED), (jev, False, DANGER if bad else MUTED)],
+         size=9.5, first=True)
     tf = text_box(s, M + 4.45, y, 1.6, 0.3)
-    para(tf, st, size=9.5, bold=True, color=RECLAIM, first=True)
+    rich(tf, [("✓ ", True, RECLAIM), (st, False, RECLAIM)], size=9.5, first=True)
     if i < len(rows) - 1:
         rect(s, M + 0.16, y + 0.34, 5.8, 0.006, fill=LINE, radius=False)
 tf = text_box(s, M + 0.16, 5.56, 5.9, 0.3)
