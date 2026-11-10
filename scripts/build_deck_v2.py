@@ -319,7 +319,7 @@ def outline_word(slide, text, x, y, w, h, size=140, color="FFFFFF", alpha=20,
     return tf
 
 
-def new_slide(section, title, sub=None, icon=None):
+def new_slide(section, title, sub=None, icon=None, tag=None):
     s = prs.slides.add_slide(BLANK)
     bg_path = art_path(f"content-bg-{section}")
     if not os.path.exists(bg_path):
@@ -344,6 +344,23 @@ def new_slide(section, title, sub=None, icon=None):
             r = p.add_run()
             r.text = seg
             set_font(r, size, bold or i % 2 == 1, AMBER if i % 2 else base_color)
+
+    if tag:
+        # 页头标签：让评委一眼知道这页是「背景 / 技术亮点 / 证据 / 价值」中的哪一类
+        tw = 0.20 + 0.135 * len(tag)
+        chip = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(M - 0.03),
+                                  Inches(0.62), Inches(tw), Inches(0.26))
+        chip.fill.solid(); chip.fill.fore_color.rgb = PRIMARY
+        chip.line.fill.background(); chip.shadow.inherit = False
+        chip.adjustments[0] = 0.35
+        tf = chip.text_frame
+        tf.word_wrap = False
+        tf.margin_left = Inches(0.06); tf.margin_right = Inches(0.06)
+        tf.margin_top = 0; tf.margin_bottom = 0
+        for p in tf.paragraphs:
+            p.alignment = PP_ALIGN.CENTER
+        r0 = tf.paragraphs[0].add_run(); r0.text = tag
+        set_font(r0, 8, True, WHITE)
 
     tf = text_box(s, tx, 1.02, 13.333 - tx - M, 0.62)
     emphasized(tf, title, 26, TEXT, first=True, bold=True)
@@ -467,7 +484,7 @@ footer(s, 2)
 
 # ============ P3 项目背景 ============
 s = new_slide(0, "家族史是**免费的风险信号**，三套引擎都给它留了权重", icon="family",
-              sub="但用户手上的体检报告，从来没有家系图")
+              sub="但用户手上的体检报告，从来没有家系图", tag="背景 · 问题")
 items = [
     ("report", "01", "体检报告只解读当次指标", "「未见异常」四个字，不看你父亲 52 岁放的支架。"),
     ("survey", "02", "医院问卷把家族史压成「有 / 无」", "谁、几岁发病、几个亲属——三件最关键的事全部丢掉。"),
@@ -544,7 +561,7 @@ for i, (ic, label) in enumerate(flow):
 
 # ============ P5 方案总览 ============
 s = new_slide(1, "口述进，**行动出**：四步闭环，每一步都能复核", icon="flag",
-              sub="抽出来的每一条病，都能回查到用户原话")
+              sub="抽出来的每一条病，都能回查到用户原话", tag="方案 · 闭环")
 steps = [
     ("mic", "①", "口述", "语音或一句话描述家族病史，不用填表", "输出：结构化条目"),
     ("family", "②", "家系图", "自动结构化：谁、几岁发病、几个亲属", "输出：可点选回溯的家系图"),
@@ -586,7 +603,7 @@ para(tf, "不替代医生：所有判断写成「提示」，并给出模型置�
 footer(s, 4)
 
 # ============ P5 产品① ============
-s = new_slide(1, "第一屏：**一段话**，直接变成一张家系图", icon="mic")
+s = new_slide(1, "第一屏：**一段话**，直接变成一张家系图", icon="mic", tag="方案 · 界面")
 picture_fit(s, os.path.join(ART, "shot-laptop-chat.png"), M - 0.05, 1.95, 8.35, 4.75)
 for i, (h1, h2) in enumerate([
     ("语音或文字输入", "不支持语音的浏览器自动隐藏入口，不留坏入口"),
@@ -601,7 +618,7 @@ for i, (h1, h2) in enumerate([
 footer(s, 5)
 
 # ============ P6 产品② ============
-s = new_slide(1, "第二屏：算清楚，**哪一部分本就能拿回来**", icon="chart")
+s = new_slide(1, "第二屏：算清楚，**哪一部分本就能拿回来**", icon="chart", tag="方案 · 界面")
 picture_fit(s, os.path.join(ART, "shot-browser-risk.png"), M - 0.06, 1.98, 5.95, 4.05)
 tf = text_box(s, M, 6.10, 5.9, 0.35)
 para(tf, "可回收风险（FINDRISC）：把「可改」与「改不了」分开算", size=10.5, color=MUTED, first=True)
@@ -617,7 +634,7 @@ footer(s, 6)
 
 # ============ P7 现场动线 ============
 s = new_slide(1, "现场一走：四个动作，**两分钟**", icon="timer",
-              sub="网页与 PPT 交替；抽取单句 0.11 秒，几乎没有等待，讲慢一点就行")
+              sub="网页与 PPT 交替；抽取单句 0.11 秒，几乎没有等待，讲慢一点就行", tag="方案 · 现场")
 beats = [
     ("mic", "0:00 – 0:30", "说一句",
      ["打开 /chat，照这句话念：", "「我爸 52 岁放了支架，", "爷爷糖尿病，外公脑溢血。」"],
@@ -661,7 +678,7 @@ footer(s, 7)
 
 # ============ P8 技术路线（真正的架构图） ============
 s = new_slide(2, "一张图看懂：数据怎么流动，**模型只占哪一格**", icon="dna",
-              sub="从一句口述到一份行动方案，中间经过四段处理，全部在本机完成")
+              sub="从一句口述到一份行动方案，中间经过四段处理，全部在本机完成", tag="技术 · 数据流")
 
 COLS = [
     ("输入", PRIMARY, [("mic", "语音 · Web Speech"), ("chat", "自然语言文本"),
@@ -739,7 +756,7 @@ footer(s, 7)
 
 # ============ P10 分层技术架构（模块级） ============
 s = new_slide(2, "代码怎么组织：五层，每层只依赖下一层",
-              icon="chip", sub="五层单向依赖，**路径都是仓库里真实存在的目录**")
+              icon="chip", sub="五层单向依赖，**路径都是仓库里真实存在的目录**", tag="技术 · 架构")
 MONO = "Consolas"
 
 BANDS = [
@@ -837,7 +854,7 @@ footer(s, 10)
 
 # ============ P9 部署视图 ============
 s = new_slide(2, "部署视图：一台电脑跑完全部，只有公网入口是可选项",
-              icon="desktop", sub="评委常问的三件事——跑在哪、要不要联网、花多少钱")
+              icon="desktop", sub="评委常问的三件事——跑在哪、要不要联网、花多少钱", tag="技术 · 部署")
 
 
 def dep_box(x, y, w, h, icon=None, title="", sub="", fill=SURFACE, brand=None):
@@ -930,7 +947,7 @@ footer(s, 9)
 
 # ============ P8 三引擎：三列对照板（不是三张卡片） ============
 s = new_slide(2, "三套引擎，各管一段，**都对齐原始文献**", icon="heart",
-              sub="同一套口径：人群边界写死、系数逐项登记、越界只提示不给数字")
+              sub="同一套口径：人群边界写死、系数逐项登记、越界只提示不给数字", tag="技术亮点 ①")
 ENG = [
     ("blood", "FINDRISC", "糖代谢", "年龄 / BMI / 腰围 / 用药 / 家族史", "成人（年龄计入分值）",
      "0–26 分 · 五档 · 可回收拆分", "腰围单独计分，不是 2003 原文的旧版量表"),
@@ -979,7 +996,7 @@ footer(s, 12)
 
 # ============ AI 用在哪 / 不用在哪：以一条分界线划开 ============
 s = new_slide(2, "AI 用在哪四件事上，**其余刻意不用**", icon="chip",
-              sub="上面是模型的地盘，下面是确定性代码的地盘——这条线就是我们的取舍")
+              sub="上面是模型的地盘，下面是确定性代码的地盘——这条线就是我们的取舍", tag="技术亮点 ②")
 
 USED = [
     ("mic", "口语 → 结构化家系", "GBNF 约束解码，只能从词表里选"),
@@ -1028,7 +1045,7 @@ footer(s, 13)
 
 # ============ AI 的三道保险 ============
 s = new_slide(2, "让模型不跑偏的**三道保险**：语法、兜底、评测", icon="route",
-              sub="每一道都能举出一个真实失败的例子——不是设计时想到的，是踩到之后补的")
+              sub="每一道都能举出一个真实失败的例子——不是设计时想到的，是踩到之后补的", tag="技术亮点 ③")
 
 layers3 = [
     ("chip", "语法层 · GBNF 约束解码",
@@ -1061,7 +1078,7 @@ footer(s, 14)
 
 # ============ P9 准确性 ============
 s = new_slide(3, "口语抽取：留出集 F1 **从 0.877 到 1.000**", icon="target",
-              sub="每套留出集都是全新措辞、只跑一次；跑过即降级为开发集，不再对外报数")
+              sub="每套留出集都是全新措辞、只跑一次；跑过即降级为开发集，不再对外报数", tag="证据 · 留出集")
 f1_chart(s, M - 0.1, 1.95, 7.25, 4.05,
          [0.877, 0.868, 0.912, 0.966, 1.000 - 0.018, 1.000],
          ["v2", "v3", "v5", "v7", "v8", "v9"],
@@ -1115,7 +1132,7 @@ footer(s, 11)
 
 # ============ JEV / 决策协议 ============
 s = new_slide(3, "JEV：**一次前向直接给判定**，不让模型写一段话", icon="scales",
-              sub="接入的是 llama.cpp 的 /v1/systemone（TypeSafe 决策协议）：三原语 + 严格校验")
+              sub="接入的是 llama.cpp 的 /v1/systemone（TypeSafe 决策协议）：三原语 + 严格校验", tag="技术亮点 ④")
 
 prims = [
     ("choice", "若干选项里选一个", '{"choice": "autosomal-dominant", "probabilities": {...}}'),
@@ -1164,7 +1181,7 @@ footer(s, 15)
 
 # ============ 对照实验：通用决策模型 vs 我们的结构模型 ============
 s = new_slide(3, "这一页是**对照实验**：同一个任务，两种做法谁更合适", icon="chart",
-              sub="同一批均衡样本（每类 5 条）、同一份输入。左边是对照组，右边是我们的方案")
+              sub="同一批均衡样本（每类 5 条）、同一份输入。左边是对照组，右边是我们的方案", tag="证据 · 对照实验")
 
 # 顶部：一句话把两个数字的身份说清楚
 rect(s, M, 1.96, 5.55, 0.90, fill=SURFACE, line=LINE)
@@ -1245,7 +1262,7 @@ footer(s, 17)
 
 # ============ 判定链路（产品里怎么用） ============
 s = new_slide(3, "产品里的一条链路：**从五个概率到一句人话**", icon="route",
-              sub="判定不是把模型的答案直接印在屏幕上，中间有四道处理")
+              sub="判定不是把模型的答案直接印在屏幕上，中间有四道处理", tag="技术亮点 ⑤")
 
 steps = [
     ("tree", "输入家系", "关系 / 性别 / 病名 / 发病年龄；缺什么记什么"),
@@ -1287,7 +1304,7 @@ footer(s, 18)
 
 # ============ P11 微调 A/B：成本 vs 收益 ============
 s = new_slide(3, "我们真的微调了一次，**然后被数据否掉**", icon="flask",
-              sub="封存留出集 30 条，从未参与训练；两组的数字并排放，长度差为零")
+              sub="封存留出集 30 条，从未参与训练；两组的数字并排放，长度差为零", tag="证据 · 负结果")
 
 pairs = [
     ("叠加规则层之后的 F1", "0.943", "0.943", "27/30", "27/30"),
@@ -1337,7 +1354,7 @@ para(tf, "换任何一组同任务模型，这条结论都成立，所以它比�
 footer(s, 19)
 
 # ============ P12 隐私与合规 ============
-s = new_slide(4, "隐私与合规：写进代码的承诺", icon="shield")
+s = new_slide(4, "隐私与合规：写进代码的承诺", icon="shield", tag="价值 · 合规")
 left = [
     ("desktop", "100% 本机推理", "llama-server 跑在 127.0.0.1；代码里没有任何外部 API 调用"),
     ("shield", "数据不出机器", "家系与体检数字存在本机 MySQL；化验单图片只在内存里转 base64"),
@@ -1365,7 +1382,7 @@ footer(s, 12)
 
 # ============ P13 差异化：矩阵 + 具备项数条形 ============
 s = new_slide(4, "同一件事，**四种现有做法各自缺一环**", icon="diff",
-              sub="我们对照的是典型形态，不针对某一款具体产品；✓ 具备　△ 部分　✕ 不具备")
+              sub="我们对照的是典型形态，不针对某一款具体产品；✓ 具备　△ 部分　✕ 不具备", tag="价值 · 差异化")
 
 COLSX = ["体检解读 App", "医院问卷", "临床家系图", "通用健康 App", "家系"]
 ROWS = [
@@ -1421,7 +1438,7 @@ footer(s, 21)
 
 # ============ P18 价值与落地（实测数字） ============
 s = new_slide(4, "落地：一台电脑跑完整个闭环，**数字都是实测的**", icon="launch",
-              sub="以下体积与耗时在本机实测（RTX 5080 / 32 GB 内存），不是估算")
+              sub="以下体积与耗时在本机实测（RTX 5080 / 32 GB 内存），不是估算", tag="价值 · 落地")
 rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
 para(tf, "要装什么（体积）", size=10.5, bold=True, color=PRIMARY, first=True)
@@ -1472,9 +1489,51 @@ para(tf, "口径：本机实测（RTX 5080 / GPU 推理，多次取中位）；�
      size=9.5, color=MUTED, line=1.35)
 footer(s, 18)
 
+# ============ 创新与价值总结（三栏概括） ============
+s = new_slide(4, "三个词概括：**我们到底创新在哪**", icon="puzzle",
+              sub="如果只记住一页，记这页：每一栏都能在正文里找到对应证据", tag="创新点 · 总结")
+
+CARDS = [
+    ("PRIMARY", "把家系当数据结构", [
+        "不是聊天记录，是关系 / 性别 / 病名 / 发病年龄四元组",
+        "每条都能回溯到用户原话，可点选、可改、可重算",
+    ]),
+    ("RECLAIM", "确定性与模型分工", [
+        "能复算的写进代码，模型只做「口语 → 结构」",
+        "18.5 GB 决策模型实测 40%，12 维结构模型 96%",
+    ]),
+    ("RED", "全本机，断网可用", [
+        "抽取 0.11 秒、显存 1.8 GB、推理 0 元，无外部 API",
+        "隐私不再靠承诺，而是部署形态本身决定的",
+    ]),
+]
+CW5 = (W - 0.5) / 3
+for i2, (tone, head, bullets) in enumerate(CARDS):
+    x = M + i2 * (CW5 + 0.25)
+    fill, line_c, ink = {
+        "PRIMARY": (PRIMARY_SOFT, RGBColor(0xB9, 0xD6, 0xEE), PRIMARY),
+        "RECLAIM": (RECLAIM_SOFT, RECLAIM_LINE, RECLAIM),
+        "RED": (RED_SOFT, RGBColor(0xE8, 0xB4, 0xAC), RED),
+    }[tone]
+    rect(s, x, 2.02, CW5, 0.62, fill=fill, line=line_c)
+    tf = text_box(s, x + 0.16, 2.20, CW5 - 0.32, 0.3)
+    para(tf, head, size=12.5, bold=True, color=ink, first=True)
+    rect(s, x, 2.64, CW5, 1.92, fill=SURFACE, line=line_c)
+    yy = 2.84
+    for b in bullets:
+        tf = text_box(s, x + 0.18, yy, CW5 - 0.36, 0.82)
+        rich(tf, [("✓ ", True, ink), (b, False, TEXT)], size=9.5, first=True, line=1.45)
+        yy += 0.86
+
+rect(s, M, 4.86, W, 1.0, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.30, 4.96, W - 0.60, 0.8)
+para(tf, "一句话：把一个免费、却被每次体检丢掉的信号，变成能算、能改、能复算的东西。",
+     size=15, bold=True, color=TEXT, first=True, line=1.35)
+footer(s, 23)
+
 # ============ P15 团队 ============
 s = new_slide(5, "团队：谁在负责哪一块", icon="team",
-              sub="【待填】请补充成员姓名、学校 / 单位、分工与代表成果")
+              sub="【待填】请补充成员姓名、学校 / 单位、分工与代表成果", tag="团队 · 分工")
 members = [("【成员 1】", "【角色】", "【负责模块】"), ("【成员 2】", "【角色】", "【负责模块】"),
            ("【成员 3】", "【角色】", "【负责模块】")]
 cw = (W - 0.5) / 3
@@ -1728,6 +1787,7 @@ NOTES = [
     "隐私合规：本机、不落盘、不诊断、不确定就不显示。",
     "差异化：四类现有做法各缺一环，最后一列是我们补的那一环。",
     "落地：体积与耗时都是本机实测（1.7 秒启动 / 0.11 秒抽取 / 1.8 GB 显存）。",
+    "创新总结：三栏对应三组证据——数据结构（P12 三引擎）、分工（P17 对照实验）、本机（P22 落地）。讲这页时手指依次点三栏，不要重讲细节。",
     "团队：待填成员信息。",
     "结尾：留时间提问，主动提出可现场演示。",
 ]
