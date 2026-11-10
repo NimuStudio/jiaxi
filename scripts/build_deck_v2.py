@@ -29,6 +29,10 @@ PRIMARY_SOFT = RGBColor(0xEA, 0xF3, 0xFB)
 RECLAIM = RGBColor(0x0F, 0x7C, 0x8C)
 RECLAIM_SOFT = RGBColor(0xE6, 0xF4, 0xF6)
 DANGER = RGBColor(0xB4, 0x23, 0x18)
+# 强调色：只用于「这页最重要的一句话/一个数字」，全篇控制在四种颜色的语义里
+AMBER = RGBColor(0xB2, 0x6A, 0x00)
+AMBER_SOFT = RGBColor(0xFD, 0xF2, 0xE0)
+RECLAIM_LINE = RGBColor(0x7F, 0xC3, 0xCB)
 
 EA = "微软雅黑"
 CWD = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -324,11 +328,24 @@ def new_slide(section, title, sub=None, icon=None):
         if os.path.exists(path):
             s.shapes.add_picture(path, Inches(M - 0.04), Inches(0.98), Inches(0.60), Inches(0.60))
             tx = M + 0.72
+    def emphasized(tf, text, size, base_color, first=False, bold=False):
+        """用 **…** 标出要强调的片段，着强调色——颜色承担语义，不做装饰。"""
+        if "**" not in text:
+            para(tf, text, size=size, bold=bold, color=base_color, first=first)
+            return
+        p = tf.paragraphs[0] if first else tf.add_paragraph()
+        for i, seg in enumerate(text.split("**")):
+            if not seg:
+                continue
+            r = p.add_run()
+            r.text = seg
+            set_font(r, size, bold or i % 2 == 1, AMBER if i % 2 else base_color)
+
     tf = text_box(s, tx, 1.02, 13.333 - tx - M, 0.62)
-    para(tf, title, size=26, bold=True, first=True)
+    emphasized(tf, title, 26, TEXT, first=True, bold=True)
     if sub:
         tf = text_box(s, tx, 1.62, 13.333 - tx - M, 0.4)
-        para(tf, sub, size=12.5, color=MUTED, first=True)
+        emphasized(tf, sub, 12.5, MUTED, first=True)
     return s
 
 
@@ -445,7 +462,7 @@ for i, (num, ic, name, desc) in enumerate(toc):
 footer(s, 2)
 
 # ============ P3 项目背景 ============
-s = new_slide(0, "家族史是免费的风险信号，三套引擎都给它留了权重", icon="family",
+s = new_slide(0, "家族史是**免费的风险信号**，三套引擎都给它留了权重", icon="family",
               sub="但用户手上的体检报告，从来没有家系图")
 items = [
     ("report", "01", "体检报告只解读当次指标", "「未见异常」四个字，不看你父亲 52 岁放的支架。"),
@@ -522,7 +539,7 @@ for i, (ic, label) in enumerate(flow):
         ar.line.fill.background(); ar.shadow.inherit = False
 
 # ============ P5 方案总览 ============
-s = new_slide(1, "口述进，行动出：四步闭环，每一步都能复核", icon="flag",
+s = new_slide(1, "口述进，**行动出**：四步闭环，每一步都能复核", icon="flag",
               sub="抽出来的每一条病，都能回查到用户原话")
 steps = [
     ("mic", "①", "口述", "语音或一句话描述家族病史，不用填表", "输出：结构化条目"),
@@ -533,7 +550,9 @@ steps = [
 cw = (W - 0.45) / 4
 for i, (ic, mark, h1, h2, h3) in enumerate(steps):
     x = M + i * (cw + 0.15)
-    rect(s, x, 2.2, cw, 2.5, fill=SURFACE, line=LINE)
+    # 第 4 步是产品价值落点，用墨青底把它从三张白卡里区分出来
+    rect(s, x, 2.2, cw, 2.5, fill=RECLAIM_SOFT if i == 3 else SURFACE,
+         line=RECLAIM_LINE if i == 3 else LINE)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
                          Inches(2.32), Inches(0.54), Inches(0.54))
     tf = text_box(s, x + cw - 0.62, 2.34, 0.42, 0.34, align=PP_ALIGN.RIGHT)
@@ -557,7 +576,7 @@ para(tf, "不替代医生：所有判断写成「提示」，并给出模型置�
 footer(s, 4)
 
 # ============ P5 产品① ============
-s = new_slide(1, "第一屏：一段话，直接变成一张家系图", icon="mic")
+s = new_slide(1, "第一屏：**一段话**，直接变成一张家系图", icon="mic")
 picture_fit(s, os.path.join(ART, "shot-laptop-chat.png"), M - 0.05, 1.95, 8.35, 4.75)
 for i, (h1, h2) in enumerate([
     ("语音或文字输入", "不支持语音的浏览器自动隐藏入口，不留坏入口"),
@@ -572,7 +591,7 @@ for i, (h1, h2) in enumerate([
 footer(s, 5)
 
 # ============ P6 产品② ============
-s = new_slide(1, "第二屏：算清楚，哪一部分本就能拿回来", icon="chart")
+s = new_slide(1, "第二屏：算清楚，**哪一部分本就能拿回来**", icon="chart")
 picture_fit(s, os.path.join(ART, "shot-browser-risk.png"), M - 0.06, 1.98, 5.95, 4.05)
 tf = text_box(s, M, 6.10, 5.9, 0.35)
 para(tf, "可回收风险（FINDRISC）：把「可改」与「改不了」分开算", size=10.5, color=MUTED, first=True)
@@ -587,7 +606,7 @@ para(tf, "界面上的每个数都能复算：China-PAR 对论文 Table 2 的 8 
 footer(s, 6)
 
 # ============ P7 现场动线 ============
-s = new_slide(1, "现场一走：四个动作，两分钟", icon="timer",
+s = new_slide(1, "现场一走：四个动作，**两分钟**", icon="timer",
               sub="网页与 PPT 交替；抽取单句 0.11 秒，几乎没有等待，讲慢一点就行")
 beats = [
     ("mic", "0:00 – 0:30", "说一句",
@@ -631,7 +650,7 @@ para(tf, "不要在现场重启服务。启动脚本在桌面：启动家系演�
 footer(s, 7)
 
 # ============ P8 技术路线（真正的架构图） ============
-s = new_slide(2, "一张图看懂：数据怎么流动，模型只占哪一格", icon="dna",
+s = new_slide(2, "一张图看懂：数据怎么流动，**模型只占哪一格**", icon="dna",
               sub="从一句口述到一份行动方案，中间经过四段处理，全部在本机完成")
 
 COLS = [
@@ -710,7 +729,7 @@ footer(s, 7)
 
 # ============ P10 分层技术架构（模块级） ============
 s = new_slide(2, "代码怎么组织：五层，每层只依赖下一层",
-              icon="chip", sub="路径都是仓库里真实存在的目录；这页回答「你们的架构是什么」")
+              icon="chip", sub="五层单向依赖，**路径都是仓库里真实存在的目录**")
 MONO = "Consolas"
 
 BANDS = [
@@ -900,7 +919,7 @@ for i, (big, label) in enumerate([("1 台", "实测显存 1.8 GB，单机即可�
 footer(s, 9)
 
 # ============ P8 三引擎 ============
-s = new_slide(2, "三套引擎，各管一段，都对齐原始文献", icon="heart")
+s = new_slide(2, "三套引擎，各管一段，**都对齐原始文献**", icon="heart")
 engines = [
     ("blood", "FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史",
      [("适用", "成人（年龄计入分值）"),
@@ -953,7 +972,7 @@ para(tf, "系数逐项登记在 docs/references.md；越界只提示不拒绝，
 footer(s, 12)
 
 # ============ AI 用在哪 / 不用在哪 ============
-s = new_slide(2, "AI 用在哪四件事上，其余刻意不用", icon="chip",
+s = new_slide(2, "AI 用在哪四件事上，**其余刻意不用**", icon="chip",
               sub="模型只做「口语 → 结构」；凡是能确定性复算的，都不交给模型")
 
 USED = [
@@ -997,7 +1016,7 @@ para(tf, "判断标准只有一条：这件事换个人、换台机器，答案�
 footer(s, 12)
 
 # ============ AI 的三道保险 ============
-s = new_slide(2, "让模型不跑偏的三道保险：语法、兜底、评测", icon="route",
+s = new_slide(2, "让模型不跑偏的**三道保险**：语法、兜底、评测", icon="route",
               sub="每一道都能举出一个真实失败的例子——不是设计时想到的，是踩到之后补的")
 
 layers3 = [
@@ -1013,7 +1032,9 @@ layers3 = [
 ]
 for i, (ic, h1, h2, h3) in enumerate(layers3):
     y = 2.02 + i * 1.42
-    rect(s, M, y, W, 1.24, fill=SURFACE, line=LINE)
+    # 质量层是最后一道闸门，用琥珀底强调
+    rect(s, M, y, W, 1.24, fill=AMBER_SOFT if i == 2 else SURFACE,
+         line=RGBColor(0xE8, 0xC8, 0x92) if i == 2 else LINE)
     s.shapes.add_picture(icon_p(ic), Inches(M + 0.26), Inches(y + 0.18), Inches(0.40), Inches(0.40))
     tf = text_box(s, M + 0.82, y + 0.14, 4.3, 0.32)
     para(tf, h1, size=12.5, bold=True, color=PRIMARY, first=True)
@@ -1028,7 +1049,7 @@ para(tf, "三道保险的顺序很重要：能靠语法解决的不用规则，�
 footer(s, 14)
 
 # ============ P9 准确性 ============
-s = new_slide(3, "口语抽取：留出集 F1 从 0.877 到 1.000", icon="target",
+s = new_slide(3, "口语抽取：留出集 F1 **从 0.877 到 1.000**", icon="target",
               sub="每套留出集都是全新措辞、只跑一次；跑过即降级为开发集，不再对外报数")
 f1_chart(s, M - 0.1, 1.95, 7.25, 4.05,
          [0.877, 0.868, 0.912, 0.966, 1.000 - 0.018, 1.000],
@@ -1082,7 +1103,7 @@ para(tf, "机制：留出集只跑一次 · 每次评测自动落盘（commit + 
 footer(s, 11)
 
 # ============ JEV / 决策协议 ============
-s = new_slide(3, "JEV：一次前向直接给判定，不让模型写一段话", icon="scales",
+s = new_slide(3, "JEV：**一次前向直接给判定**，不让模型写一段话", icon="scales",
               sub="接入的是 llama.cpp 的 /v1/systemone（TypeSafe 决策协议）：三原语 + 严格校验")
 
 prims = [
@@ -1131,7 +1152,7 @@ for i, (h1, h2) in enumerate(eng):
 footer(s, 15)
 
 # ============ 对照实验：通用决策模型 vs 我们的结构模型 ============
-s = new_slide(3, "这一页是对照实验：同一个任务，两种做法谁更合适", icon="chart",
+s = new_slide(3, "这一页是**对照实验**：同一个任务，两种做法谁更合适", icon="chart",
               sub="同一批均衡样本（每类 5 条）、同一份输入。左边是对照组，右边是我们的方案")
 
 # 顶部：一句话把两个数字的身份说清楚
@@ -1201,7 +1222,7 @@ para(tf, "结论只有一句：遗传模式由家系结构决定，12 维特征�
 footer(s, 17)
 
 # ============ 判定链路（产品里怎么用） ============
-s = new_slide(3, "产品里的一条链路：从五个概率，到一句用户看得懂的话", icon="route",
+s = new_slide(3, "产品里的一条链路：**从五个概率到一句人话**", icon="route",
               sub="判定不是把模型的答案直接印在屏幕上，中间有四道处理")
 
 steps = [
@@ -1213,7 +1234,8 @@ steps = [
 cw3 = (W - 0.45) / 4
 for i, (ic, h1, h2) in enumerate(steps):
     x = M + i * (cw3 + 0.15)
-    rect(s, x, 2.02, cw3, 1.86, fill=SURFACE, line=LINE)
+    rect(s, x, 2.02, cw3, 1.86, fill=RECLAIM_SOFT if i == 3 else SURFACE,
+         line=RECLAIM_LINE if i == 3 else LINE)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.22), Inches(2.18), Inches(0.36), Inches(0.36))
     tf = text_box(s, x + 0.68, 2.20, cw3 - 0.9, 0.32)
     para(tf, h1, size=11, bold=True, color=TEXT, first=True)
@@ -1242,7 +1264,7 @@ para(tf, "· 追问是收集证据，不是把判断推回给用户", size=9.5, 
 footer(s, 18)
 
 # ============ P11 微调 A/B ============
-s = new_slide(3, "我们真的微调了一次，然后被数据否掉", icon="flask")
+s = new_slide(3, "我们真的微调了一次，**然后被数据否掉**", icon="flask")
 rows = [
     ("基线 + few-shot + 规则层", "1.000", "0.893", "0.943", "27/30"),
     ("微调 + 规则层", "1.000", "0.893", "0.943", "27/30"),
@@ -1361,7 +1383,7 @@ para(tf, "我们的四件事，都落在这张表的最后一列", size=9.5, bol
 footer(s, 17)
 
 # ============ P18 价值与落地（实测数字） ============
-s = new_slide(4, "落地：一台电脑跑完整个闭环，数字都是实测的", icon="launch",
+s = new_slide(4, "落地：一台电脑跑完整个闭环，**数字都是实测的**", icon="launch",
               sub="以下体积与耗时在本机实测（RTX 5080 / 32 GB 内存），不是估算")
 rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
@@ -1401,7 +1423,7 @@ for i, (big, unit, label) in enumerate(metrics):
     y = 2.42 + i * 0.76
     rect(s, 7.65, y, 4.9, 0.66, fill=SURFACE, line=LINE)
     tf = text_box(s, 7.85, y + 0.10, 1.5, 0.4)
-    rich(tf, [(big, True, PRIMARY), (unit, False, PRIMARY)], size=17, first=True)
+    rich(tf, [(big, True, AMBER), (unit, False, AMBER)], size=17, first=True)
     tf = text_box(s, 9.35, y + 0.10, 3.05, 0.5)
     para(tf, label, size=9.5, color=MUTED, first=True, line=1.25)
 
