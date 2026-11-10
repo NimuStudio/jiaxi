@@ -788,7 +788,9 @@ def animate_all(presentation, max_groups=3):
     第 1 组随页面自动出现（标题 + 副标题），其余每组一次点击。
     一页最多按两次 —— 8~10 分钟的答辩不该把时间花在按空格上。
     """
-    mode = os.environ.get("DECK_ANIM", "transitions")
+    # entrance 已在真机 PowerPoint 放映中验证通过（2026-11）；
+    # 若要退回到「只切页」，设 DECK_ANIM=transitions。
+    mode = os.environ.get("DECK_ANIM", "entrance")
     for idx, slide in enumerate(presentation.slides):
         add_transition(slide, "fade")
         if mode != "entrance":
