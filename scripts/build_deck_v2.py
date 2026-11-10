@@ -792,28 +792,54 @@ footer(s, 9)
 # ============ P8 三引擎 ============
 s = new_slide(2, "三套引擎，各管一段，都对齐原始文献", icon="calc")
 engines = [
-    ("FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史", "8 个题项，输出可回收分数"),
-    ("China-PAR", "心血管 10 年风险", "血压 / 血脂 / 吸烟 / 糖尿病 / 家族史", "适用 35–74 岁，越界只提示不拒绝"),
-    ("PLCOm2012", "肺癌 6 年风险", "吸烟量（包年）/ 戒烟年限 / 家族史", "判定是否够得上筛查条件"),
+    ("FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史",
+     [("适用", "成人（年龄计入分值）"),
+      ("输出", "0–26 分 · 五档 · 可回收拆分"),
+      ("分档线", "≤6 / 7–11 / 12–14 / 15–20 / 21–26")],
+     "腰围单独计分，不是 2003 原文的旧版量表"),
+    ("China-PAR", "心血管 10 年风险", "血压 / 血脂 / 吸烟 / 糖尿病 / 家族史",
+     [("适用", "35–74 岁（越界只提示）"),
+      ("输出", "10 年 ASCVD 风险 % + 分层"),
+      ("校验", "论文 Table 2 八个验证点")],
+     "家族史是独立系数，不是一个「有 / 无」开关"),
+    ("PLCOm2012", "肺癌 6 年风险", "吸烟量（包年）/ 戒烟年限 / 家族史",
+     [("适用", "55–74 岁验证人群（计算 40–85）"),
+      ("输出", "6 年肺癌风险 % + 筛查阈值"),
+      ("边界", "只对曾吸烟者建模")],
+     "非吸烟者不在建模人群里，直接不给数字"),
 ]
 cw = (W - 0.5) / 3
-for i, (name, what, inputs, note) in enumerate(engines):
+for i, (name, what, inputs, specs, note) in enumerate(engines):
     x = M + i * (cw + 0.25)
-    rect(s, x, 2.15, cw, 3.3, fill=SURFACE, line=LINE)
-    rect(s, x, 2.15, cw, 0.06, fill=PRIMARY, radius=False)
-    tf = text_box(s, x + 0.3, 2.33, cw - 0.6, 0.4)
-    para(tf, name, size=16.5, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, x + 0.3, 2.74, cw - 0.6, 0.32)
-    para(tf, what, size=12.5, bold=True, first=True)
-    tf = text_box(s, x + 0.3, 3.14, cw - 0.6, 1.0)
-    para(tf, "输入：" + inputs, size=10.5, color=MUTED, first=True, line=1.4)
-    tf = text_box(s, x + 0.3, 4.4, cw - 0.6, 0.9)
-    para(tf, note, size=11, color=RECLAIM, first=True, line=1.4)
+    rect(s, x, 2.05, cw, 3.55, fill=SURFACE, line=LINE)
+    rect(s, x, 2.05, cw, 0.06, fill=PRIMARY, radius=False)
+    tf = text_box(s, x + 0.28, 2.20, cw - 0.56, 0.36)
+    para(tf, name, size=16, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, x + 0.28, 2.58, cw - 0.56, 0.3)
+    para(tf, what, size=12, bold=True, first=True)
+    tf = text_box(s, x + 0.28, 2.94, cw - 0.56, 0.72)
+    para(tf, "输入：" + inputs, size=9.5, color=MUTED, first=True, line=1.35)
 
-tf = text_box(s, M, 5.7, W, 0.8)
+    rect(s, x + 0.28, 3.72, cw - 0.56, 0.012, fill=LINE, radius=False)
+
+    # 规格行：把卡片中段的空白用真实参数填掉，而不是留空
+    for j, (label, value) in enumerate(specs):
+        y = 3.86 + j * 0.44
+        tf = text_box(s, x + 0.28, y, 0.72, 0.26)
+        para(tf, label, size=8.5, color=FAINT, first=True)
+        tf = text_box(s, x + 0.96, y - 0.03, cw - 1.24, 0.34)
+        para(tf, value, size=9.5, color=TEXT, first=True, line=1.25)
+
+    tf = text_box(s, x + 0.28, 5.20, cw - 0.56, 0.36)
+    para(tf, note, size=9, color=RECLAIM, first=True, line=1.3)
+
+rect(s, M, 5.80, W, 0.98, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.28, 5.90, W - 0.56, 0.8)
 para(tf, "为什么不用云端大模型算风险：确定性计算可复算、可审计，换任何模型结论都不变；模型只负责把口语变成结构。",
-     size=12, first=True, line=1.4)
-footer(s, 8)
+     size=11, first=True, line=1.35)
+para(tf, "系数逐项登记在 docs/references.md；越界只提示不拒绝，落在建模人群之外（如非吸烟者）时直接不给数字。",
+     size=11, color=MUTED, line=1.35)
+footer(s, 12)
 
 # ============ P9 准确性 ============
 s = new_slide(3, "口语抽取：留出集 F1 从 0.877 到 1.000", icon="target",
