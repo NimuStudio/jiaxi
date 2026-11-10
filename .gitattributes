@@ -7,3 +7,6 @@
 *.jpeg binary
 *.gif binary
 *.ico binary
+# Windows 批处理必须 CRLF：cmd 解析 goto / 括号块时对 LF 不稳
+*.cmd text eol=crlf
+*.bat text eol=crlf
