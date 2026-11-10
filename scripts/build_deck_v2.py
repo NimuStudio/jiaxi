@@ -47,12 +47,12 @@ M = 0.78
 W = 13.333 - 2 * M
 
 
-def set_font(run, size=14, bold=False, color=TEXT):
+def set_font(run, size=14, bold=False, color=TEXT, latin=None):
     f = run.font
     f.size = Pt(size)
     f.bold = bold
     f.color.rgb = color
-    f.name = EA
+    f.name = latin or EA
     rPr = run._r.get_or_add_rPr()
     A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
     for tag in ("ea", "cs"):
@@ -73,7 +73,7 @@ def text_box(slide, x, y, w, h, align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.TOP):
 
 
 def para(tf, text, size=14, bold=False, color=TEXT, first=False, line=None,
-         space_before=0, align=None):
+         space_before=0, align=None, latin=None):
     p = tf.paragraphs[0] if first else tf.add_paragraph()
     if align is not None:
         p.alignment = align
@@ -82,7 +82,7 @@ def para(tf, text, size=14, bold=False, color=TEXT, first=False, line=None,
         p.line_spacing = line
     r = p.add_run()
     r.text = text
-    set_font(r, size, bold, color)
+    set_font(r, size, bold, color, latin)
     return p
 
 
@@ -583,6 +583,89 @@ tf = text_box(s, M, 6.42, W, 0.4)
 para(tf, "模型只负责「口语 → 结构」这一段；风险与可回收是确定性计算，可复算、可审计，换任何模型结论都不变。",
      size=11, color=MUTED, first=True)
 footer(s, 7)
+
+# ============ P10 分层技术架构（模块级） ============
+s = new_slide(2, "代码怎么组织：五层，每层只依赖下一层",
+              icon="layers", sub="路径都是仓库里真实存在的目录；这页回答「你们的架构是什么」")
+MONO = "Consolas"
+
+BANDS = [
+    ("表现层", "Presentation", "layers",
+     ["app/chat · app/risk", "app/cvd · app/lung", "components/pedigree", "components/simulator"],
+     "客户端只做展示与交互，判断全在服务端"),
+    ("接口层", "API Routes", "terminal",
+     ["/api/extract", "/api/extract/stream", "/api/ocr", "/api/agent",
+      "/api/decision/*", "/api/me/*"],
+     "统一限流 + 入参上限 + 畸形数据拒绝"),
+    ("领域层", "Domain", "calc",
+     [("lib/extract", "client · grammar · lexicon · repair"),
+      ("lib/risk", "findrisc · chinapar · plcom2012"),
+      ("lib/decision", "client · hereditary · structural"),
+      ("lib/agent", "loop · tools")],
+     "纯函数为主，可单测；不含 IO"),
+    ("引擎层", "Engines", "chip",
+     ["llama :8080 · Qwen3-1.7B + GBNF", "llama :8082 · 视觉", "MySQL :3306", "结构模型 LR 12 维"],
+     "全在本机，代码里没有外部 API 调用"),
+    ("质控层", "Quality Gate", "target",
+     ["scripts/eval-extract.ts", "scripts/lexicon-gaps.ts", "metrics.ts + metrics.test.ts",
+      "docs/eval-results/*.json"],
+     "留出集只跑一次；数字漂移会让测试失败"),
+]
+
+band_x, band_w = 2.30, 8.55
+note_x = 11.05
+top, band_h, band_gap = 1.98, 0.74, 0.15
+tone_of = [PRIMARY, PRIMARY, RECLAIM, RECLAIM, DANGER]
+
+for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
+    y = top + bi * (band_h + band_gap)
+    tone = tone_of[bi]
+    # 左侧层名
+    rect(s, M, y, 1.38, band_h, fill=SURFACE, line=LINE2)
+    icon_path = os.path.join(ICONS, ic + ".png")
+    if os.path.exists(icon_path):
+        s.shapes.add_picture(icon_path, Inches(M + 0.12), Inches(y + 0.12), Inches(0.22), Inches(0.22))
+    tf = text_box(s, M + 0.38, y + 0.10, 0.92, 0.28)
+    para(tf, cn, size=10, bold=True, color=tone, first=True)
+    tf = text_box(s, M + 0.10, y + 0.44, 1.20, 0.26)
+    para(tf, en, size=7.5, color=FAINT, first=True)
+
+    # 该层的模块块：chip 可以是纯字符串，也可以是 (模块名, 子模块) 两行
+    gap = 0.10
+    def label_len(c):
+        return len(c[0]) + (len(c[1]) if isinstance(c, tuple) else 0)
+
+    widths = [max(1.0, min(3.4, 0.098 * label_len(c) + 0.30)) for c in chips]
+    k = (band_w - gap * (len(chips) - 1)) / sum(widths)
+    x = band_x
+    for ci, c in enumerate(chips):
+        w = widths[ci] * k
+        rect(s, x, y + 0.10, w, band_h - 0.20, fill=SURFACE, line=LINE2)
+        tf = text_box(s, x + 0.08, y + 0.10, w - 0.16, band_h - 0.20,
+                      align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
+        if isinstance(c, tuple):
+            para(tf, c[0], size=8, bold=True, color=TEXT, first=True,
+                 align=PP_ALIGN.CENTER, line=1.1, latin=MONO)
+            para(tf, c[1], size=6.5, color=MUTED, align=PP_ALIGN.CENTER, line=1.1, latin=MONO)
+        else:
+            para(tf, c, size=7.5, color=TEXT, first=True, align=PP_ALIGN.CENTER, line=1.15, latin=MONO)
+        x += w + gap
+
+    # 右侧约束说明
+    tf = text_box(s, note_x, y + 0.10, 1.55, band_h - 0.20, anchor=MSO_ANCHOR.MIDDLE)
+    para(tf, note, size=8, color=MUTED, first=True, line=1.3)
+
+    # 层间向下箭头（在层名与模块之间的空隙里）
+    if bi < len(BANDS) - 1:
+        ar = s.shapes.add_shape(MSO_SHAPE.DOWN_ARROW, Inches(M + 0.62), Inches(y + band_h + 0.02),
+                                Inches(0.14), Inches(band_gap - 0.04))
+        ar.fill.solid(); ar.fill.fore_color.rgb = LINE2
+        ar.line.fill.background(); ar.shadow.inherit = False
+
+tf = text_box(s, M, 6.42, W, 0.3)
+para(tf, "依赖方向自上而下：上层可换（表现层 / 接口层），下层稳定（领域层纯函数、引擎层确定性）。",
+     size=9.5, color=MUTED, first=True)
+footer(s, 10)
 
 # ============ P9 部署视图 ============
 s = new_slide(2, "部署视图：一台电脑跑完全部，只有公网入口是可选项",
@@ -1099,6 +1182,7 @@ NOTES = [
     "第二屏：可回收风险把可改与改不了分账；China-PAR 实时重算。",
     "现场动线：说一句 -> 点节点 -> 改一项 -> 看结论，两分半钟；卡住就翻截图页，别现场调试。",
     "四层架构：模型只做把口语变成结构这一件事。",
+    "分层架构：五层，每层只依赖下一层；路径都是仓库里真实目录，被问到可以当场打开。",
     "部署视图：一台电脑跑完全部；只有公网入口是可选的，断网也能完整演示。",
     "三套引擎各管一段，都对齐原始文献。",
     "准确性：六套留出集只跑一次，F1 0.877 -> 1.000；同时说明 ±10% 的置信区间。",
