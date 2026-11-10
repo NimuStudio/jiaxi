@@ -216,6 +216,15 @@ def f1_chart(s, x, y, w, h, values, labels, notes):
 ICONS = os.path.join(ART, "icons")
 
 
+def art_path(name):
+    """背景是大图、按 JPEG 存（体积小一个数量级）；图标与截图带透明通道仍是 PNG。"""
+    for ext in (".jpg", ".png"):
+        p = os.path.join(ART, name + ext)
+        if os.path.exists(p):
+            return p
+    return os.path.join(ART, name + ".png")
+
+
 def outline_word(slide, text, x, y, w, h, size=140, color="FFFFFF", alpha=20,
                  spc=0.14, line_w=1.15):
     """描边大字：与网站开屏那层 PEDIGREE 同款处理（描边、透明填充、宽字距）。
@@ -250,9 +259,9 @@ def outline_word(slide, text, x, y, w, h, size=140, color="FFFFFF", alpha=20,
 
 def new_slide(section, title, sub=None, icon=None):
     s = prs.slides.add_slide(BLANK)
-    bg_path = os.path.join(ART, f"content-bg-{section}.png")
+    bg_path = art_path(f"content-bg-{section}")
     if not os.path.exists(bg_path):
-        bg_path = os.path.join(ART, "content-bg.png")
+        bg_path = art_path("content-bg")
     s.shapes.add_picture(bg_path, 0, 0, width=prs.slide_width, height=prs.slide_height)
     rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
     nav_bar(s, section)
@@ -310,7 +319,7 @@ def picture_fit(slide, path, x, y, max_w, max_h):
 
 # ============ P1 封面（深色全幅背景图） ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(os.path.join(ART, "cover-bg.png"), 0, 0,
+s.shapes.add_picture(art_path("cover-bg"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
 
 GLOW = RGBColor(0x7F, 0xC3, 0xE8)
@@ -414,7 +423,7 @@ footer(s, 3)
 
 # ============ P4 引语页（满版深色，制造节奏） ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(os.path.join(ART, "cover-bg.png"), 0, 0,
+s.shapes.add_picture(art_path("cover-bg"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
 tf = text_box(s, M, 1.95, 6, 0.4)
 para(tf, "一 句 真 话", size=11, bold=True, color=GLOW, first=True)
@@ -1009,7 +1018,7 @@ footer(s, 15)
 
 # ============ P17 结尾（与封面呼应：深色背景） ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(os.path.join(ART, "cover-bg.png"), 0, 0,
+s.shapes.add_picture(art_path("cover-bg"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
 tf = text_box(s, M, 2.20, 10, 0.4)
 para(tf, "家  系", size=13, bold=True, color=GLOW, first=True)
