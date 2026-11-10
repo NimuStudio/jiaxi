@@ -383,6 +383,11 @@ for i, (k, v) in enumerate(info):
     tf = text_box(s, x + 0.18, 6.13, 1.95, 0.3)
     para(tf, v, size=11.5, bold=True, color=WHITE, first=True)
 
+# 右下角小刊名：补住底部的空，并与顶部刊头呼应
+tf = text_box(s, 10.05, 6.88, 2.5, 0.3, align=PP_ALIGN.RIGHT)
+para(tf, "P E D I G R E E   ·   2 0 2 6", size=8.5, color=RGBColor(0x6F, 0x93, 0xB5), first=True,
+     align=PP_ALIGN.RIGHT)
+
 # 产品截图：白卡片压深底，形成对比
 rect(s, 8.45, 1.70, 4.25, 3.15, fill=WHITE, line=None)
 picture_fit(s, os.path.join(SHOTS, "02-chat.png"), 8.57, 1.82, 4.01, 2.91)

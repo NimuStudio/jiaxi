@@ -283,7 +283,8 @@ cover = vignette(cover, alpha=42)
 
 
 def bake_wordmark(img, text="PEDIGREE", size_px=352, tracking=0.14, stroke=3,
-                  color=(255, 255, 255, 76)):
+                  color=(255, 255, 255, 76), top=None):
+    """把描边字烘进背景。top 给定时按该像素位置定位（可负、越界被裁），否则贴底。"""
     w, h = img.size
     layer = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
@@ -292,14 +293,16 @@ def bake_wordmark(img, text="PEDIGREE", size_px=352, tracking=0.14, stroke=3,
     gap = size_px * tracking
     total = sum(widths) + gap * (len(text) - 1)
     x = (w - total) / 2
-    y = h - size_px * 0.86
+    y = (h - size_px * 0.86) if top is None else top
     for ch, cw in zip(text, widths):
         d.text((x, y), ch, font=f, fill=(0, 0, 0, 0), stroke_width=stroke, stroke_fill=color)
         x += cw + gap
     return overlay(img, layer)
 
 
-cover = bake_wordmark(cover)
+# 顶部刊头：巨型描边字，上缘被裁掉，只露下 45%（开场的第一记）
+cover = bake_wordmark(cover, size_px=560, tracking=0.17, stroke=5,
+                      color=(255, 255, 255, 86), top=-int(560 * 0.52))
 cover.convert("RGB").save(os.path.join(ART, "cover-bg.jpg"), quality=JPEG_Q + 2, optimize=True)
 print("  cover-bg.jpg 已更新")
 
