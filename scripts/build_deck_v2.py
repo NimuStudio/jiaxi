@@ -1270,42 +1270,56 @@ para(tf, "· 内部打分信号（logprobs）不进界面，只做调试用", si
 para(tf, "· 追问是收集证据，不是把判断推回给用户", size=9.5, line=1.45)
 footer(s, 18)
 
-# ============ P11 微调 A/B ============
-s = new_slide(3, "我们真的微调了一次，**然后被数据否掉**", icon="flask")
-rows = [
-    ("基线 + few-shot + 规则层", "1.000", "0.893", "0.943", "27/30"),
-    ("微调 + 规则层", "1.000", "0.893", "0.943", "27/30"),
-    ("基线模型原始能力（跳过规则层）", "0.957", "0.786", "0.863", "23/30"),
-    ("微调模型原始能力（跳过规则层）", "0.957", "0.786", "0.863", "23/30"),
-]
-tbl = s.shapes.add_table(len(rows) + 1, 5, Inches(M), Inches(2.15), Inches(W), Inches(2.0)).table
-for j, wd in enumerate([5.5, 1.6, 1.6, 1.6, 1.5]):
-    tbl.columns[j].width = Inches(wd)
-for j, h in enumerate(["配置（封存留出集 30 条，从未参与训练）", "Precision", "Recall", "F1", "完全匹配"]):
-    cell = tbl.cell(0, j); cell.text = ""
-    r = cell.text_frame.paragraphs[0].add_run(); r.text = h
-    set_font(r, 10.5, True, MUTED)
-    cell.fill.solid(); cell.fill.fore_color.rgb = PRIMARY_SOFT
-for i, row in enumerate(rows, start=1):
-    for j, val in enumerate(row):
-        cell = tbl.cell(i, j); cell.text = ""
-        r = cell.text_frame.paragraphs[0].add_run(); r.text = val
-        set_font(r, 11, j == 3, TEXT)
-        cell.fill.solid(); cell.fill.fore_color.rgb = SURFACE
-for row in tbl.rows:
-    row.height = Inches(0.46)
-    for cell in row.cells:
-        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
-        cell.margin_left = Inches(0.14)
+# ============ P11 微调 A/B：成本 vs 收益 ============
+s = new_slide(3, "我们真的微调了一次，**然后被数据否掉**", icon="flask",
+              sub="封存留出集 30 条，从未参与训练；两组的数字并排放，长度差为零")
 
-rect(s, M, 4.5, W, 1.7, fill=RECLAIM_SOFT, line=LINE)
-tf = text_box(s, M + 0.3, 4.62, W - 0.6, 1.45)
-para(tf, "逐条比对 30 条输出：模型层只有 2 条不同，指标完全一致；叠加规则层后 30/30 完全相同。",
-     size=12, first=True, line=1.4)
-para(tf, "处置：不引入微调模型，省下 1.1 GB 权重与一套维护。训练链路保留（1355 条 / 3 epoch / 21 分钟 / merge → GGUF → Q4）。",
-     size=11, color=MUTED, line=1.4)
-para(tf, "负结果也是结果：它证明提升空间在词表与规则，而不在参数量。", size=11, color=RECLAIM, line=1.4)
-footer(s, 11)
+pairs = [
+    ("叠加规则层之后的 F1", "0.943", "0.943", "27/30", "27/30"),
+    ("模型原始能力 F1（跳过规则层）", "0.863", "0.863", "23/30", "23/30"),
+]
+SCALE = 3.2
+for gi, (label, b1, b2, hit1, hit2) in enumerate(pairs):
+    base_y = 2.05 + gi * 2.05
+    tf = text_box(s, M, base_y, 6.4, 0.3)
+    para(tf, label, size=10.5, bold=True, color=TEXT, first=True)
+    for bi, (name, val, hit) in enumerate([("基线 + few-shot", b1, hit1), ("微调后", b2, hit2)]):
+        y = base_y + 0.40 + bi * 0.62
+        tf = text_box(s, M, y + 0.04, 1.85, 0.3)
+        para(tf, name, size=9.5, color=MUTED, first=True)
+        rect(s, M + 1.95, y + 0.08, SCALE, 0.26, fill=RGBColor(0xEC, 0xF1, 0xF6), line=None, radius=False)
+        rect(s, M + 1.95, y + 0.08, SCALE * float(val), 0.26,
+             fill=PRIMARY if bi == 0 else AMBER, line=None, radius=False)
+        tf = text_box(s, M + 1.95 + SCALE + 0.12, y + 0.04, 1.6, 0.3)
+        rich(tf, [(val, True, PRIMARY if bi == 0 else AMBER), ("  " + hit, False, MUTED)],
+             size=10.5, first=True)
+    if gi == 0:
+        tf = text_box(s, M, base_y + 1.68, 6.4, 0.3)
+        para(tf, "两条等长：差 0.000", size=9.5, bold=True, color=DANGER, first=True)
+
+rect(s, 8.15, 2.05, 4.4, 1.15, fill=AMBER_SOFT, line=RGBColor(0xE8, 0xC8, 0x92))
+tf = text_box(s, 8.40, 2.13, 3.9, 1.0)
+para(tf, "投入", size=10.5, bold=True, color=AMBER, first=True)
+para(tf, "1355 条合成数据 · 3 epoch · 21 分钟（RTX 5080）", size=9.5, line=1.55)
+para(tf, "额外 1.1 GB 权重 + 一套微调链路维护", size=9.5, line=1.55)
+
+rect(s, 8.15, 3.36, 4.4, 1.15, fill=SURFACE, line=LINE)
+tf = text_box(s, 8.40, 3.44, 3.9, 1.0)
+para(tf, "收益", size=10.5, bold=True, color=MUTED, first=True)
+para(tf, "F1 +0.000 · 完全匹配 27/30 不变", size=9.5, line=1.55)
+para(tf, "逐条比对：30 条输出里模型层只有 2 条不同", size=9.5, line=1.55)
+
+rect(s, 8.15, 4.67, 4.4, 0.76, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, 8.40, 4.74, 3.9, 0.64)
+para(tf, "所以判断", size=10, bold=True, color=PRIMARY, first=True)
+para(tf, "提升空间在词表与规则，不在参数量", size=9.5, color=TEXT, line=1.4)
+
+rect(s, M, 5.68, W, 0.92, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.26, 5.78, W - 0.52, 0.75)
+para(tf, "处置：不引入微调模型，训练链路保留（可复跑）。这不是失败——它证明提升空间在词表与规则，不在参数量。",
+     size=10, bold=True, color=TEXT, first=True, line=1.35)
+para(tf, "换任何一组同任务模型，这条结论都成立，所以它比「我们调得更好」更值得讲。", size=9.5, color=MUTED, line=1.35)
+footer(s, 19)
 
 # ============ P12 隐私与合规 ============
 s = new_slide(4, "隐私与合规：写进代码的承诺", icon="shield")
@@ -1334,9 +1348,10 @@ for i, line in enumerate(["不埋点统计用户病史", "不上传任何图片�
     para(tf, "· " + line, size=11, first=(i == 0), line=1.6)
 footer(s, 12)
 
-# ============ P13 差异化 ============
-s = new_slide(4, "同一件事，四种现有做法各自缺一环", icon="diff",
-              sub="对照的是典型形态，不针对某一款具体产品")
+# ============ P13 差异化：矩阵 + 具备项数条形 ============
+s = new_slide(4, "同一件事，**四种现有做法各自缺一环**", icon="diff",
+              sub="我们对照的是典型形态，不针对某一款具体产品；✓ 具备　△ 部分　✕ 不具备")
+
 COLSX = ["体检解读 App", "医院问卷", "临床家系图", "通用健康 App", "家系"]
 ROWS = [
     ("看家族史", ["✕", "△", "✓", "△", "✓"]),
@@ -1346,48 +1361,48 @@ ROWS = [
     ("拆出「可回收」", ["✕", "✕", "✕", "✕", "✓"]),
     ("数据不出机器", ["✕", "✓", "✓", "✕", "✓"]),
 ]
-ncol = len(COLSX)
-label_w = 2.35
-col_w = (W - label_w) / ncol
-top = 2.05
-row_h = 0.52
-tbl = s.shapes.add_table(len(ROWS) + 1, ncol + 1, Inches(M), Inches(top),
-                         Inches(W), Inches(row_h * (len(ROWS) + 1))).table
-tbl.columns[0].width = Inches(label_w)
-for j in range(1, ncol + 1):
-    tbl.columns[j].width = Inches(col_w)
-head = [" "] + COLSX
-for j, h in enumerate(head):
-    cell = tbl.cell(0, j); cell.text = ""
-    last = j == ncol
-    para(cell.text_frame, h, size=9.5, bold=True,
-         color=PRIMARY if last else MUTED, first=True, align=PP_ALIGN.CENTER)
-    cell.fill.solid()
-    cell.fill.fore_color.rgb = PRIMARY_SOFT if last else SURFACE
-for i, (label, marks) in enumerate(ROWS, start=1):
-    cell = tbl.cell(i, 0); cell.text = ""
-    para(cell.text_frame, label, size=9.5, color=TEXT, first=True)
-    cell.fill.solid(); cell.fill.fore_color.rgb = SURFACE
-    for j, mk in enumerate(marks, start=1):
-        cell = tbl.cell(i, j); cell.text = ""
-        # ✕ 原来太淡（投影下看不见），改成 FAINT 级灰；△ 用 MUTED，✓ 用墨绿
-        color = RECLAIM if mk == "✓" else (MUTED if mk == "△" else FAINT)
-        para(cell.text_frame, mk, size=12, bold=(mk == "✓"), color=color, first=True,
-             align=PP_ALIGN.CENTER)
-        cell.fill.solid()
-        cell.fill.fore_color.rgb = RECLAIM_SOFT if j == ncol else SURFACE
-for row in tbl.rows:
-    row.height = Inches(row_h)
-    for cell in row.cells:
-        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
-        cell.margin_left = Inches(0.10); cell.margin_right = Inches(0.06)
+TX, TW = M, 8.05
+CW2 = (TW - 1.95) / 4
+# 矩阵只放四类现有做法：「家系」那一列由右侧条形代表，避免同一信息出现两次
+for j, c in enumerate(COLSX[:4]):
+    cx = TX + 1.95 + j * CW2
+    tf = text_box(s, cx - 0.25, 1.98, CW2 + 0.2, 0.28, align=PP_ALIGN.CENTER)
+    para(tf, c, size=8.5, color=MUTED, first=True, align=PP_ALIGN.CENTER)
+for i, (name, marks) in enumerate(ROWS):
+    y = 2.42 + i * 0.52
+    tf = text_box(s, TX, y, 1.9, 0.3)
+    para(tf, name, size=9.5, color=TEXT, first=True)
+    for j, mk in enumerate(marks[:4]):
+        cx = TX + 1.95 + j * CW2
+        color = RECLAIM if mk == "✓" else (FAINT if mk == "✕" else MUTED)
+        tf = text_box(s, cx - 0.25, y, CW2 + 0.2, 0.3, align=PP_ALIGN.CENTER)
+        para(tf, mk, size=10, color=color, first=True, align=PP_ALIGN.CENTER)
+    if i < len(ROWS) - 1:
+        rect(s, TX, y + 0.40, TW, 0.006, fill=LINE, radius=False)
 
-tf = text_box(s, M, 6.28, 7.6, 0.3)
-para(tf, "✓ 具备　△ 部分具备　✕ 不具备", size=8.5, color=FAINT, first=True)
-rect(s, 8.55, 6.22, 4.2, 0.42, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, 8.72, 6.28, 3.9, 0.3)
-para(tf, "我们的四件事，都落在这张表的最后一列", size=9.5, bold=True, color=PRIMARY, first=True)
-footer(s, 17)
+# 右：按「具备几项 / 6」做成条形——把矩阵里的勾叉变成一个可比的量
+SCORE = [0, 1, 3, 0.5, 6]
+tf = text_box(s, 9.55, 1.98, 3.2, 0.3)
+para(tf, "具备几项（满分 6）", size=10, bold=True, color=PRIMARY, first=True)
+for j, (c, sc) in enumerate(zip(COLSX, SCORE)):
+    y = 2.42 + j * 0.52
+    tf = text_box(s, 9.55, y - 0.02, 3.2, 0.24)
+    para(tf, c, size=8, color=RECLAIM if j == 4 else MUTED, first=True)
+    track_w = 2.45
+    rect(s, 9.55, y + 0.22, track_w, 0.16, fill=RGBColor(0xEC, 0xF1, 0xF6), line=None, radius=False)
+    rect(s, 9.55, y + 0.22, track_w * sc / 6.0, 0.16,
+         fill=RECLAIM if j == 4 else RGBColor(0xC2, 0xD6, 0xE9), line=None, radius=False)
+    tf = text_box(s, 9.55 + track_w + 0.10, y + 0.14, 0.6, 0.26)
+    para(tf, ("6" if sc == 6 else (str(sc) if sc != int(sc) else str(int(sc)))),
+         size=9.5, bold=(j == 4), color=RECLAIM if j == 4 else MUTED, first=True)
+
+tf = text_box(s, 9.55, 5.14, 3.25, 0.5)
+para(tf, "四类做法平均 1.1 项，我们 6 项。", size=9.5, bold=True, color=TEXT, first=True, line=1.4)
+para(tf, "缺的不是 AI，是把家系当成数据结构。", size=9, color=MUTED, line=1.4)
+tf = text_box(s, M, 5.72, W, 0.5)
+para(tf, "横向读：每一行是一种能力；纵向读：没有任何一类现有做法同时在六行上都打勾——这就是缺口。",
+     size=9.5, color=MUTED, first=True)
+footer(s, 21)
 
 # ============ P18 价值与落地（实测数字） ============
 s = new_slide(4, "落地：一台电脑跑完整个闭环，**数字都是实测的**", icon="launch",
