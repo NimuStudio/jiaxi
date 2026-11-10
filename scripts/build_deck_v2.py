@@ -1034,54 +1034,103 @@ for i, line in enumerate(["不埋点统计用户病史", "不上传任何图片�
 footer(s, 12)
 
 # ============ P13 差异化 ============
-s = new_slide(4, "和谁都不一样：把「判断」和「行动」补上", icon="layers")
-tf = text_box(s, M, 2.15, 6.0, 3.6)
-para(tf, "体检解读 App", size=12, bold=True, color=FAINT, first=True, line=1.2)
-para(tf, "只解读当次指标，不看家族", size=10.5, color=MUTED, line=1.3)
-para(tf, "医院问卷", size=12, bold=True, color=FAINT, space_before=10, line=1.2)
-para(tf, "家族史压成「有 / 无」", size=10.5, color=MUTED, line=1.3)
-para(tf, "临床家系图工具", size=12, bold=True, color=FAINT, space_before=10, line=1.2)
-para(tf, "医生画在病历本上，患者见不到第二次", size=10.5, color=MUTED, line=1.3)
-para(tf, "通用健康 App", size=12, bold=True, color=FAINT, space_before=10, line=1.2)
-para(tf, "给建议，但不复算、不说哪部分能拿回来", size=10.5, color=MUTED, line=1.3)
-
-rect(s, M + 5.9, 2.15, 5.1, 3.5, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, M + 6.15, 2.28, 4.6, 3.2)
-para(tf, "我们做的四件事", size=12.5, bold=True, color=PRIMARY, first=True, line=1.45)
-para(tf, "① 用口述替代填表，抽出的每条病可回查原话", size=11, line=1.55)
-para(tf, "② 把风险拆成「可回收 / 改不了」，并复算给你看", size=11, line=1.55)
-para(tf, "③ 所有判断带置信度与拒答路径，不装懂", size=11, line=1.55)
-para(tf, "④ 100% 本机推理：断网可演示，数据不出机器", size=11, color=RECLAIM, line=1.55)
-para(tf, "", size=6)
-para(tf, "评测上也不含糊：留出集只跑一次、产物留痕、微调被 A/B 否掉就不引入。", size=10, color=MUTED, line=1.45)
-footer(s, 13)
-
-# ============ P14 价值与落地 ============
-s = new_slide(4, "落地：一台普通电脑就能跑完整个闭环", icon="trend",
-              sub="没有 API 账单，也没有额度限制——这是「本机推理」带来的直接好处")
-cards = [
-    ("0 元", "推理成本", "模型跑在本机，不产生按次计费；演示与试点不需要预算审批"),
-    ("1 台", "部署规模", "单机（16 GB 显存）即可承载模型、站点与数据库"),
-    ("3 类", "使用场景", "体检中心问诊前自助梳理 · 家庭医生随访 · 个人自查后带图就医"),
+s = new_slide(4, "同一件事，四种现有做法各自缺一环", icon="layers",
+              sub="对照的是典型形态，不针对某一款具体产品")
+COLSX = ["体检解读 App", "医院问卷", "临床家系图", "通用健康 App", "家系"]
+ROWS = [
+    ("看家族史", ["✕", "△", "✓", "△", "✓"]),
+    ("记发病年龄", ["✕", "✕", "✓", "✕", "✓"]),
+    ("结果可复算", ["✕", "✕", "△", "✕", "✓"]),
+    ("每条可回查原话", ["✕", "✕", "✕", "✕", "✓"]),
+    ("拆出「可回收」", ["✕", "✕", "✕", "✕", "✓"]),
+    ("数据不出机器", ["✕", "✓", "✓", "✕", "✓"]),
 ]
-cw = (W - 0.5) / 3
-for i, (big, label, desc) in enumerate(cards):
-    x = M + i * (cw + 0.25)
-    rect(s, x, 2.2, cw, 2.35, fill=SURFACE, line=LINE)
-    tf = text_box(s, x + 0.3, 2.4, cw - 0.6, 0.6)
-    para(tf, big, size=30, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, x + 0.3, 3.02, cw - 0.6, 0.3)
-    para(tf, label, size=11.5, bold=True, first=True)
-    tf = text_box(s, x + 0.3, 3.38, cw - 0.6, 1.0)
-    para(tf, desc, size=10.5, color=MUTED, first=True, line=1.4)
+ncol = len(COLSX)
+label_w = 2.35
+col_w = (W - label_w) / ncol
+top = 2.05
+row_h = 0.52
+tbl = s.shapes.add_table(len(ROWS) + 1, ncol + 1, Inches(M), Inches(top),
+                         Inches(W), Inches(row_h * (len(ROWS) + 1))).table
+tbl.columns[0].width = Inches(label_w)
+for j in range(1, ncol + 1):
+    tbl.columns[j].width = Inches(col_w)
+head = [" "] + COLSX
+for j, h in enumerate(head):
+    cell = tbl.cell(0, j); cell.text = ""
+    last = j == ncol
+    para(cell.text_frame, h, size=9.5, bold=True,
+         color=PRIMARY if last else MUTED, first=True, align=PP_ALIGN.CENTER)
+    cell.fill.solid()
+    cell.fill.fore_color.rgb = PRIMARY_SOFT if last else SURFACE
+for i, (label, marks) in enumerate(ROWS, start=1):
+    cell = tbl.cell(i, 0); cell.text = ""
+    para(cell.text_frame, label, size=9.5, color=TEXT, first=True)
+    cell.fill.solid(); cell.fill.fore_color.rgb = SURFACE
+    for j, mk in enumerate(marks, start=1):
+        cell = tbl.cell(i, j); cell.text = ""
+        # ✕ 原来太淡（投影下看不见），改成 FAINT 级灰；△ 用 MUTED，✓ 用墨绿
+        color = RECLAIM if mk == "✓" else (MUTED if mk == "△" else FAINT)
+        para(cell.text_frame, mk, size=12, bold=(mk == "✓"), color=color, first=True,
+             align=PP_ALIGN.CENTER)
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = RECLAIM_SOFT if j == ncol else SURFACE
+for row in tbl.rows:
+    row.height = Inches(row_h)
+    for cell in row.cells:
+        cell.vertical_anchor = MSO_ANCHOR.MIDDLE
+        cell.margin_left = Inches(0.10); cell.margin_right = Inches(0.06)
 
-rect(s, M, 4.9, W, 1.18, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, M + 0.3, 5.02, W - 0.6, 1.0)
-para(tf, "下一步：把口语留出集扩到 100 条（当前 30 条，置信区间约 ±10%）· 引入医生复核试点 · 补姻亲与曾祖辈的关系支持",
-     size=11.5, first=True, line=1.45)
-para(tf, "更长远：把「可回收」从建议升级为可追踪的行动记录，让用户看到半年后复算的数字变化。",
-     size=11.5, color=MUTED, line=1.45)
-footer(s, 14)
+tf = text_box(s, M, 6.28, 7.6, 0.3)
+para(tf, "✓ 具备　△ 部分具备　✕ 不具备", size=8.5, color=FAINT, first=True)
+rect(s, 8.55, 6.22, 4.2, 0.42, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, 8.72, 6.28, 3.9, 0.3)
+para(tf, "我们的四件事，都落在这张表的最后一列", size=9.5, bold=True, color=PRIMARY, first=True)
+footer(s, 17)
+
+# ============ P18 价值与落地（实测数字） ============
+s = new_slide(4, "落地：一台电脑跑完整个闭环，数字都是实测的", icon="trend",
+              sub="以下体积与耗时在本机实测（RTX 5080 / 32 GB 内存），不是估算")
+rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE)
+tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
+para(tf, "要装什么（体积）", size=10.5, bold=True, color=PRIMARY, first=True)
+items = [
+    ("抽取模型 Qwen3-1.7B · Q4_K_M", "1.2 GB"),
+    ("llama.cpp 运行时（CUDA 构建）", "202 MB"),
+    ("视觉模型 + mmproj（可选）", "2.6 GB"),
+    ("站点构建产物 .next", "120 MB"),
+    ("依赖 node_modules", "419 MB"),
+]
+for i, (name, size) in enumerate(items):
+    y = 2.52 + i * 0.56
+    tf = text_box(s, M + 0.28, y, 4.5, 0.3)
+    para(tf, name, size=9.5, color=TEXT, first=True)
+    tf = text_box(s, 5.55, y, 1.05, 0.3, align=PP_ALIGN.RIGHT)
+    para(tf, size, size=10, bold=True, color=PRIMARY, first=True, align=PP_ALIGN.RIGHT)
+    if i < len(items) - 1:
+        rect(s, M + 0.28, y + 0.40, 6.0, 0.008, fill=LINE, radius=False)
+
+tf = text_box(s, 7.65, 2.02, 4.9, 0.3)
+para(tf, "要等多久（实测）", size=10.5, bold=True, color=PRIMARY, first=True)
+metrics = [("2.7", " 秒", "模型服务启动到首个可用响应"),
+           ("1.2", " 秒", "单句家族史抽取（含 GBNF 约束）"),
+           ("1.0", " 秒", "站点启动（已有构建产物）"),
+           ("< 1", " 毫秒", "三套风险方程（纯本地函数）")]
+for i, (big, unit, label) in enumerate(metrics):
+    y = 2.42 + i * 0.76
+    rect(s, 7.65, y, 4.9, 0.66, fill=SURFACE, line=LINE)
+    tf = text_box(s, 7.85, y + 0.10, 1.5, 0.4)
+    rich(tf, [(big, True, PRIMARY), (unit, False, PRIMARY)], size=17, first=True)
+    tf = text_box(s, 9.35, y + 0.10, 3.05, 0.5)
+    para(tf, label, size=9.5, color=MUTED, first=True, line=1.25)
+
+rect(s, M, 5.62, W, 1.05, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.3, 5.72, W - 0.6, 0.9)
+para(tf, "成本：推理全在本机，没有按次计费、没有额度限制；整套演示环境约 4.5 GB 磁盘，一台机器即可承载。",
+     size=11, first=True, line=1.35)
+para(tf, "口径说明：耗时为本机 CPU 路径实测；补齐 CUDA 运行时后走 GPU 会更快（模型仅 1.2 GB，16 GB 显存绰绰有余）。",
+     size=9.5, color=MUTED, line=1.35)
+footer(s, 18)
 
 # ============ P15 团队 ============
 s = new_slide(5, "团队：谁在负责哪一块", icon="team",
