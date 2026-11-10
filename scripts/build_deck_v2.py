@@ -392,7 +392,7 @@ para(tf, "口述 → 家系图 → 风险 → 可回收", size=9.5, color=RGBCol
 
 # ============ P2 目录 ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(os.path.join(ART, "content-bg.png"), 0, 0,
+s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
 rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
 tf = text_box(s, M, 1.1, 6, 0.5)
@@ -401,24 +401,27 @@ tf = text_box(s, M, 1.55, 8, 0.7)
 para(tf, "六个问题，一条主线", size=30, bold=True, first=True)
 
 toc = [
-    ("01", "项目背景", "家族史是免费的风险信号，却几乎没人用"),
-    ("02", "方案与产品", "口述进、行动出；两屏演示完整闭环"),
-    ("03", "技术路线", "四层架构：模型只做它不可替代的一件事"),
-    ("04", "准确性与选型", "留出集 F1 1.000；判定为什么不用大模型"),
-    ("05", "价值与落地", "差异化、部署成本与落地场景"),
-    ("06", "团队", "我们是谁，各自负责什么"),
+    ("01", "tree", "项目背景", "家族史是免费的风险信号，却几乎没人用"),
+    ("02", "flag", "方案与产品", "口述进、行动出；两屏演示完整闭环"),
+    ("03", "chip", "技术路线", "数据流 / 分层架构 / 部署视图"),
+    ("04", "target", "准确性与选型", "留出集 F1 1.000；判定为什么不用大模型"),
+    ("05", "trend", "价值与落地", "差异化、部署成本与实测性能"),
+    ("06", "team", "团队", "我们是谁，各自负责什么"),
 ]
-for i, (num, name, desc) in enumerate(toc):
+for i, (num, ic, name, desc) in enumerate(toc):
     col = i % 2
     row = i // 2
     x = M + col * 5.95
-    y = 2.55 + row * 1.4
-    tf = text_box(s, x, y, 0.6, 0.35)
-    para(tf, num, size=13, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, x + 0.62, y - 0.06, 4.9, 0.4)
-    para(tf, name, size=17, bold=True, first=True)
-    tf = text_box(s, x + 0.62, y + 0.38, 4.9, 0.4)
-    para(tf, desc, size=10.5, color=MUTED, first=True)
+    y = 2.45 + row * 1.32
+    rect(s, x, y - 0.02, 0.52, 0.52, fill=PRIMARY_SOFT, line=LINE)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.10),
+                         Inches(y + 0.08), Inches(0.32), Inches(0.32))
+    tf = text_box(s, x + 0.64, y - 0.06, 0.6, 0.32)
+    para(tf, num, size=11, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, x + 1.10, y - 0.10, 4.4, 0.4)
+    para(tf, name, size=16.5, bold=True, first=True)
+    tf = text_box(s, x + 1.10, y + 0.32, 4.4, 0.4)
+    para(tf, desc, size=10, color=MUTED, first=True)
 footer(s, 2)
 
 # ============ P3 项目背景 ============
@@ -458,25 +461,45 @@ rich(tf, [("家族史在引擎里都有权重：", True, TEXT),
           ("PLCOm2012 是肺癌方程的一项", True, DANGER)], size=11.5, first=True)
 footer(s, 3)
 
-# ============ P4 引语页（满版深色，制造节奏） ============
+# ============ P4 引语页（浅色版：深色只留给封面） ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(art_path("cover-bg"), 0, 0,
+s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
-tf = text_box(s, M, 1.95, 6, 0.4)
-para(tf, "一 句 真 话", size=11, bold=True, color=GLOW, first=True)
-tf = text_box(s, M, 2.45, 9.6, 2.4)
-para(tf, "「我爸 52 岁放了支架，爷爷糖尿病，", size=30, bold=True, color=WHITE, first=True, line=1.5)
-para(tf, "外公是脑溢血走的。」", size=30, bold=True, color=WHITE, line=1.5)
-rect(s, M, 5.25, 1.2, 0.05, fill=GLOW, radius=False)
-tf = text_box(s, M, 5.45, 9.2, 0.5)
-para(tf, "这三条，任何体检 App 都不会问。", size=14, color=RGBColor(0xB9, 0xD3, 0xE8), first=True)
+rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
 
-rect(s, 9.05, 2.45, 3.5, 2.55, fill=RGBColor(0x0E, 0x33, 0x57), line=RGBColor(0x39, 0x6D, 0x9E))
-tf = text_box(s, 9.3, 2.62, 3.0, 2.2)
-para(tf, "这一句话的价值", size=10.5, bold=True, color=GLOW, first=True)
-para(tf, "5 / 26", size=40, bold=True, color=WHITE, space_before=6)
-para(tf, "FINDRISC 满分 26 分里，家族史记 5 分；", size=10, color=RGBColor(0xB9, 0xD3, 0xE8), line=1.45)
-para(tf, "China-PAR 还把它作为独立系数。", size=10, color=RGBColor(0xB9, 0xD3, 0xE8), line=1.45)
+s.shapes.add_picture(os.path.join(ICONS, "chat.png"), Inches(M), Inches(1.92),
+                     Inches(0.34), Inches(0.34))
+tf = text_box(s, M + 0.48, 1.96, 6, 0.34)
+para(tf, "一 句 真 话", size=11, bold=True, color=PRIMARY, first=True)
+tf = text_box(s, M, 2.50, 8.9, 2.4)
+para(tf, "「我爸 52 岁放了支架，爷爷糖尿病，", size=29, bold=True, color=TEXT, first=True, line=1.5)
+para(tf, "外公是脑溢血走的。」", size=29, bold=True, color=TEXT, line=1.5)
+rect(s, M, 5.20, 1.2, 0.05, fill=RECLAIM, radius=False)
+tf = text_box(s, M, 5.40, 8.6, 0.5)
+para(tf, "这三条，任何体检 App 都不会问。", size=14, color=MUTED, first=True)
+
+rect(s, 9.35, 2.50, 3.2, 1.95, fill=SURFACE, line=LINE)
+rect(s, 9.35, 2.50, 3.2, 0.06, fill=PRIMARY, radius=False)
+tf = text_box(s, 9.58, 2.66, 2.75, 1.7)
+para(tf, "这一句话的价值", size=10, bold=True, color=MUTED, first=True)
+rich(tf, [("5", True, PRIMARY), (" / 26", True, MUTED)], size=38)
+para(tf, "FINDRISC 满分 26 分里，家族史记 5 分；", size=9.5, color=MUTED, line=1.4)
+para(tf, "China-PAR 还把它作为独立系数。", size=9.5, color=MUTED, line=1.4)
+
+# 底部：一句话 -> 家系图 -> 风险，用三个图标把动向画出来
+flow = [("chat", "说一句话"), ("tree", "长出家系图"), ("target", "三个风险数字")]
+for i, (ic, label) in enumerate(flow):
+    x = M + i * 2.75
+    rect(s, x, 6.10, 2.45, 0.66, fill=SURFACE, line=LINE)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.16),
+                         Inches(6.27), Inches(0.30), Inches(0.30))
+    tf = text_box(s, x + 0.56, 6.26, 1.75, 0.34)
+    para(tf, label, size=10.5, color=TEXT, first=True)
+    if i < 2:
+        ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + 2.50), Inches(6.34),
+                                Inches(0.20), Inches(0.18))
+        ar.fill.solid(); ar.fill.fore_color.rgb = LINE2
+        ar.line.fill.background(); ar.shadow.inherit = False
 
 # ============ P5 方案总览 ============
 s = new_slide(1, "口述进，行动出：四步闭环，每一步都能复核", icon="flag",
@@ -1157,21 +1180,36 @@ footer(s, 15)
 
 # ============ P17 结尾（与封面呼应：深色背景） ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(art_path("cover-bg"), 0, 0,
+s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
-tf = text_box(s, M, 2.20, 10, 0.4)
-para(tf, "家  系", size=13, bold=True, color=GLOW, first=True)
-tf = text_box(s, M, 2.62, 10.6, 1.2)
+rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
+tf = text_box(s, M, 1.75, 10, 0.36)
+para(tf, "家  系　Pedigree", size=12.5, bold=True, color=PRIMARY, first=True)
+tf = text_box(s, M, 2.15, 10.9, 1.1)
 para(tf, "把家族史从一句话，变成能算、能改、能复算的东西", size=30, bold=True,
-     color=WHITE, first=True)
-tf = text_box(s, M, 4.05, 10, 0.5)
-para(tf, "谢谢聆听 · 欢迎提问", size=14, color=RGBColor(0xB9, 0xD3, 0xE8), first=True)
-rect(s, M, 4.75, 1.5, 0.05, fill=GLOW, radius=False)
-tf = text_box(s, M, 5.05, 11, 1.2)
+     color=TEXT, first=True, line=1.25)
+tf = text_box(s, M, 3.35, 10, 0.45)
+para(tf, "谢谢聆听 · 欢迎提问", size=14, color=MUTED, first=True)
+rect(s, M, 3.95, 1.5, 0.05, fill=PRIMARY, radius=False)
+tf = text_box(s, M, 4.20, 11, 0.9)
 para(tf, "现场可演示：口述家族史 → 家系图 → 三套风险 → 可回收建议（全程本机，断网可用）",
-     size=11.5, color=RGBColor(0xB9, 0xD3, 0xE8), first=True, line=1.6)
+     size=11, color=MUTED, first=True, line=1.5)
 para(tf, "代码与评测产物：留出集 6 套、每套 30 条，docs/eval-results 可逐条复核",
-     size=11.5, color=RGBColor(0xB9, 0xD3, 0xE8), line=1.6)
+     size=11, color=MUTED, line=1.5)
+
+# 收尾的四件事，用图标条代替空话
+closing = [("tree", "家系图", "口述即可生成"), ("chip", "本机推理", "抽取 0.11 秒"),
+           ("lock", "数据不出机器", "无外部 API"), ("flag", "可执行的下一步", "这周就能做")]
+cw2 = (W - 0.45) / 4
+for i, (ic, title, note) in enumerate(closing):
+    x = M + i * (cw2 + 0.15)
+    rect(s, x, 5.30, cw2, 1.15, fill=SURFACE, line=LINE)
+    s.shapes.add_picture(os.path.join(ICONS, ic + ".png"), Inches(x + 0.22),
+                         Inches(5.48), Inches(0.34), Inches(0.34))
+    tf = text_box(s, x + 0.66, 5.44, cw2 - 0.86, 0.32)
+    para(tf, title, size=11.5, bold=True, color=PRIMARY, first=True)
+    tf = text_box(s, x + 0.66, 5.76, cw2 - 0.86, 0.3)
+    para(tf, note, size=9.5, color=MUTED, first=True)
 
 
 # ---------------- 动画与切换 ----------------

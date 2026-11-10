@@ -254,6 +254,18 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
                            quality=JPEG_Q, optimize=True)
     print("  bg", idx, name, motif)
 
+# ---------- 中性背景（过渡页：不带栏目数字与专属图形） ----------
+plain = gradient((W, H), [(0.0, (247, 250, 254)), (0.50, (241, 246, 252)), (1.0, (233, 241, 250))])
+plain = soft_blob(plain, W * 0.99, H * 0.03, W * 0.34, (203, 224, 243), 120)
+plain = soft_blob(plain, W * 0.01, H * 1.0, W * 0.26, (206, 228, 246), 80)
+plain = dot_grid(plain, (26, 111, 181), alpha=28, pitch=36, radius=2.4)
+plain = arcs(plain, W * 1.02, H * -0.02, [W * 0.30, W * 0.40, W * 0.50], (26, 111, 181), alpha=26, width=3)
+plain = pedestal_wire(plain, (26, 111, 181), alpha=14, scale=1.05, offset=(W * 0.02, H * 0.04))
+plain = grain(plain, amount=4.0)
+plain = vignette(plain, alpha=28)
+plain.convert("RGB").save(os.path.join(ART, "content-bg-plain.jpg"), quality=JPEG_Q, optimize=True)
+print("  content-bg-plain.jpg 已生成")
+
 # ---------- 封面背景（更深、元素更多） ----------
 cover = gradient((W, H), [(0.0, (4, 18, 34)), (0.38, (8, 36, 68)),
                           (0.72, (17, 66, 112)), (1.0, (6, 24, 44))])
