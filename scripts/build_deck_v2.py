@@ -129,16 +129,109 @@ def nav_bar(slide, active):
     rect(slide, M, 0.78, W, 0.012, fill=LINE, radius=False)
 
 
-def new_slide(section, title, sub=None):
+from pptx.enum.shapes import MSO_CONNECTOR
+
+
+def hline_shape(s, x1, x2, y, color=LINE, w=1.0, dash=None):
+    cn = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Inches(x1), Inches(y), Inches(x2), Inches(y))
+    cn.line.color.rgb = color
+    cn.line.width = Pt(w)
+    if dash:
+        cn.line.dash_style = dash
+    return cn
+
+
+def f1_chart(s, x, y, w, h, values, labels, notes):
+    """手绘折线图：为了能逐点标注「这一跳改了什么」。
+
+    原生图表无法精确控制注记位置，所以坐标全部自己算；
+    数值仍以文本呈现，改数只需改这里的 values。
+    """
+    vmin, vmax = 0.80, 1.05
+    n = len(values)
+    pad_l, pad_r = 0.62, 0.22
+    pad_t, pad_b = 0.26, 1.16
+    px0, px1 = x + pad_l, x + w - pad_r
+    py0, py1 = y + pad_t, y + h - pad_b
+
+    def X(i):
+        return px0 + (px1 - px0) * i / (n - 1)
+
+    def Y(v):
+        return py1 - (py1 - py0) * (v - vmin) / (vmax - vmin)
+
+    # 网格与刻度
+    tick = 0.80
+    while tick <= vmax + 1e-9:
+        yy = Y(tick)
+        hline_shape(s, px0, px1, yy, color=LINE, w=0.75)
+        tf = text_box(s, x + 0.04, yy - 0.11, 0.5, 0.22, align=PP_ALIGN.RIGHT)
+        para(tf, f"{tick:.2f}".rstrip("0").rstrip("."), size=8.5, color=FAINT, first=True,
+             align=PP_ALIGN.RIGHT)
+        tick += 0.05
+
+    # 折线
+    fb = s.shapes.build_freeform(Inches(X(0)), Inches(Y(values[0])), scale=1.0)
+    fb.add_line_segments([(Inches(X(i)), Inches(Y(values[i]))) for i in range(1, n)], close=False)
+    poly = fb.convert_to_shape()
+    poly.fill.background()
+    poly.line.color.rgb = PRIMARY
+    poly.line.width = Pt(2.5)
+    poly.shadow.inherit = False
+
+    for i, v in enumerate(values):
+        cx, cy = X(i), Y(v)
+        last = i == n - 1
+        r = 0.075
+        dot = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(cx - r), Inches(cy - r),
+                                 Inches(2 * r), Inches(2 * r))
+        dot.fill.solid()
+        dot.fill.fore_color.rgb = RECLAIM if last else PRIMARY
+        dot.line.color.rgb = SURFACE
+        dot.line.width = Pt(1.5)
+        dot.shadow.inherit = False
+        # 数值：首尾点向内收，否则会压到纵轴刻度或右侧卡片
+        if i == 0:
+            lx, lw, la = cx + 0.02, 1.0, PP_ALIGN.LEFT
+        elif last:
+            lx, lw, la = cx - 1.02, 1.0, PP_ALIGN.RIGHT
+        else:
+            lx, lw, la = cx - 0.55, 1.1, PP_ALIGN.CENTER
+        tf = text_box(s, lx, cy - 0.34, lw, 0.24, align=la)
+        para(tf, f"{v:.3f}", size=9.5, bold=True, color=RECLAIM if last else PRIMARY,
+             first=True, align=la)
+        # 版本号
+        tf = text_box(s, cx - 0.55, py1 + 0.10, 1.1, 0.24, align=PP_ALIGN.CENTER)
+        para(tf, labels[i], size=10, bold=True, color=MUTED, first=True, align=PP_ALIGN.CENTER)
+        # 该跳改了什么
+        tf = text_box(s, cx - 0.62, py1 + 0.38, 1.24, 0.5, align=PP_ALIGN.CENTER)
+        para(tf, notes[i], size=8.5, color=FAINT, first=True, align=PP_ALIGN.CENTER, line=1.25)
+        # 刻度短线
+        hline_shape(s, cx, cx, py1, color=LINE2, w=1.0)
+
+    # 坐标轴
+    hline_shape(s, px0, px1, py1, color=LINE2, w=1.25)
+
+
+ICONS = os.path.join(ART, "icons")
+
+
+def new_slide(section, title, sub=None, icon=None):
     s = prs.slides.add_slide(BLANK)
     s.shapes.add_picture(os.path.join(ART, "content-bg.png"), 0, 0,
                          width=prs.slide_width, height=prs.slide_height)
     rect(s, 0, 0, 0.14, 7.5, fill=PRIMARY, radius=False)
     nav_bar(s, section)
-    tf = text_box(s, M, 1.02, W, 0.62)
+    tx = M
+    if icon:
+        path = os.path.join(ICONS, icon + ".png")
+        if os.path.exists(path):
+            s.shapes.add_picture(path, Inches(M + 0.02), Inches(1.03), Inches(0.46), Inches(0.46))
+            tx = M + 0.66
+    tf = text_box(s, tx, 1.02, 13.333 - tx - M, 0.62)
     para(tf, title, size=26, bold=True, first=True)
     if sub:
-        tf = text_box(s, M, 1.62, W, 0.4)
+        tf = text_box(s, tx, 1.62, 13.333 - tx - M, 0.4)
         para(tf, sub, size=12.5, color=MUTED, first=True)
     return s
 
@@ -156,8 +249,15 @@ def footer(slide, idx=None):
     FOOTERS[id(slide)] = tf
 
 
-def stat_card(slide, x, y, w, h, big, unit, label, color=PRIMARY):
+def stat_card(slide, x, y, w, h, big, unit, label, color=PRIMARY, compact=False):
     rect(slide, x, y, w, h, fill=SURFACE, line=LINE)
+    if compact:
+        # 矮卡片：数字 24pt、标签紧贴下方，否则标签会掉出卡片压到下一张
+        tf = text_box(slide, x + 0.20, y + 0.08, w - 0.40, 0.46)
+        rich(tf, [(big, True, color), (unit, False, color)], size=23, first=True)
+        tf = text_box(slide, x + 0.20, y + 0.52, w - 0.40, 0.3)
+        para(tf, label, size=9.5, color=MUTED, first=True)
+        return
     tf = text_box(slide, x + 0.22, y + 0.20, w - 0.44, 0.6)
     rich(tf, [(big, True, color), (unit, False, color)], size=30, first=True)
     tf = text_box(slide, x + 0.22, y + 0.85, w - 0.44, 0.6)
@@ -242,8 +342,8 @@ for i, (num, name, desc) in enumerate(toc):
 footer(s, 2)
 
 # ============ P3 项目背景 ============
-s = new_slide(0, "家族史是免费的风险信号，三套引擎都给它留了权重",
-              "但用户手上的体检报告，从来没有家系图")
+s = new_slide(0, "家族史是免费的风险信号，三套引擎都给它留了权重", icon="tree",
+              sub="但用户手上的体检报告，从来没有家系图")
 items = [
     ("01", "体检报告只解读当次指标", "「未见异常」四个字，不看你父亲 52 岁放的支架。"),
     ("02", "医院问卷把家族史压成「有 / 无」", "谁、几岁发病、几个亲属——三件最关键的事全部丢掉。"),
@@ -299,8 +399,8 @@ para(tf, "FINDRISC 满分 26 分里，家族史记 5 分；", size=10, color=RGB
 para(tf, "China-PAR 还把它作为独立系数。", size=10, color=RGBColor(0xB9, 0xD3, 0xE8), line=1.45)
 
 # ============ P5 方案总览 ============
-s = new_slide(1, "口述进，行动出：四步闭环，每一步都能复核",
-              "抽出来的每一条病，都能回查到用户原话")
+s = new_slide(1, "口述进，行动出：四步闭环，每一步都能复核", icon="flag",
+              sub="抽出来的每一条病，都能回查到用户原话")
 steps = [
     ("①", "口述", "语音或一句话描述家族病史，不用填表", "输出：结构化条目"),
     ("②", "家系图", "自动结构化：谁、几岁发病、几个亲属", "输出：可点选回溯的家系图"),
@@ -332,7 +432,7 @@ para(tf, "不替代医生：所有判断写成「提示」，并给出模型置�
 footer(s, 4)
 
 # ============ P5 产品① ============
-s = new_slide(1, "第一屏：一段话，直接变成一张家系图")
+s = new_slide(1, "第一屏：一段话，直接变成一张家系图", icon="chat")
 rect(s, M, 2.1, 8.1, 4.35, fill=SURFACE, line=LINE)
 picture_fit(s, os.path.join(SHOTS, "02-chat.png"), M + 0.12, 2.2, 7.86, 4.15)
 for i, (h1, h2) in enumerate([
@@ -348,7 +448,7 @@ for i, (h1, h2) in enumerate([
 footer(s, 5)
 
 # ============ P6 产品② ============
-s = new_slide(1, "第二屏：算清楚，哪一部分本就能拿回来")
+s = new_slide(1, "第二屏：算清楚，哪一部分本就能拿回来", icon="gauge")
 rect(s, M, 2.1, 5.85, 3.9, fill=SURFACE, line=LINE)
 picture_fit(s, os.path.join(SHOTS, "03-risk.png"), M + 0.1, 2.18, 5.65, 3.76)
 tf = text_box(s, M, 6.08, 5.85, 0.35)
@@ -365,8 +465,8 @@ para(tf, "界面上的每个数都能复算：China-PAR 对论文 Table 2 的 8 
 footer(s, 6)
 
 # ============ P7 现场动线 ============
-s = new_slide(1, "现场一走：四个动作，两分半钟",
-              "网页与 PPT 交替；任何一步卡住就退回上一页截图，不在台上调试")
+s = new_slide(1, "现场一走：四个动作，两分半钟", icon="play",
+              sub="网页与 PPT 交替；任何一步卡住就退回上一页截图，不在台上调试")
 beats = [
     ("0:00 – 0:40", "说一句",
      ["打开 /chat，照这句话念：", "「我爸 52 岁放了支架，", "爷爷糖尿病，外公脑溢血。」"],
@@ -407,8 +507,8 @@ para(tf, "不要在现场重启服务。启动脚本在桌面：启动家系演�
 footer(s, 7)
 
 # ============ P8 技术路线（真正的架构图） ============
-s = new_slide(2, "一张图看懂：数据怎么流动，模型只占哪一格",
-              "从一句口述到一份行动方案，中间经过四段处理，全部在本机完成")
+s = new_slide(2, "一张图看懂：数据怎么流动，模型只占哪一格", icon="chip",
+              sub="从一句口述到一份行动方案，中间经过四段处理，全部在本机完成")
 
 COLS = [
     ("输入", PRIMARY, ["语音（浏览器 Web Speech）", "自然语言文本", "化验单照片（可选）"]),
@@ -470,7 +570,7 @@ para(tf, "模型只负责「口语 → 结构」这一段；风险与可回收�
 footer(s, 7)
 
 # ============ P8 三引擎 ============
-s = new_slide(2, "三套引擎，各管一段，都对齐原始文献")
+s = new_slide(2, "三套引擎，各管一段，都对齐原始文献", icon="calc")
 engines = [
     ("FINDRISC", "糖代谢风险", "年龄 / BMI / 腰围 / 用药 / 家族史", "8 个题项，输出可回收分数"),
     ("China-PAR", "心血管 10 年风险", "血压 / 血脂 / 吸烟 / 糖尿病 / 家族史", "适用 35–74 岁，越界只提示不拒绝"),
@@ -496,48 +596,34 @@ para(tf, "为什么不用云端大模型算风险：确定性计算可复算、�
 footer(s, 8)
 
 # ============ P9 准确性 ============
-s = new_slide(3, "口语抽取：留出集 F1 从 0.877 到 1.000",
-              "每套留出集都是全新措辞、只跑一次；跑过即降级为开发集，不再对外报数")
-data = CategoryChartData()
-data.categories = ["v2", "v3", "v5", "v7", "v8", "v9"]
-data.add_series("留出集 F1", (0.877, 0.868, 0.912, 0.966, 0.982, 1.000))
-gf = s.shapes.add_chart(XL_CHART_TYPE.LINE_MARKERS, Inches(M), Inches(2.1), Inches(7.0), Inches(3.15), data)
-chart = gf.chart
-chart.has_legend = False
-chart.has_title = False
-chart.font.size = Pt(10); chart.font.name = EA; chart.font.color.rgb = MUTED
-plot = chart.plots[0]
-plot.has_data_labels = True
-dl = plot.data_labels
-dl.number_format = "0.000"; dl.number_format_is_linked = False
-dl.font.size = Pt(9); dl.font.color.rgb = PRIMARY
-try:
-    dl.position = XL_LABEL_POSITION.BELOW
-except Exception:
-    pass
-sr = plot.series[0]
-sr.format.line.color.rgb = PRIMARY
-sr.format.line.width = Pt(2.25)
-sr.marker_size = 6
-chart.value_axis.maximum_scale = 1.05
-chart.value_axis.minimum_scale = 0.80
-chart.value_axis.major_gridlines.format.line.color.rgb = LINE
+s = new_slide(3, "口语抽取：留出集 F1 从 0.877 到 1.000", icon="target",
+              sub="每套留出集都是全新措辞、只跑一次；跑过即降级为开发集，不再对外报数")
+f1_chart(s, M - 0.1, 1.95, 7.25, 4.05,
+         [0.877, 0.868, 0.912, 0.966, 1.000 - 0.018, 1.000],
+         ["v2", "v3", "v5", "v7", "v8", "v9"],
+         ["规则修补\n称谓/续句", "词表\n系统补齐", "规则兜底\n+ few-shot",
+          "支架/血压\n续句用原话", "血糖/心脏\n别名变体", "裸「支架」\n入表"])
 
-stats = [("6", " 套", "留出集，全部全新措辞", PRIMARY),
-         ("30", " 条", "每套样本，只跑一次", PRIMARY),
-         ("±10", " %", "置信区间（30 条）", DANGER),
-         ("1.000", "", "四项指标全部满分", RECLAIM)]
-for i, (big, unit, label, color) in enumerate(stats):
-    stat_card(s, 8.1 + (i % 2) * 2.35, 2.1 + (i // 2) * 1.62, 2.2, 1.45, big, unit, label, color)
+tf = text_box(s, M, 6.02, 7.1, 0.4)
+para(tf, "每一跳都对应一次具体改动，没有一次是「换个更大的模型」。", size=10.5,
+     bold=True, color=RECLAIM, first=True)
 
-rect(s, M, 5.5, 7.0, 1.0, fill=SURFACE, line=LINE)
-tf = text_box(s, M + 0.25, 5.6, 6.6, 0.8)
-para(tf, "机制：留出集只跑一次 → 每次评测自动落盘（commit + 模型 + 逐条预测）→", size=10.5, first=True, line=1.4)
-para(tf, "页面数字从 metrics.ts 取值，测试校验其与词表、最新产物一致。", size=10.5, line=1.4)
-footer(s, 9)
+stats = [("6", " 套", "留出集，全部全新措辞"),
+         ("30", " 条", "每套样本，只跑一次"),
+         ("±10", " %", "置信区间（30 条）"),
+         ("1.000", "", "四项指标全部满分")]
+for i, (big, unit, label) in enumerate(stats):
+    color = DANGER if i == 2 else (RECLAIM if i == 3 else PRIMARY)
+    stat_card(s, 8.15, 1.98 + i * 1.02, 4.35, 0.86, big, unit, label, color, compact=True)
+
+rect(s, M, 6.42, W, 0.42, fill=PRIMARY_SOFT, line=LINE)
+tf = text_box(s, M + 0.24, 6.47, W - 0.48, 0.3)
+para(tf, "机制：留出集只跑一次 · 每次评测自动落盘（commit + 模型 + 逐条预测）· 页面数字由 metrics.ts 单一来源提供",
+     size=9.5, color=TEXT, first=True)
+footer(s, 11)
 
 # ============ P10 判定选型 ============
-s = new_slide(3, "遗传模式判定：为什么最后没用大模型做这件事")
+s = new_slide(3, "遗传模式判定：为什么最后没用大模型做这件事", icon="balance")
 rows = [
     ("OpenJev-Q4（18.5 GB，通用决策模型）", "40%", "6.3 s", "隐性 / X 连锁 / 线粒体 三类全错"),
     ("结构逻辑回归（12 维特征，2.3 KB）", "96%", "< 0.1 s", "同一批均衡样本，每类 5 条"),
@@ -577,7 +663,7 @@ para(tf, "并列出缺什么让用户补一句（例如「母系亲属是否患�
 footer(s, 10)
 
 # ============ P11 微调 A/B ============
-s = new_slide(3, "我们真的微调了一次，然后被数据否掉")
+s = new_slide(3, "我们真的微调了一次，然后被数据否掉", icon="flask")
 rows = [
     ("基线 + few-shot + 规则层", "1.000", "0.893", "0.943", "27/30"),
     ("微调 + 规则层", "1.000", "0.893", "0.943", "27/30"),
@@ -614,7 +700,7 @@ para(tf, "负结果也是结果：它证明提升空间在词表与规则，而�
 footer(s, 11)
 
 # ============ P12 隐私与合规 ============
-s = new_slide(4, "隐私与合规：写进代码的承诺")
+s = new_slide(4, "隐私与合规：写进代码的承诺", icon="lock")
 left = [
     ("100% 本机推理", "llama-server 跑在 127.0.0.1；代码里没有任何外部 API 调用"),
     ("数据不出机器", "家系与体检数字存在本机 MySQL；化验单图片只在内存里转 base64"),
@@ -638,7 +724,7 @@ for i, line in enumerate(["不埋点统计用户病史", "不上传任何图片�
 footer(s, 12)
 
 # ============ P13 差异化 ============
-s = new_slide(4, "和谁都不一样：把「判断」和「行动」补上")
+s = new_slide(4, "和谁都不一样：把「判断」和「行动」补上", icon="layers")
 tf = text_box(s, M, 2.15, 6.0, 3.6)
 para(tf, "体检解读 App", size=12, bold=True, color=FAINT, first=True, line=1.2)
 para(tf, "只解读当次指标，不看家族", size=10.5, color=MUTED, line=1.3)
@@ -661,8 +747,8 @@ para(tf, "评测上也不含糊：留出集只跑一次、产物留痕、微调�
 footer(s, 13)
 
 # ============ P14 价值与落地 ============
-s = new_slide(4, "落地：一台普通电脑就能跑完整个闭环",
-              "没有 API 账单，也没有额度限制——这是「本机推理」带来的直接好处")
+s = new_slide(4, "落地：一台普通电脑就能跑完整个闭环", icon="trend",
+              sub="没有 API 账单，也没有额度限制——这是「本机推理」带来的直接好处")
 cards = [
     ("0 元", "推理成本", "模型跑在本机，不产生按次计费；演示与试点不需要预算审批"),
     ("1 台", "部署规模", "单机（16 GB 显存）即可承载模型、站点与数据库"),
@@ -688,7 +774,8 @@ para(tf, "更长远：把「可回收」从建议升级为可追踪的行动记�
 footer(s, 14)
 
 # ============ P15 团队 ============
-s = new_slide(5, "团队：谁在负责哪一块", "【待填】请补充成员姓名、学校 / 单位、分工与代表成果")
+s = new_slide(5, "团队：谁在负责哪一块", icon="team",
+              sub="【待填】请补充成员姓名、学校 / 单位、分工与代表成果")
 members = [("【成员 1】", "【角色】", "【负责模块】"), ("【成员 2】", "【角色】", "【负责模块】"),
            ("【成员 3】", "【角色】", "【负责模块】")]
 cw = (W - 0.5) / 3
