@@ -221,6 +221,36 @@ def nav_bar(slide, active):
     rect(slide, M, 0.782, W, 0.008, fill=LINE, radius=False)
 
 
+DIVIDER_SLIDES = set()
+
+# 六张章节扉页：整幅半调图 + 章节名，翻页节奏靠它切开
+DIVIDERS = [
+    (0, "项目背景", "为什么这件事现在值得做"),
+    (1, "方案与产品", "口述进、行动出：两屏演示完整闭环"),
+    (2, "技术路线", "数据流 · 分层架构 · 部署视图"),
+    (3, "准确性与选型", "留出集、对照实验、判定链路"),
+    (4, "价值与落地", "差异化、合规、部署成本"),
+    (5, "团队", "我们是谁，各自负责什么"),
+]
+
+
+def divider(idx, name, sub):
+    s = prs.slides.add_slide(BLANK)
+    s.shapes.add_picture(art_path(f"divider-{idx}"), 0, 0,
+                         width=prs.slide_width, height=prs.slide_height)
+    hue = SECTION_HUES[idx]
+    tf = text_box(s, M, 2.30, 7.6, 1.0)
+    para(tf, f"{idx + 1:02d}", size=15, bold=True, color=hue, first=True)
+    tf = text_box(s, M, 2.72, 8.4, 1.4)
+    para(tf, name, size=46, bold=True, color=TEXT, first=True)
+    tf = text_box(s, M, 3.92, 7.2, 0.5)
+    para(tf, sub, size=14, color=MUTED, first=True)
+    # 一条栏目色短横：扉页在版面上只留这一处颜色
+    rect(s, M, 3.72, 0.86, 0.05, fill=hue, radius=False)
+    DIVIDER_SLIDES.add(id(s))
+    return s
+
+
 from pptx.enum.shapes import MSO_CONNECTOR
 
 
@@ -616,6 +646,8 @@ for i, (num, ic, name, desc) in enumerate(toc):
         rect(s, M, y + 0.70, 8.55, 0.008, fill=LINE, radius=False)
 footer(s, 2)
 
+divider(0, "项目背景", "为什么这件事现在值得做")
+
 # ============ P3 项目背景 ============
 s = new_slide(0, "家族史是**免费的风险信号**，三套引擎都给它留了权重", icon="family",
               sub="但用户手上的体检报告，从来没有家系图", tag="背景 · 问题")
@@ -697,6 +729,8 @@ for i, (ic, label) in enumerate(flow):
                                 Inches(0.20), Inches(0.18))
         ar.fill.solid(); ar.fill.fore_color.rgb = LINE2
         ar.line.fill.background(); ar.shadow.inherit = False
+
+divider(1, "方案与产品", "口述进、行动出：两屏演示完整闭环")
 
 # ============ P5 方案总览 ============
 s = new_slide(1, "口述进，**行动出**：四步闭环，每一步都能复核", icon="flag",
@@ -816,6 +850,8 @@ para(tf, "兜底：模型没起来或网络断了，直接翻 P5 / P6 的截图�
      size=11.5, first=True, line=1.4)
 para(tf, "不要在现场重启服务。启动脚本在桌面：启动家系演示.cmd（断网也不影响这套流程）。", size=11.5, color=MUTED, line=1.4)
 footer(s, 7)
+
+divider(2, "技术路线", "数据流 · 分层架构 · 部署视图")
 
 # ============ P8 技术路线（真正的架构图） ============
 s = new_slide(2, "一张图看懂：数据怎么流动，**模型只占哪一格**", icon="dna",
@@ -1131,8 +1167,9 @@ rect(s, M, 2.72, W, 0.012, fill=LINE2, radius=False)
 ROWS_DEF = [("输入", 3), ("适用人群", 4), ("输出", 5), ("边界与校验", 6)]
 for ri, (label, vi) in enumerate(ROWS_DEF):
     y = 2.86 + ri * 0.80
+    # 这一列压在侧栏色块上，FAINT 太淡读不出来，改用 MUTED 加粗
     tf = text_box(s, M, y + 0.04, LW2 - 0.15, 0.3)
-    para(tf, label, size=9.5, color=FAINT, first=True)
+    para(tf, label, size=9.5, bold=True, color=MUTED, first=True)
     for i, eng in enumerate(ENG):
         x = M + LW2 + i * CW3
         val = eng[vi]
@@ -1235,6 +1272,8 @@ tf = text_box(s, M, 6.38, W, 0.3)
 para(tf, "三道保险的顺序很重要：能靠语法解决的不用规则，能靠规则解决的不用模型，剩下的才交给评测兜底。",
      size=10.5, color=MUTED, first=True)
 footer(s, 14)
+
+divider(3, "准确性与选型", "留出集、对照实验、判定链路")
 
 # ============ P9 准确性 ============
 s = new_slide(3, "口语抽取：留出集 F1 **从 0.877 到 1.000**", icon="target",
@@ -1516,6 +1555,8 @@ para(tf, "处置：不引入微调模型，训练链路保留（可复跑）。�
 para(tf, "换任何一组同任务模型，这条结论都成立，所以它比「我们调得更好」更值得讲。", size=10.5, color=MUTED, line=1.35)
 footer(s, 19)
 
+divider(4, "价值与落地", "差异化、合规、部署成本")
+
 # ============ P12 隐私与合规 ============
 s = new_slide(4, "隐私与合规：写进代码的承诺", icon="shield", tag="价值 · 合规")
 left = [
@@ -1719,6 +1760,8 @@ tf = text_box(s, M, 6.42, W, 0.32)
 para(tf, "对外只承诺一件事：给同样的输入，任何人都能复现同样的数字。", size=11, bold=True,
      color=TEXT, first=True)
 footer(s, 23)
+
+divider(5, "团队", "我们是谁，各自负责什么")
 
 # ============ P15 团队 ============
 s = new_slide(5, "团队：谁在负责哪一块", icon="team",
@@ -1986,12 +2029,17 @@ NOTES = [
     "团队：待填成员信息。",
     "结尾：留时间提问，主动提出可现场演示。",
 ]
+ni = 0
 for i, slide in enumerate(prs.slides):
     tf = FOOTERS.get(id(slide))
     if tf is not None:
         tf.paragraphs[0].runs[0].text = f"{i + 1:02d}"
-    if i < len(NOTES):
-        slide.notes_slide.notes_text_frame.text = NOTES[i]
+    if id(slide) in DIVIDER_SLIDES:
+        slide.notes_slide.notes_text_frame.text = "章节扉页：一句话带过，不要停。让评委知道进入下一章即可。"
+        continue
+    if ni < len(NOTES):
+        slide.notes_slide.notes_text_frame.text = NOTES[ni]
+    ni += 1
 
 flatten(prs)
 # 输出名可用环境变量覆盖：PowerPoint 打开着目标文件时无法写入

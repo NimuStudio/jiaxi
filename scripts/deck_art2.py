@@ -520,6 +520,19 @@ plain = grain(plain, amount=4.0)
 plain = vignette(plain, alpha=28)
 plain.convert("RGB").save(os.path.join(ART, "content-bg-plain.jpg"), quality=JPEG_Q, optimize=True)
 
+# ---------- 六张章节扉页：整幅半调图（图占大半页面）+ 栏目色 ----------
+DIV_ICONS = ["heart", "family", "dna", "shield", "chart", "team"]
+for di, (dname, dtone, dwash, dnum, dmotif) in enumerate(SECTIONS):
+    dv = gradient((W, H), [(0.0, (252, 253, 255)), (0.6, (245, 249, 253)), (1.0, (236, 243, 250))])
+    dv = soft_blob(dv, W * 0.72, H * 0.5, W * 0.62, dwash, 170)
+    src = os.path.join(ART, "mat", DIV_ICONS[di] + ".png")
+    # 半调图占右半幅、超出页面：扉页要的是「一张图」，不是一枚图标
+    dv = halftone_plate(dv, src, dtone, alpha=225, size=1500, x=0.30, y=-0.10,
+                        pitch=11, rmax=12.5)
+    dv = dot_grid(dv, dtone, alpha=18, pitch=36, radius=2.3)
+    dv = reg_marks(dv, dtone, alpha=34)
+    dv.convert("RGB").save(os.path.join(ART, f"divider-{di}.jpg"), quality=JPEG_Q, optimize=True)
+
 # ---------- 目录页专用背景：右侧巨型「目录」+ 六道栏目色刻度 ----------
 toc = gradient((W, H), [(0.0, (250, 252, 255)), (0.55, (243, 247, 253)), (1.0, (232, 240, 251))])
 toc = soft_blob(toc, W * 0.02, H * 0.5, W * 0.5, (206, 226, 245), 150)
@@ -545,6 +558,10 @@ quo = soft_blob(quo, W * 0.12, H * 0.9, W * 0.5, (245, 220, 190), 150)
 quo = soft_blob(quo, W * 0.95, H * 0.08, W * 0.42, (214, 226, 244), 120)
 quo = duotone_texture(quo, os.path.join(ART, "tree.png"), (176, 106, 8), alpha=20, blur=2.6,
                       crop=(0.05, 0.05, 0.95, 0.85))
+# 右侧整幅：把家系图渲染做成半调装饰，占右半幅（引语页需要一张图压住空场）
+# 点要细（rmax 小、pitch 密）：家系图是细线图，点一大就糊成色块，还会压住引语
+quo = halftone_plate(quo, os.path.join(ART, "tree.png"), (150, 92, 10), alpha=215,
+                     size=900, x=0.60, y=0.575, pitch=6, rmax=4.0)
 quo = contour_field(quo, (176, 106, 8), alpha=18, cx=0.05, cy=0.95, rings=16, seed=61, step=66)
 quo = reg_marks(quo, (176, 106, 8), alpha=30)
 quo.convert("RGB").save(os.path.join(ART, "content-bg-quote.jpg"), quality=JPEG_Q, optimize=True)
