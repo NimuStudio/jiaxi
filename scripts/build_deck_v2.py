@@ -152,7 +152,8 @@ def nav_bar(slide, active):
     for i, name in enumerate(NAV):
         on = i == active
         tf = text_box(slide, x, 0.30, sizes[i], 0.32, align=PP_ALIGN.RIGHT)
-        para(tf, name, size=11 if on else 9.5, bold=on, color=PRIMARY if on else FAINT,
+        # 背景现在带栏目色，未选中项用 FAINT 会看不清，统一提到 MUTED
+        para(tf, name, size=11 if on else 9.5, bold=on, color=PRIMARY if on else MUTED,
              first=True, align=PP_ALIGN.RIGHT)
         x += sizes[i] + 0.10
     rect(slide, M, 0.78, W, 0.012, fill=LINE, radius=False)

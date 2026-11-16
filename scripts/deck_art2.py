@@ -416,8 +416,10 @@ SECTIONS = [
 SEED_BASE = 11
 for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
     bg = gradient((W, H), [(0.0, (247, 250, 254)), (0.50, (241, 246, 252)), (1.0, (233, 241, 250))])
-    bg = soft_blob(bg, W * 0.98, H * 0.04, W * 0.36, wash, 130)
-    bg = soft_blob(bg, W * 0.02, H * 1.02, W * 0.28, wash, 80)
+    # 整页先铺一层栏目色（不是只有四角有雾）：这是「页面有颜色」与「白纸」的分界
+    bg = soft_blob(bg, W * 0.50, H * 0.46, W * 0.92, tone, 26)
+    bg = soft_blob(bg, W * 0.98, H * 0.04, W * 0.42, wash, 165)
+    bg = soft_blob(bg, W * 0.02, H * 1.02, W * 0.34, wash, 120)
     # 参考稿的背景是有存在感的纹理；纯白会显得像没设计过的文档。
     # 点阵加密到 28px、透明度 30→40；弧线同步提一档，但仍低于正文对比度。
     # —— 每章 = 实色面板（重量）+ 巨型章节名（尺度）+ 真实图片底纹（材料） ——
@@ -436,12 +438,12 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
     SPANS = [(0.0, 1.0), (0.34, 1.0), (0.0, 1.0), (0.0, 0.64), (0.0, 1.0), (0.26, 0.8)]
     tex, crop = TEXTURES[idx]
     if tex:
-        bg = duotone_texture(bg, tex, tone, alpha=16, blur=2.2, crop=crop)
-    bg = color_panel(bg, tone, side=side, width_frac=0.22, light=0.88, span=SPANS[idx])
+        bg = duotone_texture(bg, tex, tone, alpha=26, blur=2.0, crop=crop)
+    bg = color_panel(bg, tone, side=side, width_frac=0.22, light=0.62, span=SPANS[idx])
     # 巨型章节名放在面板那一侧，压在上面形成「色块 + 大字」的封面感
     # 巨型字只露半截：全露出来会压住正文，露一半才是「版面上的字」而不是「水印」
     gx = -0.115 if side == "left" else 0.79
-    bg = giant_text(bg, name, tone, alpha=22, size=300, x=gx, y=0.28)
+    bg = giant_text(bg, name, tone, alpha=40, size=320, x=gx, y=0.26)
     bg = dot_grid(bg, tone, alpha=22, pitch=32, radius=2.3)
     bg = reg_marks(bg, tone, alpha=40)
 
