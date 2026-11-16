@@ -230,8 +230,10 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
     bg = gradient((W, H), [(0.0, (247, 250, 254)), (0.50, (241, 246, 252)), (1.0, (233, 241, 250))])
     bg = soft_blob(bg, W * 0.98, H * 0.04, W * 0.36, wash, 130)
     bg = soft_blob(bg, W * 0.02, H * 1.02, W * 0.28, wash, 80)
-    bg = dot_grid(bg, tone, alpha=30, pitch=36, radius=2.4)
-    bg = arcs(bg, W * 1.02, H * -0.02, [W * 0.30, W * 0.38, W * 0.46], tone, alpha=30, width=3)
+    # 参考稿的背景是有存在感的纹理；纯白会显得像没设计过的文档。
+    # 点阵加密到 28px、透明度 30→40；弧线同步提一档，但仍低于正文对比度。
+    bg = dot_grid(bg, tone, alpha=40, pitch=28, radius=2.6)
+    bg = arcs(bg, W * 1.02, H * -0.02, [W * 0.30, W * 0.38, W * 0.46], tone, alpha=42, width=4)
     # 数字放在右缘中部并露出大半：只露一条边时会被误读成无意义的色块
     bg = big_numeral(bg, num, tone, alpha=15, size=700, cx=0.975, cy=0.46)
 
@@ -258,7 +260,7 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
 plain = gradient((W, H), [(0.0, (247, 250, 254)), (0.50, (241, 246, 252)), (1.0, (233, 241, 250))])
 plain = soft_blob(plain, W * 0.99, H * 0.03, W * 0.34, (203, 224, 243), 120)
 plain = soft_blob(plain, W * 0.01, H * 1.0, W * 0.26, (206, 228, 246), 80)
-plain = dot_grid(plain, (26, 111, 181), alpha=28, pitch=36, radius=2.4)
+plain = dot_grid(plain, (26, 111, 181), alpha=36, pitch=28, radius=2.6)
 plain = arcs(plain, W * 1.02, H * -0.02, [W * 0.30, W * 0.40, W * 0.50], (26, 111, 181), alpha=26, width=3)
 plain = pedestal_wire(plain, (26, 111, 181), alpha=14, scale=1.05, offset=(W * 0.02, H * 0.04))
 plain = grain(plain, amount=4.0)

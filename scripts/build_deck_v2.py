@@ -124,15 +124,28 @@ def rect(slide, x, y, w, h, fill=None, line=None, radius=True):
 
 
 def nav_bar(slide, active):
-    """顶部栏目导航：当前栏目主色加粗，其余淡灰。"""
-    x = M
+    """页眉：左侧品牌标识（每页固定），右侧栏目导航（当前栏目主色加粗）。
+
+    参考稿的识别度来自「每页同一个页眉」——只有栏目名的话，翻页时没有品牌锚点，
+    每页看起来都是「标题 + 一通内容」，容易读成千篇一律。
+    """
+    # 品牌标识：实心方块 + 中文名 + 英文名
+    rect(slide, M - 0.02, 0.22, 0.34, 0.34, fill=PRIMARY, radius=True)
+    tf = text_box(slide, M + 0.04, 0.26, 0.26, 0.26, align=PP_ALIGN.CENTER)
+    para(tf, "家", size=13, bold=True, color=WHITE, first=True, align=PP_ALIGN.CENTER)
+    tf = text_box(slide, M + 0.40, 0.24, 2.0, 0.32)
+    rich(tf, [("家系", True, TEXT), ("  Pedigree", False, FAINT)], size=11.5, first=True)
+
+    # 栏目导航右对齐：与品牌分居两端，页眉才像「页眉」而不是「一串标签」
+    sizes = [(1.42 if i == active else 1.34) for i in range(len(NAV))]
+    total = sum(sizes) + 0.10 * (len(NAV) - 1)
+    x = M + W - total
     for i, name in enumerate(NAV):
         on = i == active
-        w = 1.62 if on else 1.52
-        tf = text_box(slide, x, 0.30, w, 0.32)
-        para(tf, name, size=11 if on else 10.5, bold=on, color=PRIMARY if on else FAINT, first=True)
-        # 当前栏目只用颜色与字重区分，不加下划线：装饰性色条容易被读成模板味
-        x += w + 0.06
+        tf = text_box(slide, x, 0.30, sizes[i], 0.32, align=PP_ALIGN.RIGHT)
+        para(tf, name, size=11 if on else 9.5, bold=on, color=PRIMARY if on else FAINT,
+             first=True, align=PP_ALIGN.RIGHT)
+        x += sizes[i] + 0.10
     rect(slide, M, 0.78, W, 0.012, fill=LINE, radius=False)
 
 
@@ -173,7 +186,7 @@ def f1_chart(s, x, y, w, h, values, labels, notes):
         yy = Y(tick)
         hline_shape(s, px0, px1, yy, color=LINE, w=0.75)
         tf = text_box(s, x + 0.04, yy - 0.11, 0.5, 0.22, align=PP_ALIGN.RIGHT)
-        para(tf, f"{tick:.2f}".rstrip("0").rstrip("."), size=8.5, color=FAINT, first=True,
+        para(tf, f"{tick:.2f}".rstrip("0").rstrip("."), size=9.5, color=FAINT, first=True,
              align=PP_ALIGN.RIGHT)
         tick += 0.05
 
@@ -205,14 +218,14 @@ def f1_chart(s, x, y, w, h, values, labels, notes):
         else:
             lx, lw, la = cx - 0.55, 1.1, PP_ALIGN.CENTER
         tf = text_box(s, lx, cy - 0.34, lw, 0.24, align=la)
-        para(tf, f"{v:.3f}", size=9.5, bold=True, color=RECLAIM if last else PRIMARY,
+        para(tf, f"{v:.3f}", size=10.5, bold=True, color=RECLAIM if last else PRIMARY,
              first=True, align=la)
         # 版本号
         tf = text_box(s, cx - 0.55, py1 + 0.10, 1.1, 0.24, align=PP_ALIGN.CENTER)
-        para(tf, labels[i], size=10, bold=True, color=MUTED, first=True, align=PP_ALIGN.CENTER)
+        para(tf, labels[i], size=11, bold=True, color=MUTED, first=True, align=PP_ALIGN.CENTER)
         # 该跳改了什么
         tf = text_box(s, cx - 0.62, py1 + 0.38, 1.24, 0.5, align=PP_ALIGN.CENTER)
-        para(tf, notes[i], size=8.5, color=FAINT, first=True, align=PP_ALIGN.CENTER, line=1.25)
+        para(tf, notes[i], size=9.5, color=FAINT, first=True, align=PP_ALIGN.CENTER, line=1.25)
         # 刻度短线
         hline_shape(s, cx, cx, py1, color=LINE2, w=1.0)
 
@@ -363,10 +376,10 @@ def new_slide(section, title, sub=None, icon=None, tag=None):
         set_font(r0, 8, True, WHITE)
 
     tf = text_box(s, tx, 1.02, 13.333 - tx - M, 0.62)
-    emphasized(tf, title, 26, TEXT, first=True, bold=True)
+    emphasized(tf, title, 29, TEXT, first=True, bold=True)
     if sub:
-        tf = text_box(s, tx, 1.62, 13.333 - tx - M, 0.4)
-        emphasized(tf, sub, 12.5, MUTED, first=True)
+        tf = text_box(s, tx, 1.66, 13.333 - tx - M, 0.4)
+        emphasized(tf, sub, 13, MUTED, first=True)
     return s
 
 
@@ -377,9 +390,9 @@ def footer(slide, idx=None):
     """页脚。页码不再手写：登记下来，生成结束后按真实页序统一填，
     这样中间插页不用手工改后面每一页的编号（插错过一次）。"""
     tf = text_box(slide, M, 6.98, 8, 0.28)
-    para(tf, "家系 · 家族健康风险量化", size=9, color=FAINT, first=True)
+    para(tf, "家系 · 家族健康风险量化", size=10, color=FAINT, first=True)
     tf = text_box(slide, 13.333 - M - 1.2, 6.98, 1.2, 0.28, align=PP_ALIGN.RIGHT)
-    para(tf, "00", size=9, color=FAINT, first=True, align=PP_ALIGN.RIGHT)
+    para(tf, "00", size=10, color=FAINT, first=True, align=PP_ALIGN.RIGHT)
     FOOTERS[id(slide)] = tf
 
 
@@ -390,12 +403,12 @@ def stat_card(slide, x, y, w, h, big, unit, label, color=PRIMARY, compact=False)
         tf = text_box(slide, x + 0.20, y + 0.08, w - 0.40, 0.46)
         rich(tf, [(big, True, color), (unit, False, color)], size=23, first=True)
         tf = text_box(slide, x + 0.20, y + 0.52, w - 0.40, 0.3)
-        para(tf, label, size=9.5, color=MUTED, first=True)
+        para(tf, label, size=10.5, color=MUTED, first=True)
         return
     tf = text_box(slide, x + 0.22, y + 0.20, w - 0.44, 0.6)
     rich(tf, [(big, True, color), (unit, False, color)], size=30, first=True)
     tf = text_box(slide, x + 0.22, y + 0.85, w - 0.44, 0.6)
-    para(tf, label, size=10.5, color=MUTED, first=True, line=1.35)
+    para(tf, label, size=11.5, color=MUTED, first=True, line=1.35)
 
 
 def picture_fit(slide, path, x, y, max_w, max_h):
@@ -426,27 +439,27 @@ para(tf, "并算出你的风险里，有多少是「能拿回来的」", size=20
 tf = text_box(s, M, 5.05, 6.9, 0.4)
 rich(tf, [("FINDRISC · China-PAR · PLCOm2012　|　100% 本机推理　|　口语留出集 ", False,
            RGBColor(0xB9, 0xD3, 0xE8)), ("F1 1.000", True, RGBColor(0xFF, 0x9E, 0x91))],
-     size=10.5, first=True)
+     size=11.5, first=True)
 
 info = [("作品编号", "【待填】"), ("省份", "【待填】"), ("团队", "【待填】")]
 for i, (k, v) in enumerate(info):
     x = M + i * 2.45
     box = rect(s, x, 5.85, 2.25, 0.66, fill=RGBColor(0x0E, 0x33, 0x57), line=RGBColor(0x39, 0x6D, 0x9E))
     tf = text_box(s, x + 0.18, 5.90, 1.95, 0.24)
-    para(tf, k, size=8.5, color=RGBColor(0x8F, 0xB2, 0xCE), first=True)
+    para(tf, k, size=9.5, color=RGBColor(0x8F, 0xB2, 0xCE), first=True)
     tf = text_box(s, x + 0.18, 6.13, 1.95, 0.3)
     para(tf, v, size=11.5, bold=True, color=WHITE, first=True)
 
 # 右下角小刊名：补住底部的空，并与顶部刊头呼应
 tf = text_box(s, 10.05, 6.88, 2.5, 0.3, align=PP_ALIGN.RIGHT)
-para(tf, "P E D I G R E E   ·   2 0 2 6", size=8.5, color=RGBColor(0x6F, 0x93, 0xB5), first=True,
+para(tf, "P E D I G R E E   ·   2 0 2 6", size=9.5, color=RGBColor(0x6F, 0x93, 0xB5), first=True,
      align=PP_ALIGN.RIGHT)
 
 # 产品截图：白卡片压深底，形成对比
 rect(s, 8.45, 1.70, 4.25, 3.15, fill=WHITE, line=None)
 picture_fit(s, os.path.join(SHOTS, "02-chat.png"), 8.57, 1.82, 4.01, 2.91)
 tf = text_box(s, 8.45, 4.95, 4.25, 0.3, align=PP_ALIGN.CENTER)
-para(tf, "口述 → 家系图 → 风险 → 可回收", size=9.5, color=RGBColor(0xA8, 0xC6, 0xDF),
+para(tf, "口述 → 家系图 → 风险 → 可回收", size=10.5, color=RGBColor(0xA8, 0xC6, 0xDF),
      first=True, align=PP_ALIGN.CENTER)
 
 # ============ P2 目录 ============
@@ -479,7 +492,7 @@ for i, (num, ic, name, desc) in enumerate(toc):
     tf = text_box(s, x + 1.10, y - 0.10, 4.4, 0.4)
     para(tf, name, size=16.5, bold=True, first=True)
     tf = text_box(s, x + 1.10, y + 0.32, 4.4, 0.4)
-    para(tf, desc, size=10, color=MUTED, first=True)
+    para(tf, desc, size=11, color=MUTED, first=True)
 footer(s, 2)
 
 # ============ P3 项目背景 ============
@@ -496,7 +509,7 @@ for ic, num, h1, h2 in items:
     s.shapes.add_picture(icon_p(ic), Inches(M + 0.06),
                          Inches(y + 0.02), Inches(0.40), Inches(0.40))
     tf = text_box(s, M + 0.62, y - 0.10, 0.5, 0.3)
-    para(tf, num, size=10.5, bold=True, color=PRIMARY, first=True)
+    para(tf, num, size=11.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, M + 0.62, y + 0.20, 6.4, 0.4)
     para(tf, h1, size=15, bold=True, first=True)
     tf = text_box(s, M + 0.62, y + 0.60, 6.4, 0.6)
@@ -507,10 +520,10 @@ for ic, num, h1, h2 in items:
 rect(s, 6.95, 1.95, 5.6, 3.45, fill=SURFACE, line=LINE)
 picture_fit(s, os.path.join(ART, "pedigree-scene.png"), 7.05, 2.03, 5.4, 3.3)
 tf = text_box(s, 6.95, 5.48, 5.6, 0.3, align=PP_ALIGN.CENTER)
-para(tf, "男 = 方　女 = 圆　实心 = 患病　斜线 = 已故", size=9.5, color=FAINT, first=True,
+para(tf, "男 = 方　女 = 圆　实心 = 患病　斜线 = 已故", size=10.5, color=FAINT, first=True,
      align=PP_ALIGN.CENTER)
 tf = text_box(s, 6.95, 5.78, 5.6, 0.3, align=PP_ALIGN.CENTER)
-para(tf, "这三句话，翻译过来就是临床用了六十年的家系图", size=10.5, bold=True,
+para(tf, "这三句话，翻译过来就是临床用了六十年的家系图", size=11.5, bold=True,
      color=PRIMARY, first=True, align=PP_ALIGN.CENTER)
 
 # 底部：家族史在三套引擎里的分量（一层横条，替代原来两个卡片）
@@ -539,10 +552,10 @@ para(tf, "这三条，任何体检 App 都不会问。", size=14, color=MUTED, f
 
 rect(s, 9.35, 2.50, 3.2, 1.95, fill=SURFACE, line=LINE)
 tf = text_box(s, 9.58, 2.66, 2.75, 1.7)
-para(tf, "这一句话的价值", size=10, bold=True, color=MUTED, first=True)
+para(tf, "这一句话的价值", size=11, bold=True, color=MUTED, first=True)
 rich(tf, [("5", True, PRIMARY), (" / 26", True, MUTED)], size=38)
-para(tf, "FINDRISC 满分 26 分里，家族史记 5 分；", size=9.5, color=MUTED, line=1.4)
-para(tf, "China-PAR 还把它作为独立系数。", size=9.5, color=MUTED, line=1.4)
+para(tf, "FINDRISC 满分 26 分里，家族史记 5 分；", size=10.5, color=MUTED, line=1.4)
+para(tf, "China-PAR 还把它作为独立系数。", size=10.5, color=MUTED, line=1.4)
 
 # 底部：一句话 -> 家系图 -> 风险，用三个图标把动向画出来
 flow = [("chat", "说一句话"), ("tree", "长出家系图"), ("target", "三个风险数字")]
@@ -552,7 +565,7 @@ for i, (ic, label) in enumerate(flow):
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.16),
                          Inches(6.27), Inches(0.30), Inches(0.30))
     tf = text_box(s, x + 0.56, 6.26, 1.75, 0.34)
-    para(tf, label, size=10.5, color=TEXT, first=True)
+    para(tf, label, size=11.5, color=TEXT, first=True)
     if i < 2:
         ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + 2.50), Inches(6.34),
                                 Inches(0.20), Inches(0.18))
@@ -591,9 +604,9 @@ for i, (ic, mark, h1, h2, h3) in enumerate(steps):
     para(tf, h1, size=15, bold=True, color=RECLAIM if hot else TEXT, first=True,
          align=PP_ALIGN.CENTER)
     tf = text_box(s, cx - cw / 2 + 0.06, AXIS_Y + 0.90, cw - 0.12, 0.9)
-    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.4, align=PP_ALIGN.CENTER)
+    para(tf, h2, size=10.5, color=MUTED, first=True, line=1.4, align=PP_ALIGN.CENTER)
     tf = text_box(s, cx - cw / 2 + 0.06, AXIS_Y + 1.90, cw - 0.12, 0.3)
-    para(tf, h3, size=9, color=PRIMARY, first=True, align=PP_ALIGN.CENTER)
+    para(tf, h3, size=10, color=PRIMARY, first=True, align=PP_ALIGN.CENTER)
 
 rect(s, M, 5.05, W, 1.3, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.3, 5.18, W - 0.6, 1.05)
@@ -614,22 +627,22 @@ for i, (h1, h2) in enumerate([
     tf = text_box(s, 9.2, y, 3.3, 0.35)
     para(tf, h1, size=13.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, 9.2, y + 0.36, 3.3, 0.7)
-    para(tf, h2, size=10.5, color=MUTED, first=True, line=1.35)
+    para(tf, h2, size=11.5, color=MUTED, first=True, line=1.35)
 footer(s, 5)
 
 # ============ P6 产品② ============
 s = new_slide(1, "第二屏：算清楚，**哪一部分本就能拿回来**", icon="chart", tag="方案 · 界面")
 picture_fit(s, os.path.join(ART, "shot-browser-risk.png"), M - 0.06, 1.98, 5.95, 4.05)
 tf = text_box(s, M, 6.10, 5.9, 0.35)
-para(tf, "可回收风险（FINDRISC）：把「可改」与「改不了」分开算", size=10.5, color=MUTED, first=True)
+para(tf, "可回收风险（FINDRISC）：把「可改」与「改不了」分开算", size=11.5, color=MUTED, first=True)
 
 picture_fit(s, os.path.join(ART, "shot-browser-cvd.png"), 6.88, 1.98, 5.75, 4.05)
 tf = text_box(s, 6.88, 6.10, 5.75, 0.35)
-para(tf, "心血管风险（China-PAR）：改任一项实时重算，纯本地计算", size=10.5, color=MUTED, first=True)
+para(tf, "心血管风险（China-PAR）：改任一项实时重算，纯本地计算", size=11.5, color=MUTED, first=True)
 
 tf = text_box(s, M, 6.45, W, 0.35)
 para(tf, "界面上的每个数都能复算：China-PAR 对论文 Table 2 的 8 个验证点，偏差均 ≤ 0.35 个百分点。",
-     size=10.5, color=FAINT, first=True)
+     size=11.5, color=FAINT, first=True)
 footer(s, 6)
 
 # ============ P7 现场动线 ============
@@ -656,14 +669,14 @@ for i, (ic, when, what, how, line) in enumerate(beats):
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.20),
                          Inches(2.20), Inches(0.40), Inches(0.40))
     tf = text_box(s, x + 0.60, 2.26, cw - 0.82, 0.28)
-    para(tf, when, size=9.5, bold=True, color=PRIMARY, first=True)
+    para(tf, when, size=10.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, x + 0.24, 2.52, cw - 0.48, 0.36)
     para(tf, what, size=15, bold=True, first=True)
     tf = text_box(s, x + 0.24, 2.95, cw - 0.48, 1.15)
     for j, ln in enumerate(how):
-        para(tf, ln, size=9.5, color=MUTED, first=(j == 0), line=1.5)
+        para(tf, ln, size=10.5, color=MUTED, first=(j == 0), line=1.5)
     tf = text_box(s, x + 0.24, 4.25, cw - 0.48, 0.85)
-    para(tf, "「" + line + "」", size=10, color=RECLAIM, first=True, line=1.4)
+    para(tf, "「" + line + "」", size=11, color=RECLAIM, first=True, line=1.4)
     if i < 3:
         ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + cw + 0.005), Inches(3.55),
                                 Inches(0.12), Inches(0.18))
@@ -672,8 +685,8 @@ for i, (ic, when, what, how, line) in enumerate(beats):
 rect(s, M, 5.5, W, 1.1, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.3, 5.62, W - 0.6, 0.9)
 para(tf, "兜底：模型没起来或网络断了，直接翻 P5 / P6 的截图页，说明「演示机今天没连模型，这是同一份代码的真实截图」，",
-     size=10.5, first=True, line=1.4)
-para(tf, "不要在现场重启服务。启动脚本在桌面：启动家系演示.cmd（断网也不影响这套流程）。", size=10.5, color=MUTED, line=1.4)
+     size=11.5, first=True, line=1.4)
+para(tf, "不要在现场重启服务。启动脚本在桌面：启动家系演示.cmd（断网也不影响这套流程）。", size=11.5, color=MUTED, line=1.4)
 footer(s, 7)
 
 # ============ P8 技术路线（真正的架构图） ============
@@ -702,7 +715,7 @@ for ci, (name, tone, items) in enumerate(COLS):
     x = col_x[ci]
     # 列标题
     tf = text_box(s, x, 2.06, col_w, 0.3, align=PP_ALIGN.CENTER)
-    para(tf, name, size=10.5, bold=True, color=tone, first=True, align=PP_ALIGN.CENTER)
+    para(tf, name, size=11.5, bold=True, color=tone, first=True, align=PP_ALIGN.CENTER)
     for bi, (ic, item) in enumerate(items):
         y = top + bi * (box_h + box_gap)
         rect(s, x, y, col_w, box_h, fill=SURFACE, line=LINE2)
@@ -712,7 +725,7 @@ for ci, (name, tone, items) in enumerate(COLS):
                                  Inches(0.22), Inches(0.22))
         tf = text_box(s, x + 0.38, y + 0.05, col_w - 0.48, box_h - 0.10,
                       align=PP_ALIGN.LEFT, anchor=MSO_ANCHOR.MIDDLE)
-        para(tf, item, size=9, color=TEXT, first=True, align=PP_ALIGN.LEFT, line=1.2)
+        para(tf, item, size=10, color=TEXT, first=True, align=PP_ALIGN.LEFT, line=1.2)
     # 列间箭头
     if ci < len(COLS) - 1:
         ay = top + box_h / 2 + 0.05
@@ -729,7 +742,7 @@ if os.path.exists(db_icon):
     s.shapes.add_picture(db_icon, Inches(col_x[1] + 0.28), Inches(data_y + 0.17),
                          Inches(0.26), Inches(0.26))
 tf = text_box(s, col_x[1] + 0.6, data_y + 0.1, col_w * 2 + gap - 0.75, 0.4)
-para(tf, "本机 MySQL：家系 · 体检数字 · 会话（单用户单份，整份覆盖保存）", size=9.5,
+para(tf, "本机 MySQL：家系 · 体检数字 · 会话（单用户单份，整份覆盖保存）", size=10.5,
      color=TEXT, first=True, align=PP_ALIGN.CENTER)
 for cx in (col_x[1] + col_w / 2, col_x[2] + col_w / 2):
     ln = s.shapes.add_connector(1, Inches(cx), Inches(data_y - 0.28), Inches(cx), Inches(data_y))
@@ -746,7 +759,7 @@ bnd.shadow.inherit = False
 # 标签放在框内底部：放顶部会压住「抽取与理解 / 计算 / 输出」三个列标题
 rect(s, col_x[1] + 0.9, data_y + 0.56, col_w * 2 + gap - 1.8, 0.28, fill=SURFACE, line=None)
 tf = text_box(s, col_x[1], data_y + 0.58, col_w * 2 + gap, 0.24, align=PP_ALIGN.CENTER)
-para(tf, "本机边界 · 代码里没有任何外部 API 调用 · 断网可演示", size=9, bold=True,
+para(tf, "本机边界 · 代码里没有任何外部 API 调用 · 断网可演示", size=10, bold=True,
      color=RECLAIM, first=True, align=PP_ALIGN.CENTER)
 
 tf = text_box(s, M, 6.42, W, 0.4)
@@ -796,7 +809,7 @@ for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
     if os.path.exists(icon_path):
         s.shapes.add_picture(icon_path, Inches(M + 0.12), Inches(y + 0.12), Inches(0.22), Inches(0.22))
     tf = text_box(s, M + 0.38, y + 0.10, 0.92, 0.28)
-    para(tf, cn, size=10, bold=True, color=tone, first=True)
+    para(tf, cn, size=11, bold=True, color=tone, first=True)
     tf = text_box(s, M + 0.10, y + 0.44, 1.20, 0.26)
     para(tf, en, size=7.5, color=FAINT, first=True)
 
@@ -814,7 +827,7 @@ for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
         tf = text_box(s, x + 0.08, y + 0.10, w - 0.16, band_h - 0.20,
                       align=PP_ALIGN.CENTER, anchor=MSO_ANCHOR.MIDDLE)
         if isinstance(c, tuple):
-            para(tf, c[0], size=8, bold=True, color=TEXT, first=True,
+            para(tf, c[0], size=9, bold=True, color=TEXT, first=True,
                  align=PP_ALIGN.CENTER, line=1.1, latin=MONO)
             para(tf, c[1], size=6.5, color=MUTED, align=PP_ALIGN.CENTER, line=1.1, latin=MONO)
         else:
@@ -823,7 +836,7 @@ for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
 
     # 右侧约束说明
     tf = text_box(s, note_x, y + 0.10, 1.55, band_h - 0.20, anchor=MSO_ANCHOR.MIDDLE)
-    para(tf, note, size=8, color=MUTED, first=True, line=1.3)
+    para(tf, note, size=9, color=MUTED, first=True, line=1.3)
 
     # 层间向下箭头（在层名与模块之间的空隙里）
     if bi < len(BANDS) - 1:
@@ -834,7 +847,7 @@ for bi, (cn, en, ic, chips, note) in enumerate(BANDS):
 
 # 底部：技术栈官方图标（品牌矢量，来自 simple-icons）
 tf = text_box(s, M, 5.96, 1.6, 0.28)
-para(tf, "技术栈", size=9.5, bold=True, color=PRIMARY, first=True)
+para(tf, "技术栈", size=10.5, bold=True, color=PRIMARY, first=True)
 stack = [("nextjs", "Next.js"), ("react", "React"), ("typescript", "TypeScript"),
          ("nodejs", "Node.js"), ("python", "Python"), ("mysql", "MySQL"),
          ("nvidia", "CUDA")]
@@ -844,12 +857,12 @@ for name, label in stack:
     if os.path.exists(p):
         s.shapes.add_picture(p, Inches(sx), Inches(5.99), Inches(0.26), Inches(0.26))
     tf = text_box(s, sx + 0.31, 6.00, 1.05, 0.26)
-    para(tf, label, size=9, color=MUTED, first=True)
+    para(tf, label, size=10, color=MUTED, first=True)
     sx += 0.31 + 0.98
 
 tf = text_box(s, M, 6.36, W, 0.3)
 para(tf, "依赖方向自上而下：上层可换（表现层 / 接口层），下层稳定（领域层纯函数、引擎层确定性）。",
-     size=9.5, color=MUTED, first=True)
+     size=10.5, color=MUTED, first=True)
 footer(s, 10)
 
 # ============ P9 部署视图 ============
@@ -873,10 +886,10 @@ def dep_box(x, y, w, h, icon=None, title="", sub="", fill=SURFACE, brand=None):
         s.shapes.add_picture(path, Inches(x + 0.14), Inches(y + 0.14), Inches(0.24), Inches(0.24))
         tx = x + 0.46
     tf = text_box(s, tx, y + 0.10, w - (tx - x) - 0.14, 0.3)
-    para(tf, title, size=10.5, bold=True, color=TEXT, first=True)
+    para(tf, title, size=11.5, bold=True, color=TEXT, first=True)
     if sub:
         tf = text_box(s, x + 0.16, y + 0.42, w - 0.30, h - 0.46)
-        para(tf, sub, size=9, color=MUTED, first=True, line=1.3)
+        para(tf, sub, size=10, color=MUTED, first=True, line=1.3)
 
 
 # 左：用户侧
@@ -886,7 +899,7 @@ dep_box(M, 3.55, 2.25, 1.25, "mic", "三种输入", "语音 · 文本 · 拍化�
 ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(3.10), Inches(2.74), Inches(0.42), Inches(0.22))
 ar.fill.solid(); ar.fill.fore_color.rgb = LINE2; ar.line.fill.background(); ar.shadow.inherit = False
 tf = text_box(s, 3.02, 2.44, 0.6, 0.24, align=PP_ALIGN.CENTER)
-para(tf, "HTTP", size=8, color=FAINT, first=True, align=PP_ALIGN.CENTER)
+para(tf, "HTTP", size=9, color=FAINT, first=True, align=PP_ALIGN.CENTER)
 
 # 中：一台电脑（虚线边界）
 frame = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(3.62), Inches(2.05),
@@ -901,7 +914,7 @@ if os.path.exists(os.path.join(BRAND, "nvidia.png")):
     s.shapes.add_picture(os.path.join(BRAND, "nvidia.png"), Inches(4.02), Inches(2.00),
                          Inches(0.22), Inches(0.22))
 tf = text_box(s, 4.32, 1.99, 3.10, 0.24)
-para(tf, "同一台电脑 · RTX 5080 16 GB · CUDA", size=9, bold=True, color=RECLAIM, first=True)
+para(tf, "同一台电脑 · RTX 5080 16 GB · CUDA", size=10, bold=True, color=RECLAIM, first=True)
 
 dep_box(3.85, 2.50, 6.10, 0.82, brand="nextjs", title="Next.js 站点 :5173",
         sub="页面 + API 路由（extract / ocr / agent / decision）")
@@ -920,8 +933,8 @@ for i, (ic, t, sb) in enumerate([("chip", "抽取模型", "llama-server :8080\nQ
 
 tf = text_box(s, 3.85, 4.92, 6.10, 0.85)
 para(tf, "本机实测：模型启动 1.7 s、单句抽取 0.11 s、显存占用 1.8 GB（RTX 5080）。",
-     size=9.5, color=TEXT, first=True, line=1.35)
-para(tf, "断网时除「公网入口」外一切正常，包括现场演示。", size=9.5, color=RECLAIM, line=1.35)
+     size=10.5, color=TEXT, first=True, line=1.35)
+para(tf, "断网时除「公网入口」外一切正常，包括现场演示。", size=10.5, color=RECLAIM, line=1.35)
 
 # 右：可选的公网入口
 dash = s.shapes.add_connector(1, Inches(10.22), Inches(2.90), Inches(10.60), Inches(2.90))
@@ -929,12 +942,12 @@ dash.line.color.rgb = FAINT
 dash.line.width = Pt(1.25)
 dash.line.dash_style = 4
 tf = text_box(s, 10.12, 2.60, 0.6, 0.24, align=PP_ALIGN.CENTER)
-para(tf, "可选", size=8, color=FAINT, first=True, align=PP_ALIGN.CENTER)
+para(tf, "可选", size=9, color=FAINT, first=True, align=PP_ALIGN.CENTER)
 
 dep_box(10.62, 2.35, 1.95, 0.95, "flag", "VPS", "clear.ysti.com.cn")
 dep_box(10.62, 3.55, 1.95, 0.95, "layers", "SSH 反向隧道", "-R 18001 → 5173")
 tf = text_box(s, 10.62, 4.62, 1.95, 0.55)
-para(tf, "只为让评委用手机打开；不开也能完整演示。", size=8.5, color=FAINT, first=True, line=1.3)
+para(tf, "只为让评委用手机打开；不开也能完整演示。", size=9.5, color=FAINT, first=True, line=1.3)
 
 # 底部三条结论
 for i, (big, label) in enumerate([("1 台", "实测显存 1.8 GB，单机即可承载全部"),
@@ -965,14 +978,14 @@ for i, (ic, name, what, *_rest) in enumerate(ENG):
     tf = text_box(s, x + 0.52, 2.00, CW3 - 0.6, 0.34)
     para(tf, name, size=15, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, x + 0.52, 2.34, CW3 - 0.6, 0.28)
-    para(tf, what, size=9.5, color=MUTED, first=True)
+    para(tf, what, size=10.5, color=MUTED, first=True)
 rect(s, M, 2.72, W, 0.012, fill=LINE2, radius=False)
 
 ROWS_DEF = [("输入", 3), ("适用人群", 4), ("输出", 5), ("边界与校验", 6)]
 for ri, (label, vi) in enumerate(ROWS_DEF):
     y = 2.86 + ri * 0.80
     tf = text_box(s, M, y + 0.04, LW2 - 0.15, 0.3)
-    para(tf, label, size=8.5, color=FAINT, first=True)
+    para(tf, label, size=9.5, color=FAINT, first=True)
     for i, eng in enumerate(ENG):
         x = M + LW2 + i * CW3
         val = eng[vi]
@@ -980,18 +993,18 @@ for ri, (label, vi) in enumerate(ROWS_DEF):
         if label == "输出":
             para(tf, val, size=11.5, bold=True, color=RED, first=True, line=1.3)
         elif label == "边界与校验":
-            para(tf, val, size=9, color=RECLAIM, first=True, line=1.3)
+            para(tf, val, size=10, color=RECLAIM, first=True, line=1.3)
         elif label == "输入":
-            para(tf, val, size=8.5, color=MUTED, first=True, line=1.3)
+            para(tf, val, size=9.5, color=MUTED, first=True, line=1.3)
         else:
-            para(tf, val, size=9.5, color=TEXT, first=True, line=1.3)
+            para(tf, val, size=10.5, color=TEXT, first=True, line=1.3)
     if ri < len(ROWS_DEF) - 1:
         rect(s, M, y + 0.68, W, 0.008, fill=LINE, radius=False)
 
 rect(s, M, 6.10, W, 0.66, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.26, 6.18, W - 0.52, 0.52)
 para(tf, "为什么风险计算不交给模型：确定性计算可复算、可审计，换任何模型结论都不变；模型只负责把口语变成结构。",
-     size=10.5, bold=True, color=TEXT, first=True, line=1.3)
+     size=11.5, bold=True, color=TEXT, first=True, line=1.3)
 footer(s, 12)
 
 # ============ AI 用在哪 / 不用在哪：以一条分界线划开 ============
@@ -1009,18 +1022,18 @@ for i, (ic, h1, h2) in enumerate(USED):
     x = M + i * (CW4 + 0.15)
     s.shapes.add_picture(icon_p(ic), Inches(x), Inches(2.02), Inches(0.34), Inches(0.34))
     tf = text_box(s, x, 2.44, CW4, 0.28)
-    para(tf, h1, size=10.5, bold=True, color=TEXT, first=True)
+    para(tf, h1, size=11.5, bold=True, color=TEXT, first=True)
     tf = text_box(s, x, 2.74, CW4 - 0.10, 0.66)
-    para(tf, h2, size=8.5, color=MUTED, first=True, line=1.35)
+    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.35)
 
 # 分界线：一条细虚线 + 两端标签，上面归模型、下面归代码
 LINE_Y = 3.62
 for k in range(26):
     rect(s, M + k * (W / 26), LINE_Y, (W / 26) * 0.55, 0.014, fill=LINE2, radius=False)
 tf = text_box(s, M, LINE_Y - 0.30, 6.0, 0.26)
-para(tf, "↑ 模型做的", size=8.5, bold=True, color=PRIMARY, first=True)
+para(tf, "↑ 模型做的", size=9.5, bold=True, color=PRIMARY, first=True)
 tf = text_box(s, M + W - 3.2, LINE_Y + 0.06, 3.2, 0.26, align=PP_ALIGN.RIGHT)
-para(tf, "确定性代码做的 ↓", size=8.5, bold=True, color=RECLAIM, first=True, align=PP_ALIGN.RIGHT)
+para(tf, "确定性代码做的 ↓", size=9.5, bold=True, color=RECLAIM, first=True, align=PP_ALIGN.RIGHT)
 
 NOT = [
     ("chart", "三套风险方程", "系数来自文献，一行行抄进代码并进回归测试"),
@@ -1033,9 +1046,9 @@ for i, (ic, h1, h2) in enumerate(NOT):
     rect(s, x, 4.06, CW3b, 1.02, fill=RECLAIM_SOFT, line=RECLAIM_LINE)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.22), Inches(4.24), Inches(0.32), Inches(0.32))
     tf = text_box(s, x + 0.66, 4.20, CW3b - 0.9, 0.28)
-    para(tf, h1, size=10.5, bold=True, color=RECLAIM, first=True)
+    para(tf, h1, size=11.5, bold=True, color=RECLAIM, first=True)
     tf = text_box(s, x + 0.22, 4.62, CW3b - 0.44, 0.4)
-    para(tf, h2, size=8.5, color=MUTED, first=True, line=1.3)
+    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.3)
 
 rect(s, M, 5.34, W, 0.72, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.28, 5.44, W - 0.56, 0.56)
@@ -1067,13 +1080,13 @@ for i, (ic, h1, h2, h3) in enumerate(layers3):
     tf = text_box(s, M + 0.82, y + 0.14, 4.3, 0.32)
     para(tf, h1, size=12.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, M + 0.82, y + 0.50, 4.35, 0.66)
-    para(tf, h2, size=9.5, color=TEXT, first=True, line=1.3)
+    para(tf, h2, size=10.5, color=TEXT, first=True, line=1.3)
     tf = text_box(s, M + 5.55, y + 0.14, 6.0, 0.98, anchor=MSO_ANCHOR.MIDDLE)
-    para(tf, h3, size=9.5, color=MUTED, first=True, line=1.35)
+    para(tf, h3, size=10.5, color=MUTED, first=True, line=1.35)
 
 tf = text_box(s, M, 6.38, W, 0.3)
 para(tf, "三道保险的顺序很重要：能靠语法解决的不用规则，能靠规则解决的不用模型，剩下的才交给评测兜底。",
-     size=9.5, color=MUTED, first=True)
+     size=10.5, color=MUTED, first=True)
 footer(s, 14)
 
 # ============ P9 准确性 ============
@@ -1086,7 +1099,7 @@ f1_chart(s, M - 0.1, 1.95, 7.25, 4.05,
           "支架/血压\n续句用原话", "血糖/心脏\n别名变体", "裸「支架」\n入表"])
 
 tf = text_box(s, M, 6.02, 7.1, 0.4)
-para(tf, "每一跳都对应一次具体改动，没有一次是「换个更大的模型」。", size=10.5,
+para(tf, "每一跳都对应一次具体改动，没有一次是「换个更大的模型」。", size=11.5,
      bold=True, color=RECLAIM, first=True)
 
 # 右栏：一把抓住的四个数 + 每套留出集的真实构成（构建时现算）
@@ -1103,14 +1116,14 @@ for j, wd in enumerate([0.62, 0.82, 0.72, 0.7, 0.7, 0.7]):
 heads = ["集", "字数", "亲属", "年龄", "否定", "续句"]
 for j, h in enumerate(heads):
     cell = tbl.cell(0, j); cell.text = ""
-    para(cell.text_frame, h, size=8, bold=True, color=MUTED, first=True,
+    para(cell.text_frame, h, size=9, bold=True, color=MUTED, first=True,
          align=PP_ALIGN.CENTER)
     cell.fill.solid(); cell.fill.fore_color.rgb = PRIMARY_SOFT
 for i, (tag, n, chars, rels, age, neg, cont, multi) in enumerate(rows, start=1):
     vals = [tag, f"{chars}", f"{rels}", str(age), str(neg), str(cont)]
     for j, v in enumerate(vals):
         cell = tbl.cell(i, j); cell.text = ""
-        para(cell.text_frame, v, size=8.5, bold=(j == 0),
+        para(cell.text_frame, v, size=9.5, bold=(j == 0),
              color=TEXT if j else PRIMARY, first=True, align=PP_ALIGN.CENTER)
         cell.fill.solid(); cell.fill.fore_color.rgb = SURFACE
 for row in tbl.rows:
@@ -1121,13 +1134,13 @@ for row in tbl.rows:
 
 tf = text_box(s, 8.15, 4.92, 4.35, 0.9)
 para(tf, f"六套合计 180 条：含年龄 {tot[1]}、否定句 {tot[2]}、续句 {tot[3]}、多人句 {tot[4]}。",
-     size=9, color=MUTED, first=True, line=1.35)
-para(tf, "不是同一模板换词——每套都独立覆盖了否定、续句与多人场景。", size=9, color=MUTED, line=1.35)
+     size=10, color=MUTED, first=True, line=1.35)
+para(tf, "不是同一模板换词——每套都独立覆盖了否定、续句与多人场景。", size=10, color=MUTED, line=1.35)
 
 rect(s, M, 6.42, W, 0.42, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.24, 6.47, W - 0.48, 0.3)
 para(tf, "机制：留出集只跑一次 · 每次评测自动落盘（commit + 模型 + 逐条预测）· 页面数字由 metrics.ts 单一来源提供",
-     size=9.5, color=TEXT, first=True)
+     size=10.5, color=TEXT, first=True)
 footer(s, 11)
 
 # ============ JEV / 决策协议 ============
@@ -1145,23 +1158,23 @@ for i, (name, what, sample) in enumerate(prims):
     tf = text_box(s, M + 0.22, y + 0.10, 2.4, 0.3)
     para(tf, name, size=12, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, M + 1.55, y + 0.14, 4.0, 0.28)
-    para(tf, what, size=9.5, color=MUTED, first=True)
+    para(tf, what, size=10.5, color=MUTED, first=True)
     tf = text_box(s, M + 0.22, y + 0.50, 5.3, 0.36)
-    para(tf, sample, size=8, color=TEXT, first=True, latin="Consolas")
+    para(tf, sample, size=9, color=TEXT, first=True, latin="Consolas")
 
 rect(s, M, 5.18, 5.75, 1.2, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.24, 5.28, 5.3, 1.0)
-para(tf, "实测：18.5 GB 的 OpenJev-Q4 与 12 维结构模型，在同一批均衡样本上", size=9.5, first=True, line=1.45)
-para(tf, "40% vs 96%；单次延迟 6.3 秒 vs 不到 0.1 秒。", size=9.5, line=1.45)
-para(tf, "协议与管线是通的，只是这一题不该用它——下一页说为什么。", size=9.5, bold=True, color=RECLAIM, line=1.45)
+para(tf, "实测：18.5 GB 的 OpenJev-Q4 与 12 维结构模型，在同一批均衡样本上", size=10.5, first=True, line=1.45)
+para(tf, "40% vs 96%；单次延迟 6.3 秒 vs 不到 0.1 秒。", size=10.5, line=1.45)
+para(tf, "协议与管线是通的，只是这一题不该用它——下一页说为什么。", size=10.5, bold=True, color=RECLAIM, line=1.45)
 
 tf = text_box(s, 6.72, 1.98, 5.85, 0.3)
 para(tf, "怎么判断对方是不是决策模型", size=11, bold=True, color=PRIMARY, first=True)
 rect(s, 6.72, 2.32, 5.85, 0.92, fill=SURFACE, line=LINE)
 tf = text_box(s, 6.92, 2.42, 5.45, 0.78)
 para(tf, "判据是「有没有决策头」，不是名字。拿文本模型去调，服务端直接回 501：",
-     size=9, color=MUTED, first=True, line=1.3)
-para(tf, "This model is not a decision model", size=9, bold=True, color=DANGER, line=1.3, latin="Consolas")
+     size=10, color=MUTED, first=True, line=1.3)
+para(tf, "This model is not a decision model", size=10, bold=True, color=DANGER, line=1.3, latin="Consolas")
 
 tf = text_box(s, 6.72, 3.40, 5.85, 0.3)
 para(tf, "我们做了哪些工程上的事", size=11, bold=True, color=PRIMARY, first=True)
@@ -1174,9 +1187,9 @@ eng = [
 for i, (h1, h2) in enumerate(eng):
     y = 3.74 + i * 0.68
     tf = text_box(s, 6.72, y, 5.85, 0.26)
-    para(tf, h1, size=10, bold=True, color=TEXT, first=True)
+    para(tf, h1, size=11, bold=True, color=TEXT, first=True)
     tf = text_box(s, 6.72, y + 0.26, 5.85, 0.34)
-    para(tf, h2, size=9, color=MUTED, first=True, line=1.25)
+    para(tf, h2, size=10, color=MUTED, first=True, line=1.25)
 footer(s, 15)
 
 # ============ 对照实验：通用决策模型 vs 我们的结构模型 ============
@@ -1186,24 +1199,24 @@ s = new_slide(3, "这一页是**对照实验**：同一个任务，两种做法�
 # 顶部：一句话把两个数字的身份说清楚
 rect(s, M, 1.96, 5.55, 0.90, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.24, 2.00, 5.1, 0.3)
-para(tf, "对照组 · 通用决策模型 OpenJev-Q4（18.5 GB）", size=9, color=MUTED, first=True)
+para(tf, "对照组 · 通用决策模型 OpenJev-Q4（18.5 GB）", size=10, color=MUTED, first=True)
 tf = text_box(s, M + 0.24, 2.18, 2.3, 0.52)
 para(tf, "40%", size=28, bold=True, color=RGBColor(0x8C, 0x9A, 0xA8), first=True)
 tf = text_box(s, M + 1.95, 2.26, 3.4, 0.6)
-para(tf, "隐性 / X 连锁 / 线粒体", size=8.5, color=MUTED, first=True, line=1.3)
-para(tf, "三类全判错", size=8.5, color=MUTED, line=1.3)
+para(tf, "隐性 / X 连锁 / 线粒体", size=9.5, color=MUTED, first=True, line=1.3)
+para(tf, "三类全判错", size=9.5, color=MUTED, line=1.3)
 # 比例条：让 40% 与 96% 在视觉上先分出强弱
 rect(s, M + 0.24, 2.72, 5.1, 0.07, fill=RGBColor(0xE4, 0xE7, 0xEB), line=None, radius=False)
 rect(s, M + 0.24, 2.72, 5.1 * 0.40, 0.07, fill=RGBColor(0x8C, 0x9A, 0xA8), line=None, radius=False)
 
 rect(s, 6.55, 1.96, 6.0, 0.90, fill=RED_SOFT, line=RGBColor(0xE8, 0xB4, 0xAC))
 tf = text_box(s, 6.79, 2.00, 5.5, 0.3)
-para(tf, "我们的方案 · 12 维结构逻辑回归（2.3 KB）", size=9, color=MUTED, first=True)
+para(tf, "我们的方案 · 12 维结构逻辑回归（2.3 KB）", size=10, color=MUTED, first=True)
 tf = text_box(s, 6.79, 2.10, 2.6, 0.70)
 para(tf, "96%", size=34, bold=True, color=RED, first=True)
 tf = text_box(s, 8.55, 2.24, 3.8, 0.6)
-para(tf, "同一批样本、同一份输入", size=8.5, color=MUTED, first=True, line=1.3)
-para(tf, "单次 0.005–0.07 秒，无需 18 GB 权重", size=8.5, color=MUTED, line=1.3)
+para(tf, "同一批样本、同一份输入", size=9.5, color=MUTED, first=True, line=1.3)
+para(tf, "单次 0.005–0.07 秒，无需 18 GB 权重", size=9.5, color=MUTED, line=1.3)
 rect(s, 6.79, 2.72, 5.5, 0.07, fill=RGBColor(0xF0, 0xD3, 0xCE), line=None, radius=False)
 rect(s, 6.79, 2.72, 5.5 * 0.96, 0.07, fill=RED, line=None, radius=False)
 
@@ -1218,25 +1231,25 @@ rows = [
 rect(s, M, 2.92, 6.15, 0.32, fill=SURFACE, line=None)
 for h, hx, hc in [("类别", M + 0.16, MUTED), ("对照组", M + 2.35, FAINT), ("我们的方案", M + 4.45, RED)]:
     tf = text_box(s, hx, 2.95, 2.0, 0.26)
-    para(tf, h, size=9, bold=True, color=hc, first=True)
+    para(tf, h, size=10, bold=True, color=hc, first=True)
 for i, (cat, jev, st) in enumerate(rows):
     y = 3.30 + i * 0.44
     tf = text_box(s, M + 0.16, y, 2.2, 0.3)
-    para(tf, cat, size=9.5, color=TEXT, first=True)
+    para(tf, cat, size=10.5, color=TEXT, first=True)
     tf = text_box(s, M + 2.35, y, 2.0, 0.3)
     bad = jev.startswith("0%")
     rich(tf, [("✗ " if bad else "✓ ", True, FAINT), (jev, False, FAINT)],
-         size=9.5, first=True)
+         size=10.5, first=True)
     tf = text_box(s, M + 4.45, y, 1.6, 0.3)
-    rich(tf, [("✓ ", True, RED), (st, False, RED)], size=9.5, first=True)
+    rich(tf, [("✓ ", True, RED), (st, False, RED)], size=10.5, first=True)
     if i < len(rows) - 1:
         rect(s, M + 0.16, y + 0.34, 5.8, 0.006, fill=LINE, radius=False)
 tf = text_box(s, M + 0.16, 5.56, 5.9, 0.3)
-para(tf, "ECE 0.401 vs —：对照组不只是判错，连「自己不确定」都没校准出来。", size=8.5, color=MUTED, first=True)
+para(tf, "ECE 0.401 vs —：对照组不只是判错，连「自己不确定」都没校准出来。", size=9.5, color=MUTED, first=True)
 
 # 右：三个调参坑
 tf = text_box(s, 6.95, 2.92, 5.6, 0.3)
-para(tf, "为了让对照组发挥好，我们踩过这三个坑", size=10.5, bold=True, color=PRIMARY, first=True)
+para(tf, "为了让对照组发挥好，我们踩过这三个坑", size=11.5, bold=True, color=PRIMARY, first=True)
 pits = [
     ("01", "内部代码直接喂模型", "内部编码 myocardial-infarction 喂进去判不出来，必须翻成「心肌梗死」"),
     ("02", "指令里夹 JSON 措辞", "「onsetAge 可为 null」让显性概率从 66% 掉到 48%"),
@@ -1246,18 +1259,18 @@ for i, (num, h1, h2) in enumerate(pits):
     y = 3.28 + i * 0.82
     rect(s, 6.95, y, 5.6, 0.74, fill=SURFACE, line=LINE)
     tf = text_box(s, 7.10, y + 0.06, 0.6, 0.28)
-    para(tf, num, size=9.5, bold=True, color=PRIMARY, first=True)
+    para(tf, num, size=10.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, 7.62, y + 0.05, 4.8, 0.26)
-    para(tf, h1, size=9.5, bold=True, color=TEXT, first=True)
+    para(tf, h1, size=10.5, bold=True, color=TEXT, first=True)
     tf = text_box(s, 7.62, y + 0.32, 4.8, 0.38)
-    para(tf, h2, size=8, color=MUTED, first=True, line=1.25)
+    para(tf, h2, size=9, color=MUTED, first=True, line=1.25)
 
 rect(s, M, 5.90, W, 0.92, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.26, 6.00, W - 0.52, 0.75)
 para(tf, "这不是「我们的模型只有 40%」——40% 是通用决策模型的表现。我们把它完整接进来了（协议 / 校验 / 降级），它现在是可切换的对照后端。",
-     size=10, bold=True, color=TEXT, first=True, line=1.35)
+     size=11, bold=True, color=TEXT, first=True, line=1.35)
 para(tf, "结论只有一句：遗传模式由家系结构决定，12 维特征就够了，通用决策模型不知道结构意味着什么。",
-     size=9.5, color=MUTED, line=1.35)
+     size=10.5, color=MUTED, line=1.35)
 footer(s, 17)
 
 # ============ 判定链路（产品里怎么用） ============
@@ -1279,7 +1292,7 @@ for i, (ic, h1, h2) in enumerate(steps):
     tf = text_box(s, x + 0.68, 2.20, cw3 - 0.9, 0.32)
     para(tf, h1, size=11, bold=True, color=TEXT, first=True)
     tf = text_box(s, x + 0.22, 2.66, cw3 - 0.44, 1.1)
-    para(tf, h2, size=9.5, color=MUTED, first=True, line=1.35)
+    para(tf, h2, size=10.5, color=MUTED, first=True, line=1.35)
     if i < 3:
         ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + cw3 + 0.01), Inches(2.86),
                                 Inches(0.12), Inches(0.16))
@@ -1287,19 +1300,19 @@ for i, (ic, h1, h2) in enumerate(steps):
 
 rect(s, M, 4.12, 6.5, 1.95, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.26, 4.24, 6.0, 0.3)
-para(tf, "界面上会出现的两种结果", size=10.5, bold=True, color=PRIMARY, first=True)
+para(tf, "界面上会出现的两种结果", size=11.5, bold=True, color=PRIMARY, first=True)
 tf = text_box(s, M + 0.26, 4.60, 6.0, 1.35)
 rich(tf, [("有结论", True, RECLAIM), ("：「提示：常染色体显性遗传 · 置信度 87%」，并补一句「不是诊断」", False, TEXT)],
-     size=9.5, line=1.5)
+     size=10.5, line=1.5)
 rich(tf, [("没结论", True, DANGER), ("：「证据不足」+ 列出缺什么（父系是否患病 / 缺发病年龄 / 性别单一）", False, TEXT)],
-     size=9.5, line=1.5)
+     size=10.5, line=1.5)
 
 rect(s, 7.55, 4.12, 5.0, 1.95, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, 7.80, 4.24, 4.5, 1.7)
-para(tf, "为什么这样设计", size=10.5, bold=True, color=PRIMARY, first=True)
-para(tf, "· 门槛不达标时，给一个错结论比不给结论更糟", size=9.5, line=1.45)
-para(tf, "· 内部打分信号（logprobs）不进界面，只做调试用", size=9.5, line=1.45)
-para(tf, "· 追问是收集证据，不是把判断推回给用户", size=9.5, line=1.45)
+para(tf, "为什么这样设计", size=11.5, bold=True, color=PRIMARY, first=True)
+para(tf, "· 门槛不达标时，给一个错结论比不给结论更糟", size=10.5, line=1.45)
+para(tf, "· 内部打分信号（logprobs）不进界面，只做调试用", size=10.5, line=1.45)
+para(tf, "· 追问是收集证据，不是把判断推回给用户", size=10.5, line=1.45)
 footer(s, 18)
 
 # ============ P11 微调 A/B：成本 vs 收益 ============
@@ -1314,43 +1327,43 @@ SCALE = 3.2
 for gi, (label, b1, b2, hit1, hit2) in enumerate(pairs):
     base_y = 2.05 + gi * 2.05
     tf = text_box(s, M, base_y, 6.4, 0.3)
-    para(tf, label, size=10.5, bold=True, color=TEXT, first=True)
+    para(tf, label, size=11.5, bold=True, color=TEXT, first=True)
     for bi, (name, val, hit) in enumerate([("基线 + few-shot", b1, hit1), ("微调后", b2, hit2)]):
         y = base_y + 0.40 + bi * 0.62
         tf = text_box(s, M, y + 0.04, 1.85, 0.3)
-        para(tf, name, size=9.5, color=MUTED, first=True)
+        para(tf, name, size=10.5, color=MUTED, first=True)
         rect(s, M + 1.95, y + 0.08, SCALE, 0.26, fill=RGBColor(0xEC, 0xF1, 0xF6), line=None, radius=False)
         rect(s, M + 1.95, y + 0.08, SCALE * float(val), 0.26,
              fill=RGBColor(0xC2, 0xD6, 0xE9) if bi == 0 else RED, line=None, radius=False)
         tf = text_box(s, M + 1.95 + SCALE + 0.12, y + 0.04, 1.6, 0.3)
         rich(tf, [(val, True, MUTED if bi == 0 else RED), ("  " + hit, False, FAINT)],
-             size=10.5, first=True)
+             size=11.5, first=True)
     if gi == 0:
         tf = text_box(s, M, base_y + 1.68, 6.4, 0.3)
-        para(tf, "两条等长：差 0.000", size=9.5, bold=True, color=DANGER, first=True)
+        para(tf, "两条等长：差 0.000", size=10.5, bold=True, color=DANGER, first=True)
 
 rect(s, 8.15, 2.05, 4.4, 1.15, fill=AMBER_SOFT, line=RGBColor(0xE8, 0xC8, 0x92))
 tf = text_box(s, 8.40, 2.13, 3.9, 1.0)
-para(tf, "投入", size=10.5, bold=True, color=AMBER, first=True)
-para(tf, "1355 条合成数据 · 3 epoch · 21 分钟（RTX 5080）", size=9.5, line=1.55)
-para(tf, "额外 1.1 GB 权重 + 一套微调链路维护", size=9.5, line=1.55)
+para(tf, "投入", size=11.5, bold=True, color=AMBER, first=True)
+para(tf, "1355 条合成数据 · 3 epoch · 21 分钟（RTX 5080）", size=10.5, line=1.55)
+para(tf, "额外 1.1 GB 权重 + 一套微调链路维护", size=10.5, line=1.55)
 
 rect(s, 8.15, 3.36, 4.4, 1.15, fill=SURFACE, line=LINE)
 tf = text_box(s, 8.40, 3.44, 3.9, 1.0)
-para(tf, "收益", size=10.5, bold=True, color=MUTED, first=True)
-para(tf, "F1 +0.000 · 完全匹配 27/30 不变", size=9.5, line=1.55)
-para(tf, "逐条比对：30 条输出里模型层只有 2 条不同", size=9.5, line=1.55)
+para(tf, "收益", size=11.5, bold=True, color=MUTED, first=True)
+para(tf, "F1 +0.000 · 完全匹配 27/30 不变", size=10.5, line=1.55)
+para(tf, "逐条比对：30 条输出里模型层只有 2 条不同", size=10.5, line=1.55)
 
 rect(s, 8.15, 4.67, 4.4, 0.76, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, 8.40, 4.74, 3.9, 0.64)
-para(tf, "所以判断", size=10, bold=True, color=PRIMARY, first=True)
-para(tf, "提升空间在词表与规则，不在参数量", size=9.5, color=TEXT, line=1.4)
+para(tf, "所以判断", size=11, bold=True, color=PRIMARY, first=True)
+para(tf, "提升空间在词表与规则，不在参数量", size=10.5, color=TEXT, line=1.4)
 
 rect(s, M, 5.68, W, 0.92, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.26, 5.78, W - 0.52, 0.75)
 para(tf, "处置：不引入微调模型，训练链路保留（可复跑）。这不是失败——它证明提升空间在词表与规则，不在参数量。",
-     size=10, bold=True, color=TEXT, first=True, line=1.35)
-para(tf, "换任何一组同任务模型，这条结论都成立，所以它比「我们调得更好」更值得讲。", size=9.5, color=MUTED, line=1.35)
+     size=11, bold=True, color=TEXT, first=True, line=1.35)
+para(tf, "换任何一组同任务模型，这条结论都成立，所以它比「我们调得更好」更值得讲。", size=10.5, color=MUTED, line=1.35)
 footer(s, 19)
 
 # ============ P12 隐私与合规 ============
@@ -1369,7 +1382,7 @@ for i, (ic, h1, h2) in enumerate(left):
     tf = text_box(s, M + 0.58, y - 0.02, 6.2, 0.32)
     para(tf, h1, size=13.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, M + 0.58, y + 0.32, 6.2, 0.6)
-    para(tf, h2, size=10.5, color=MUTED, first=True, line=1.35)
+    para(tf, h2, size=11.5, color=MUTED, first=True, line=1.35)
 
 rect(s, 7.6, 2.1, 4.95, 3.75, fill=SURFACE, line=LINE)
 tf = text_box(s, 7.85, 2.22, 4.45, 0.35)
@@ -1399,41 +1412,41 @@ CW2 = (TW - 1.95) / 4
 for j, c in enumerate(COLSX[:4]):
     cx = TX + 1.95 + j * CW2
     tf = text_box(s, cx - 0.25, 1.98, CW2 + 0.2, 0.28, align=PP_ALIGN.CENTER)
-    para(tf, c, size=8.5, color=MUTED, first=True, align=PP_ALIGN.CENTER)
+    para(tf, c, size=9.5, color=MUTED, first=True, align=PP_ALIGN.CENTER)
 for i, (name, marks) in enumerate(ROWS):
     y = 2.42 + i * 0.52
     tf = text_box(s, TX, y, 1.9, 0.3)
-    para(tf, name, size=9.5, color=TEXT, first=True)
+    para(tf, name, size=10.5, color=TEXT, first=True)
     for j, mk in enumerate(marks[:4]):
         cx = TX + 1.95 + j * CW2
         color = RECLAIM if mk == "✓" else (FAINT if mk == "✕" else MUTED)
         tf = text_box(s, cx - 0.25, y, CW2 + 0.2, 0.3, align=PP_ALIGN.CENTER)
-        para(tf, mk, size=10, color=color, first=True, align=PP_ALIGN.CENTER)
+        para(tf, mk, size=11, color=color, first=True, align=PP_ALIGN.CENTER)
     if i < len(ROWS) - 1:
         rect(s, TX, y + 0.40, TW, 0.006, fill=LINE, radius=False)
 
 # 右：按「具备几项 / 6」做成条形——把矩阵里的勾叉变成一个可比的量
 SCORE = [0, 1, 3, 0.5, 6]
 tf = text_box(s, 9.55, 1.98, 3.2, 0.3)
-para(tf, "具备几项（满分 6）", size=10, bold=True, color=PRIMARY, first=True)
+para(tf, "具备几项（满分 6）", size=11, bold=True, color=PRIMARY, first=True)
 for j, (c, sc) in enumerate(zip(COLSX, SCORE)):
     y = 2.42 + j * 0.52
     tf = text_box(s, 9.55, y - 0.02, 3.2, 0.24)
-    para(tf, c, size=8, color=RED if j == 4 else MUTED, first=True)
+    para(tf, c, size=9, color=RED if j == 4 else MUTED, first=True)
     track_w = 2.45
     rect(s, 9.55, y + 0.22, track_w, 0.16, fill=RGBColor(0xEC, 0xF1, 0xF6), line=None, radius=False)
     rect(s, 9.55, y + 0.22, track_w * sc / 6.0, 0.16,
          fill=RED if j == 4 else RGBColor(0xC2, 0xD6, 0xE9), line=None, radius=False)
     tf = text_box(s, 9.55 + track_w + 0.10, y + 0.14, 0.6, 0.26)
     para(tf, ("6" if sc == 6 else (str(sc) if sc != int(sc) else str(int(sc)))),
-         size=9.5, bold=(j == 4), color=RED if j == 4 else MUTED, first=True)
+         size=10.5, bold=(j == 4), color=RED if j == 4 else MUTED, first=True)
 
 tf = text_box(s, 9.55, 5.14, 3.25, 0.5)
-para(tf, "四类做法平均 1.1 项，我们 6 项。", size=9.5, bold=True, color=TEXT, first=True, line=1.4)
-para(tf, "缺的不是 AI，是把家系当成数据结构。", size=9, color=MUTED, line=1.4)
+para(tf, "四类做法平均 1.1 项，我们 6 项。", size=10.5, bold=True, color=TEXT, first=True, line=1.4)
+para(tf, "缺的不是 AI，是把家系当成数据结构。", size=10, color=MUTED, line=1.4)
 tf = text_box(s, M, 5.72, W, 0.5)
 para(tf, "横向读：每一行是一种能力；纵向读：没有任何一类现有做法同时在六行上都打勾——这就是缺口。",
-     size=9.5, color=MUTED, first=True)
+     size=10.5, color=MUTED, first=True)
 footer(s, 21)
 
 # ============ P18 价值与落地（实测数字） ============
@@ -1441,7 +1454,7 @@ s = new_slide(4, "落地：一台电脑跑完整个闭环，**数字都是实测
               sub="以下体积与耗时在本机实测（RTX 5080 / 32 GB 内存），不是估算", tag="价值 · 落地")
 rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE)
 tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
-para(tf, "要装什么（体积）", size=10.5, bold=True, color=PRIMARY, first=True)
+para(tf, "要装什么（体积）", size=11.5, bold=True, color=PRIMARY, first=True)
 items = [
     ("robot", None, "抽取模型 Qwen3-1.7B · Q4_K_M", "1.2 GB"),
     ("package", None, "llama.cpp 运行时（CUDA 构建）", "202 MB"),
@@ -1461,14 +1474,14 @@ for i, (ic, brand, name, size) in enumerate(items):
     if p:
         s.shapes.add_picture(p, Inches(M + 0.26), Inches(y - 0.05), Inches(0.34), Inches(0.34))
     tf = text_box(s, M + 0.62, y, 4.3, 0.3)
-    para(tf, name, size=9.5, color=TEXT, first=True)
+    para(tf, name, size=10.5, color=TEXT, first=True)
     tf = text_box(s, 5.55, y, 1.05, 0.3, align=PP_ALIGN.RIGHT)
-    para(tf, size, size=10, bold=True, color=PRIMARY, first=True, align=PP_ALIGN.RIGHT)
+    para(tf, size, size=11, bold=True, color=PRIMARY, first=True, align=PP_ALIGN.RIGHT)
     if i < len(items) - 1:
         rect(s, M + 0.28, y + 0.42, 6.0, 0.008, fill=LINE, radius=False)
 
 tf = text_box(s, 7.65, 2.02, 4.9, 0.3)
-para(tf, "要等多久（实测）", size=10.5, bold=True, color=PRIMARY, first=True)
+para(tf, "要等多久（实测）", size=11.5, bold=True, color=PRIMARY, first=True)
 metrics = [("1.7", " 秒", "模型服务启动到首个可用响应"),
            ("0.11", " 秒", "单句家族史抽取（含 GBNF 约束）"),
            ("1.8", " GB", "模型推理的显存占用"),
@@ -1479,14 +1492,14 @@ for i, (big, unit, label) in enumerate(metrics):
     tf = text_box(s, 7.85, y + 0.10, 1.5, 0.4)
     rich(tf, [(big, True, AMBER), (unit, False, AMBER)], size=17, first=True)
     tf = text_box(s, 9.35, y + 0.10, 3.05, 0.5)
-    para(tf, label, size=9.5, color=MUTED, first=True, line=1.25)
+    para(tf, label, size=10.5, color=MUTED, first=True, line=1.25)
 
 rect(s, M, 5.62, W, 1.05, fill=PRIMARY_SOFT, line=LINE)
 tf = text_box(s, M + 0.3, 5.72, W - 0.6, 0.9)
 para(tf, "成本：推理全在本机，没有按次计费、没有额度限制；整套演示环境约 4.5 GB 磁盘，一台机器即可承载。",
      size=11, first=True, line=1.35)
 para(tf, "口径：本机实测（RTX 5080 / GPU 推理，多次取中位）；换普通 CPU 也能跑，只是抽取约慢一个数量级。",
-     size=9.5, color=MUTED, line=1.35)
+     size=10.5, color=MUTED, line=1.35)
 footer(s, 18)
 
 # ============ 创新与价值总结（三栏概括） ============
@@ -1522,7 +1535,7 @@ for i2, (tone, head, bullets) in enumerate(CARDS):
     yy = 2.84
     for b in bullets:
         tf = text_box(s, x + 0.18, yy, CW5 - 0.36, 0.82)
-        rich(tf, [("✓ ", True, ink), (b, False, TEXT)], size=9.5, first=True, line=1.45)
+        rich(tf, [("✓ ", True, ink), (b, False, TEXT)], size=10.5, first=True, line=1.45)
         yy += 0.86
 
 rect(s, M, 4.86, W, 1.0, fill=SURFACE, line=LINE)
@@ -1545,9 +1558,9 @@ for i, (name, role, what) in enumerate(members):
     tf = text_box(s, x + 0.2, 3.45, cw - 0.4, 0.35, align=PP_ALIGN.CENTER)
     para(tf, name, size=13, bold=True, first=True, align=PP_ALIGN.CENTER)
     tf = text_box(s, x + 0.2, 3.8, cw - 0.4, 0.3, align=PP_ALIGN.CENTER)
-    para(tf, role, size=10.5, color=PRIMARY, first=True, align=PP_ALIGN.CENTER)
+    para(tf, role, size=11.5, color=PRIMARY, first=True, align=PP_ALIGN.CENTER)
     tf = text_box(s, x + 0.2, 4.12, cw - 0.4, 0.55, align=PP_ALIGN.CENTER)
-    para(tf, what, size=10, color=MUTED, first=True, align=PP_ALIGN.CENTER, line=1.35)
+    para(tf, what, size=11, color=MUTED, first=True, align=PP_ALIGN.CENTER, line=1.35)
 
 tf = text_box(s, M, 5.15, W, 0.85)
 para(tf, "【待填】一句话团队介绍：为什么是我们——例如医学背景 + 前端工程 + 本地模型部署的组合。",
@@ -1583,7 +1596,7 @@ for i, (ic, title, note) in enumerate(closing):
     tf = text_box(s, x + 0.66, 5.44, cw2 - 0.86, 0.32)
     para(tf, title, size=11.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, x + 0.66, 5.76, cw2 - 0.86, 0.3)
-    para(tf, note, size=9.5, color=MUTED, first=True)
+    para(tf, note, size=10.5, color=MUTED, first=True)
 
 
 # ---------------- 动画与切换 ----------------
