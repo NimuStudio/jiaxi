@@ -478,6 +478,35 @@ plain = pedestal_wire(plain, (26, 111, 181), alpha=14, scale=1.05, offset=(W * 0
 plain = grain(plain, amount=4.0)
 plain = vignette(plain, alpha=28)
 plain.convert("RGB").save(os.path.join(ART, "content-bg-plain.jpg"), quality=JPEG_Q, optimize=True)
+
+# ---------- 目录页专用背景：右侧巨型「目录」+ 六道栏目色刻度 ----------
+toc = gradient((W, H), [(0.0, (250, 252, 255)), (0.55, (243, 247, 253)), (1.0, (232, 240, 251))])
+toc = soft_blob(toc, W * 0.02, H * 0.5, W * 0.5, (206, 226, 245), 150)
+toc = duotone_texture(toc, os.path.join(ART, "tree.png"), (26, 111, 181), alpha=18, blur=2.4,
+                      crop=(0.02, 0.10, 0.72, 0.9))
+toc = giant_text(toc, "目录", (26, 111, 181), alpha=30, size=430, x=0.715, y=0.06)
+toc = vertical_text(toc, "CONTENTS", (26, 111, 181), alpha=26, size=64, x=0.955, y=0.10)
+# 六道栏目色刻度：目录页顺带当全篇的色卡
+TICKS = [(176, 106, 8), (13, 124, 138), (26, 111, 181), (104, 78, 186), (183, 68, 94), (58, 124, 101)]
+for i, c in enumerate(TICKS):
+    ly = int(H * (0.20 + i * 0.115))
+    t = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(t)
+    d.rectangle([int(W * 0.905), ly, int(W * 0.905) + 26, ly + 10], fill=c + (200,))
+    toc = overlay(toc, t)
+toc = dot_grid(toc, (26, 111, 181), alpha=20, pitch=34, radius=2.3)
+toc = reg_marks(toc, (26, 111, 181), alpha=34)
+toc.convert("RGB").save(os.path.join(ART, "content-bg-toc.jpg"), quality=JPEG_Q, optimize=True)
+
+# ---------- 引语页专用背景：暖调 + 家系图双色调 ----------
+quo = gradient((W, H), [(0.0, (252, 250, 247)), (0.55, (248, 245, 240)), (1.0, (240, 236, 229))])
+quo = soft_blob(quo, W * 0.12, H * 0.9, W * 0.5, (245, 220, 190), 150)
+quo = soft_blob(quo, W * 0.95, H * 0.08, W * 0.42, (214, 226, 244), 120)
+quo = duotone_texture(quo, os.path.join(ART, "tree.png"), (176, 106, 8), alpha=20, blur=2.6,
+                      crop=(0.05, 0.05, 0.95, 0.85))
+quo = contour_field(quo, (176, 106, 8), alpha=18, cx=0.05, cy=0.95, rings=16, seed=61, step=66)
+quo = reg_marks(quo, (176, 106, 8), alpha=30)
+quo.convert("RGB").save(os.path.join(ART, "content-bg-quote.jpg"), quality=JPEG_Q, optimize=True)
 print("  content-bg-plain.jpg 已生成")
 
 # ---------- 封面背景（更深、元素更多） ----------

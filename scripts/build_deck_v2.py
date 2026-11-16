@@ -475,12 +475,12 @@ para(tf, "口述 → 家系图 → 风险 → 可回收", size=10.5, color=RGBCo
 
 # ============ P2 目录 ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
+s.shapes.add_picture(art_path("content-bg-toc"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
-tf = text_box(s, M, 1.1, 6, 0.5)
+tf = text_box(s, M, 1.02, 6, 0.5)
 para(tf, "目录  CONTENTS", size=12, bold=True, color=PRIMARY, first=True)
-tf = text_box(s, M, 1.55, 8, 0.7)
-para(tf, "六个问题，一条主线", size=30, bold=True, first=True)
+tf = text_box(s, M, 1.42, 7.4, 0.8)
+rich(tf, [("六个问题，", True, TEXT), ("一条主线", True, AMBER)], size=32, first=True)
 
 toc = [
     ("01", "family", "项目背景", "家族史是免费的风险信号，却几乎没人用"),
@@ -490,20 +490,20 @@ toc = [
     ("05", "launch", "价值与落地", "差异化、部署成本与实测性能"),
     ("06", "team", "团队", "我们是谁，各自负责什么"),
 ]
+# 六行单列：编号块直接用该栏目的识别色，目录顺带成为全篇的色卡
 for i, (num, ic, name, desc) in enumerate(toc):
-    col = i % 2
-    row = i // 2
-    x = M + col * 5.95
-    y = 2.45 + row * 1.32
-    rect(s, x, y - 0.02, 0.52, 0.52, fill=PRIMARY_SOFT, line=LINE)
-    s.shapes.add_picture(icon_p(ic), Inches(x + 0.07),
-                         Inches(y + 0.05), Inches(0.38), Inches(0.38))
-    tf = text_box(s, x + 0.64, y - 0.06, 0.6, 0.32)
-    para(tf, num, size=11, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, x + 1.10, y - 0.10, 4.4, 0.4)
-    para(tf, name, size=16.5, bold=True, first=True)
-    tf = text_box(s, x + 1.10, y + 0.32, 4.4, 0.4)
+    y = 2.32 + i * 0.78
+    rect(s, M, y, 0.66, 0.66, fill=SECTION_HUES[i], radius=True)
+    tf = text_box(s, M, y + 0.14, 0.66, 0.34, align=PP_ALIGN.CENTER)
+    para(tf, num, size=15, bold=True, color=WHITE, first=True, align=PP_ALIGN.CENTER)
+    s.shapes.add_picture(icon_p(ic), Inches(M + 0.82), Inches(y + 0.15),
+                         Inches(0.34), Inches(0.34))
+    tf = text_box(s, M + 1.28, y + 0.02, 2.1, 0.34)
+    para(tf, name, size=15.5, bold=True, first=True)
+    tf = text_box(s, M + 3.30, y + 0.08, 5.4, 0.34)
     para(tf, desc, size=11, color=MUTED, first=True)
+    if i < len(toc) - 1:
+        rect(s, M, y + 0.70, 8.55, 0.008, fill=LINE, radius=False)
 footer(s, 2)
 
 # ============ P3 项目背景 ============
@@ -549,14 +549,18 @@ footer(s, 3)
 
 # ============ P4 引语页（浅色版：深色只留给封面） ============
 s = prs.slides.add_slide(BLANK)
-s.shapes.add_picture(art_path("content-bg-plain"), 0, 0,
+s.shapes.add_picture(art_path("content-bg-quote"), 0, 0,
                      width=prs.slide_width, height=prs.slide_height)
 
-s.shapes.add_picture(icon_p("bulb"), Inches(M), Inches(1.92),
+# 巨型引号：这一页只有一句话，给它一个「版面上唯一的图形」
+tf = text_box(s, M - 0.12, 1.62, 1.6, 1.2)
+para(tf, "“", size=120, bold=True, color=RGBColor(0xE3, 0xC7, 0x9A), first=True)
+
+s.shapes.add_picture(icon_p("bulb"), Inches(M + 0.72), Inches(1.92),
                      Inches(0.34), Inches(0.34))
-tf = text_box(s, M + 0.48, 1.96, 6, 0.34)
-para(tf, "一 句 真 话", size=11, bold=True, color=PRIMARY, first=True)
-tf = text_box(s, M, 2.50, 8.9, 2.4)
+tf = text_box(s, M + 1.20, 1.96, 6, 0.34)
+para(tf, "一 句 真 话", size=11, bold=True, color=AMBER, first=True)
+tf = text_box(s, M + 0.70, 2.50, 8.4, 2.4)
 para(tf, "「我爸 52 岁放了支架，爷爷糖尿病，", size=29, bold=True, color=TEXT, first=True, line=1.5)
 para(tf, "外公是脑溢血走的。」", size=29, bold=True, color=TEXT, line=1.5)
 tf = text_box(s, M, 4.62, 8.6, 0.5)
