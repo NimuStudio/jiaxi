@@ -2,13 +2,23 @@
   "name": "pedigree-video",
   "version": "1.0.0",
   "private": true,
-  "description": "家系 · 演示视频动画段（Remotion）",
+  "description": "家系 · 演示视频（Remotion：配音驱动时间轴）",
   "scripts": {
     "studio": "remotion studio",
+    "tts": "python scripts/tts.py",
+    "storyboard": "python scripts/storyboard.py",
+    "music": "python scripts/music.py",
+    "render:film": "remotion render src/index.ts Film out/0-film.mp4 --codec=h264 --crf=19 --concurrency=4",
+    "render:cover": "remotion still src/index.ts Cover out/cover.png",
     "render:opening": "remotion render src/index.ts Opening out/1-opening.mp4 --codec=h264 --crf=18",
     "render:pipeline": "remotion render src/index.ts Pipeline out/2-pipeline.mp4 --codec=h264 --crf=18",
     "render:riskdrop": "remotion render src/index.ts RiskDrop out/3-riskdrop.mp4 --codec=h264 --crf=18",
-    "render:outro": "remotion render src/index.ts Outro out/4-outro.mp4 --codec=h264 --crf=18",
-    "render:all": "pnpm render:opening && pnpm render:pipeline && pnpm render:riskdrop && pnpm render:outro"
+    "render:outro": "remotion render src/index.ts Outro out/4-outro.mp4 --codec=h264 --crf=18"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.540",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.540"
   }
 }
