@@ -115,7 +115,31 @@ def rich(tf, parts, size=13, first=False, line=None):
     return p
 
 
-def rect(slide, x, y, w, h, fill=None, line=None, radius=True):
+def soft_shadow(shape, blur=16, dist=3, alpha=14):
+    """给形状加一层很浅的外部投影。
+
+    参考稿的每张卡片都有投影——没有投影，白卡片贴在白背景上就是一张纸，
+    有投影才「浮起来」。alpha 只给 14%，重了会显脏。
+    """
+    from lxml import etree
+    from pptx.oxml.ns import qn
+    spPr = shape._element.spPr
+    for old in spPr.findall(qn("a:effectLst")):
+        spPr.remove(old)
+    eff = etree.SubElement(spPr, qn("a:effectLst"))
+    shd = etree.SubElement(eff, qn("a:outerShdw"))
+    shd.set("blurRad", str(int(blur * 12700)))
+    shd.set("dist", str(int(dist * 12700)))
+    shd.set("dir", "5400000")
+    shd.set("algn", "ctr")
+    shd.set("rotWithShape", "0")
+    clr = etree.SubElement(shd, qn("a:srgbClr"))
+    clr.set("val", "1B3A5E")
+    alp = etree.SubElement(clr, qn("a:alpha"))
+    alp.set("val", str(int(alpha * 1000)))
+
+
+def rect(slide, x, y, w, h, fill=None, line=None, radius=True, card=False):
     s = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE if radius else MSO_SHAPE.RECTANGLE,
                                Inches(x), Inches(y), Inches(w), Inches(h))
     if radius:
@@ -129,6 +153,9 @@ def rect(slide, x, y, w, h, fill=None, line=None, radius=True):
     else:
         s.line.color.rgb = line; s.line.width = Pt(1)
     s.shadow.inherit = False
+    if card:
+        s.adjustments[0] = 0.045
+        soft_shadow(s)
     return s
 
 
@@ -400,15 +427,18 @@ FOOTERS = {}
 def footer(slide, idx=None):
     """页脚。页码不再手写：登记下来，生成结束后按真实页序统一填，
     这样中间插页不用手工改后面每一页的编号（插错过一次）。"""
-    tf = text_box(slide, M, 6.98, 8, 0.28)
-    para(tf, "家系 · 家族健康风险量化", size=10, color=FAINT, first=True)
-    tf = text_box(slide, 13.333 - M - 1.2, 6.98, 1.2, 0.28, align=PP_ALIGN.RIGHT)
-    para(tf, "00", size=10, color=FAINT, first=True, align=PP_ALIGN.RIGHT)
+    # 页脚做三层：一条发丝线 + 品牌小方点 + 页码右对齐，比一行灰字像「版脚」
+    rect(slide, M, 6.90, W, 0.006, fill=LINE, radius=False)
+    rect(slide, M, 7.00, 0.10, 0.10, fill=PRIMARY, radius=True)
+    tf = text_box(slide, M + 0.18, 6.96, 8, 0.28)
+    para(tf, "家系 · 家族健康风险量化", size=9.5, color=FAINT, first=True)
+    tf = text_box(slide, 13.333 - M - 1.2, 6.96, 1.2, 0.28, align=PP_ALIGN.RIGHT)
+    para(tf, "00", size=9.5, color=FAINT, first=True, align=PP_ALIGN.RIGHT)
     FOOTERS[id(slide)] = tf
 
 
 def stat_card(slide, x, y, w, h, big, unit, label, color=PRIMARY, compact=False):
-    rect(slide, x, y, w, h, fill=SURFACE, line=LINE)
+    rect(slide, x, y, w, h, fill=SURFACE, line=LINE2, card=True)
     if compact:
         # 矮卡片：数字 24pt、标签紧贴下方，否则标签会掉出卡片压到下一张
         tf = text_box(slide, x + 0.20, y + 0.08, w - 0.40, 0.46)
@@ -467,7 +497,7 @@ para(tf, "P E D I G R E E   ·   2 0 2 6", size=9.5, color=RGBColor(0x6F, 0x93, 
      align=PP_ALIGN.RIGHT)
 
 # 产品截图：白卡片压深底，形成对比
-rect(s, 8.45, 1.70, 4.25, 3.15, fill=WHITE, line=None)
+rect(s, 8.45, 1.70, 4.25, 3.15, fill=WHITE, line=None, card=True)
 picture_fit(s, os.path.join(SHOTS, "02-chat.png"), 8.57, 1.82, 4.01, 2.91)
 tf = text_box(s, 8.45, 4.95, 4.25, 0.3, align=PP_ALIGN.CENTER)
 para(tf, "口述 → 家系图 → 风险 → 可回收", size=10.5, color=RGBColor(0xA8, 0xC6, 0xDF),
@@ -529,7 +559,7 @@ for ic, num, h1, h2 in items:
 
 # 右侧：家系图（由 scripts/export_tree.py 用 /chat?demo=1 的同一份 DEMO 数据生成 SVG，
 # 再经 resvg 转 PNG —— 是产品里那张图，不是手绘示意）
-rect(s, 6.95, 1.95, 5.6, 3.42, fill=SURFACE, line=LINE)
+rect(s, 6.95, 1.95, 5.6, 3.42, fill=SURFACE, line=LINE2, card=True)
 picture_fit(s, os.path.join(ART, "tree.png"), 7.02, 2.00, 5.46, 3.32)
 tf = text_box(s, 6.95, 5.48, 5.6, 0.3, align=PP_ALIGN.CENTER)
 para(tf, "男 = 方　女 = 圆　实心 = 有该病记录　·　数据来自 /chat?demo=1，与产品同源",
@@ -566,7 +596,7 @@ para(tf, "外公是脑溢血走的。」", size=29, bold=True, color=TEXT, line=
 tf = text_box(s, M, 4.62, 8.6, 0.5)
 para(tf, "这三条，任何体检 App 都不会问。", size=14, color=MUTED, first=True)
 
-rect(s, 9.35, 2.50, 3.2, 1.95, fill=SURFACE, line=LINE)
+rect(s, 9.35, 2.50, 3.2, 1.95, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, 9.58, 2.66, 2.75, 1.7)
 para(tf, "这一句话的价值", size=11, bold=True, color=MUTED, first=True)
 rich(tf, [("5", True, PRIMARY), (" / 26", True, MUTED)], size=38)
@@ -577,7 +607,7 @@ para(tf, "China-PAR 还把它作为独立系数。", size=10.5, color=MUTED, lin
 flow = [("chat", "说一句话"), ("tree", "长出家系图"), ("target", "三个风险数字")]
 for i, (ic, label) in enumerate(flow):
     x = M + i * 2.75
-    rect(s, x, 6.10, 2.45, 0.66, fill=SURFACE, line=LINE)
+    rect(s, x, 6.10, 2.45, 0.66, fill=SURFACE, line=LINE2, card=True)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.16),
                          Inches(6.27), Inches(0.30), Inches(0.30))
     tf = text_box(s, x + 0.56, 6.26, 1.75, 0.34)
@@ -683,7 +713,7 @@ beats = [
 cw = (W - 0.45) / 4
 for i, (ic, when, what, how, line) in enumerate(beats):
     x = M + i * (cw + 0.15)
-    rect(s, x, 2.1, cw, 3.15, fill=SURFACE, line=LINE)
+    rect(s, x, 2.1, cw, 3.15, fill=SURFACE, line=LINE2, card=True)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.20),
                          Inches(2.20), Inches(0.40), Inches(0.40))
     tf = text_box(s, x + 0.60, 2.26, cw - 0.82, 0.28)
@@ -1087,7 +1117,7 @@ for i, (ic, h1, h2) in enumerate(NOT):
     tf = text_box(s, x + 0.22, 4.62, CW3b - 0.44, 0.4)
     para(tf, h2, size=9.5, color=MUTED, first=True, line=1.3)
 
-rect(s, M, 5.34, W, 0.72, fill=SURFACE, line=LINE)
+rect(s, M, 5.34, W, 0.72, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, M + 0.28, 5.44, W - 0.56, 0.56)
 para(tf, "判断标准只有一条：这件事换个人、换台机器，答案会不会变？会变才交给模型，不变的写进代码。",
      size=11, bold=True, color=TEXT, first=True, line=1.3)
@@ -1191,7 +1221,7 @@ prims = [
 ]
 for i, (name, what, sample) in enumerate(prims):
     y = 1.98 + i * 1.06
-    rect(s, M, y, 5.75, 0.96, fill=SURFACE, line=LINE)
+    rect(s, M, y, 5.75, 0.96, fill=SURFACE, line=LINE2, card=True)
     tf = text_box(s, M + 0.22, y + 0.10, 2.4, 0.3)
     para(tf, name, size=12, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, M + 1.55, y + 0.14, 4.0, 0.28)
@@ -1237,7 +1267,7 @@ s = new_slide(3, "这一页是**对照实验**：同一个任务，两种做法�
               sub="同一批均衡样本（每类 5 条）、同一份输入。左边是对照组，右边是我们的方案", tag="证据 · 对照实验")
 
 # 顶部：一句话把两个数字的身份说清楚
-rect(s, M, 1.96, 5.55, 0.90, fill=SURFACE, line=LINE)
+rect(s, M, 1.96, 5.55, 0.90, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, M + 0.24, 2.00, 5.1, 0.3)
 para(tf, "对照组 · 通用决策模型 OpenJev-Q4（18.5 GB）", size=10, color=MUTED, first=True)
 tf = text_box(s, M + 0.24, 2.18, 2.3, 0.52)
@@ -1269,6 +1299,7 @@ rows = [
     ("证据不足", "100%", "高"),
 ]
 rect(s, M, 2.92, 6.15, 0.32, fill=SURFACE, line=None)
+rect(s, M, 2.90, 6.15, 0.34, fill=RGBColor(0xF6, 0xFA, 0xFE), line=None, radius=False)
 for h, hx, hc in [("类别", M + 0.16, MUTED), ("对照组", M + 2.35, FAINT), ("我们的方案", M + 4.45, RED)]:
     tf = text_box(s, hx, 2.95, 2.0, 0.26)
     para(tf, h, size=10, bold=True, color=hc, first=True)
@@ -1297,7 +1328,7 @@ pits = [
 ]
 for i, (num, h1, h2) in enumerate(pits):
     y = 3.28 + i * 0.82
-    rect(s, 6.95, y, 5.6, 0.74, fill=SURFACE, line=LINE)
+    rect(s, 6.95, y, 5.6, 0.74, fill=SURFACE, line=LINE2, card=True)
     tf = text_box(s, 7.10, y + 0.06, 0.6, 0.28)
     para(tf, num, size=10.5, bold=True, color=PRIMARY, first=True)
     tf = text_box(s, 7.62, y + 0.05, 4.8, 0.26)
@@ -1338,7 +1369,7 @@ for i, (ic, h1, h2) in enumerate(steps):
                                 Inches(0.12), Inches(0.16))
         ar.fill.solid(); ar.fill.fore_color.rgb = LINE2; ar.line.fill.background(); ar.shadow.inherit = False
 
-rect(s, M, 4.12, 6.5, 1.95, fill=SURFACE, line=LINE)
+rect(s, M, 4.12, 6.5, 1.95, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, M + 0.26, 4.24, 6.0, 0.3)
 para(tf, "界面上会出现的两种结果", size=11.5, bold=True, color=PRIMARY, first=True)
 tf = text_box(s, M + 0.26, 4.60, 6.0, 1.35)
@@ -1388,7 +1419,7 @@ para(tf, "投入", size=11.5, bold=True, color=AMBER, first=True)
 para(tf, "1355 条合成数据 · 3 epoch · 21 分钟（RTX 5080）", size=10.5, line=1.55)
 para(tf, "额外 1.1 GB 权重 + 一套微调链路维护", size=10.5, line=1.55)
 
-rect(s, 8.15, 3.36, 4.4, 1.15, fill=SURFACE, line=LINE)
+rect(s, 8.15, 3.36, 4.4, 1.15, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, 8.40, 3.44, 3.9, 1.0)
 para(tf, "收益", size=11.5, bold=True, color=MUTED, first=True)
 para(tf, "F1 +0.000 · 完全匹配 27/30 不变", size=10.5, line=1.55)
@@ -1424,7 +1455,7 @@ for i, (ic, h1, h2) in enumerate(left):
     tf = text_box(s, M + 0.58, y + 0.32, 6.2, 0.6)
     para(tf, h2, size=11.5, color=MUTED, first=True, line=1.35)
 
-rect(s, 7.6, 2.1, 4.95, 3.75, fill=SURFACE, line=LINE)
+rect(s, 7.6, 2.1, 4.95, 3.75, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, 7.85, 2.22, 4.45, 0.35)
 para(tf, "我们不做的事", size=12.5, bold=True, color=DANGER, first=True)
 tf = text_box(s, 7.85, 2.65, 4.45, 3.1)
@@ -1492,7 +1523,7 @@ footer(s, 21)
 # ============ P18 价值与落地（实测数字） ============
 s = new_slide(4, "落地：一台电脑跑完整个闭环，**数字都是实测的**", icon="launch",
               sub="以下体积与耗时在本机实测（RTX 5080 / 32 GB 内存），不是估算", tag="价值 · 落地")
-rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE)
+rect(s, M, 2.02, 6.55, 3.45, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, M + 0.28, 2.14, 6.0, 0.3)
 para(tf, "要装什么（体积）", size=11.5, bold=True, color=PRIMARY, first=True)
 items = [
@@ -1528,7 +1559,7 @@ metrics = [("1.7", " 秒", "模型服务启动到首个可用响应"),
            ("< 1", " 毫秒", "三套风险方程（纯本地函数）")]
 for i, (big, unit, label) in enumerate(metrics):
     y = 2.42 + i * 0.76
-    rect(s, 7.65, y, 4.9, 0.66, fill=SURFACE, line=LINE)
+    rect(s, 7.65, y, 4.9, 0.66, fill=SURFACE, line=LINE2, card=True)
     tf = text_box(s, 7.85, y + 0.10, 1.5, 0.4)
     rich(tf, [(big, True, AMBER), (unit, False, AMBER)], size=17, first=True)
     tf = text_box(s, 9.35, y + 0.10, 3.05, 0.5)
@@ -1578,7 +1609,7 @@ for i2, (tone, head, bullets) in enumerate(CARDS):
         rich(tf, [("✓ ", True, ink), (b, False, TEXT)], size=10.5, first=True, line=1.45)
         yy += 0.86
 
-rect(s, M, 4.86, W, 1.0, fill=SURFACE, line=LINE)
+rect(s, M, 4.86, W, 1.0, fill=SURFACE, line=LINE2, card=True)
 tf = text_box(s, M + 0.30, 4.96, W - 0.60, 0.8)
 para(tf, "一句话：把一个免费、却被每次体检丢掉的信号，变成能算、能改、能复算的东西。",
      size=15, bold=True, color=TEXT, first=True, line=1.35)
@@ -1620,7 +1651,7 @@ members = [("【成员 1】", "【角色】", "【负责模块】"), ("【成员
 cw = (W - 0.5) / 3
 for i, (name, role, what) in enumerate(members):
     x = M + i * (cw + 0.25)
-    rect(s, x, 2.2, cw, 2.6, fill=SURFACE, line=LINE)
+    rect(s, x, 2.2, cw, 2.6, fill=SURFACE, line=LINE2, card=True)
     av = s.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x + cw / 2 - 0.45), Inches(2.42), Inches(0.9), Inches(0.9))
     av.fill.solid(); av.fill.fore_color.rgb = PRIMARY_SOFT; av.line.color.rgb = LINE2; av.shadow.inherit = False
     tf = text_box(s, x + 0.2, 3.45, cw - 0.4, 0.35, align=PP_ALIGN.CENTER)
@@ -1658,7 +1689,7 @@ closing = [("family", "家系图", "口述即可生成"), ("chip", "本机推理
 cw2 = (W - 0.45) / 4
 for i, (ic, title, note) in enumerate(closing):
     x = M + i * (cw2 + 0.15)
-    rect(s, x, 5.30, cw2, 1.15, fill=SURFACE, line=LINE)
+    rect(s, x, 5.30, cw2, 1.15, fill=SURFACE, line=LINE2, card=True)
     s.shapes.add_picture(icon_p(ic), Inches(x + 0.22),
                          Inches(5.48), Inches(0.34), Inches(0.34))
     tf = text_box(s, x + 0.66, 5.44, cw2 - 0.86, 0.32)
@@ -1840,9 +1871,14 @@ def flatten(presentation):
             spPr = el.find(".//" + A + "spPr")
             if spPr is None:
                 continue
+            keep = False
             for old in spPr.findall(A + "effectLst"):
-                spPr.remove(old)
-            etree.SubElement(spPr, A + "effectLst")
+                if len(old) > 0:      # 已经有 real 投影（卡片），保留
+                    keep = True
+                else:
+                    spPr.remove(old)
+            if not keep:
+                etree.SubElement(spPr, A + "effectLst")
 
 
 NOTES = [
