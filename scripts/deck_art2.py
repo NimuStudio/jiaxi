@@ -217,13 +217,15 @@ def motif_people(img, color, x, y, s=1.0, alpha=30):
     return overlay(img, layer)
 
 
+# 六个栏目各给一个真正的色相：暖 → 青 → 蓝 → 紫 → 玫 → 绿。
+# 原来六套都是蓝青紫的近亲，翻页时读起来「整本只有一个蓝色」。
 SECTIONS = [
-    ("项目背景", (26, 111, 181), (198, 220, 241), "01", "wire"),
-    ("方案与产品", (23, 127, 165), (196, 225, 238), "02", "flow"),
-    ("技术路线", (15, 124, 140), (192, 228, 234), "03", "graph"),
-    ("准确性与选型", (59, 91, 165), (203, 214, 238), "04", "target"),
-    ("价值与落地", (18, 121, 110), (194, 228, 221), "05", "bars"),
-    ("团队", (91, 90, 166), (208, 209, 238), "06", "people"),
+    ("项目背景", (176, 106, 8), (247, 232, 206), "01", "wire"),
+    ("方案与产品", (13, 124, 138), (198, 231, 233), "02", "flow"),
+    ("技术路线", (26, 111, 181), (198, 220, 241), "03", "graph"),
+    ("准确性与选型", (104, 78, 186), (222, 213, 242), "04", "target"),
+    ("价值与落地", (183, 68, 94), (246, 222, 226), "05", "bars"),
+    ("团队", (58, 124, 101), (214, 236, 228), "06", "people"),
 ]
 
 for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
@@ -384,6 +386,8 @@ def browser_frame(shot_png, out_png, url="127.0.0.1:5173"):
 
 
 laptop_frame(os.path.join(SHOTS, "02-chat.png"), os.path.join(ART, "shot-laptop-chat.png"))
-browser_frame(os.path.join(SHOTS, "03-risk.png"), os.path.join(ART, "shot-browser-risk.png"), "127.0.0.1:5173/risk")
-browser_frame(os.path.join(SHOTS, "04-cvd.png"), os.path.join(ART, "shot-browser-cvd.png"), "127.0.0.1:5173/cvd")
+browser_frame(os.path.join(SHOTS, "03-reclaim.png"), os.path.join(ART, "shot-browser-risk.png"),
+              "127.0.0.1:5173   ·   糖尿病风险 / 可回收模拟器")
+browser_frame(os.path.join(SHOTS, "04-cvd-new.png"), os.path.join(ART, "shot-browser-cvd.png"),
+              "127.0.0.1:5173/cvd   ·   China-PAR 家族史进入方程")
 print("完成")

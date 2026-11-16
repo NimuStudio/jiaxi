@@ -33,6 +33,15 @@ DANGER = RGBColor(0xC0, 0x39, 0x2B)
 # 一眼能看到重点：红只给「这页最重要的数字/结论」，其余一律让位给灰
 RED = RGBColor(0xC0, 0x39, 0x2B)
 RED_SOFT = RGBColor(0xFB, 0xEA, 0xE7)
+# 六个栏目的识别色，与 deck_art2.SECTIONS 的 tone 一一对应
+SECTION_HUES = [
+    RGBColor(0xB0, 0x6A, 0x08),   # 项目背景 · 琥珀
+    RGBColor(0x0D, 0x7C, 0x8A),   # 方案与产品 · 青
+    RGBColor(0x1A, 0x6F, 0xB5),   # 技术路线 · 主蓝
+    RGBColor(0x68, 0x4E, 0xBA),   # 准确性与选型 · 紫
+    RGBColor(0xB7, 0x44, 0x5E),   # 价值与落地 · 玫
+    RGBColor(0x3A, 0x7C, 0x65),   # 团队 · 松绿
+]
 AMBER = RED          # 旧名保留，语义已改为「重点红」
 AMBER_SOFT = RED_SOFT
 DANGER_SOFT = RED_SOFT
@@ -363,7 +372,8 @@ def new_slide(section, title, sub=None, icon=None, tag=None):
         tw = 0.20 + 0.135 * len(tag)
         chip = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(M - 0.03),
                                   Inches(0.62), Inches(tw), Inches(0.26))
-        chip.fill.solid(); chip.fill.fore_color.rgb = PRIMARY
+        # 标签用所属栏目的色相：六个章节各有识别色，翻页时不再全是同一个蓝
+        chip.fill.solid(); chip.fill.fore_color.rgb = SECTION_HUES[max(0, min(5, section))]
         chip.line.fill.background(); chip.shadow.inherit = False
         chip.adjustments[0] = 0.35
         tf = chip.text_frame
@@ -635,15 +645,17 @@ footer(s, 5)
 s = new_slide(1, "第二屏：算清楚，**哪一部分本就能拿回来**", icon="chart", tag="方案 · 界面")
 picture_fit(s, os.path.join(ART, "shot-browser-risk.png"), M - 0.06, 1.98, 5.95, 4.05)
 tf = text_box(s, M, 6.10, 5.9, 0.35)
-para(tf, "可回收风险（FINDRISC）：把「可改」与「改不了」分开算", size=11.5, color=MUTED, first=True)
+para(tf, "33% → 可回收 7 分 → 全部达标 4%：把「能改」与「改不了」分开算",
+     size=11, color=MUTED, first=True)
 
 picture_fit(s, os.path.join(ART, "shot-browser-cvd.png"), 6.88, 1.98, 5.75, 4.05)
 tf = text_box(s, 6.88, 6.10, 5.75, 0.35)
-para(tf, "心血管风险（China-PAR）：改任一项实时重算，纯本地计算", size=11.5, color=MUTED, first=True)
+para(tf, "China-PAR：家族史直接进方程，影响 0.6 个百分点；改任一项实时重算",
+     size=11, color=MUTED, first=True)
 
-tf = text_box(s, M, 6.45, W, 0.35)
+tf = text_box(s, M, 6.52, W, 0.32)
 para(tf, "界面上的每个数都能复算：China-PAR 对论文 Table 2 的 8 个验证点，偏差均 ≤ 0.35 个百分点。",
-     size=11.5, color=FAINT, first=True)
+     size=10.5, color=FAINT, first=True)
 footer(s, 6)
 
 # ============ P7 现场动线 ============
