@@ -117,6 +117,65 @@ def grain(img, amount=4.2):
     return Image.fromarray(arr, "RGB").convert("RGBA")
 
 
+def contour_field(img, color, alpha=26, cx=0.86, cy=0.1, rings=26, seed=7, step=52):
+    """等高线场：一圈圈被正弦扰动的闭合曲线。
+
+    比圆弧「有内容」——它是地形图/拓扑图的语言，和家系、谱系天然同源；
+    透明度压到 3%-8%，退到背景里只提供纹理与方向感，不抢正文。
+    """
+    import math, random
+    rnd = random.Random(seed)
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    w, h = img.size
+    ox, oy = w * cx, h * cy
+    for i in range(rings):
+        r0 = 90 + i * step
+        k1, k2 = rnd.uniform(0.028, 0.062), rnd.uniform(0.012, 0.03)
+        p1, p2 = rnd.uniform(0, 6.28), rnd.uniform(0, 6.28)
+        pts = []
+        for deg in range(0, 360, 4):
+            t = math.radians(deg)
+            rr = r0 * (1 + k1 * math.sin(3 * t + p1) + k2 * math.sin(7 * t + p2))
+            pts.append((ox + rr * math.cos(t) * 1.35, oy + rr * math.sin(t)))
+        pts.append(pts[0])
+        a = max(6, int(alpha * (1 - i / (rings + 6))))
+        d.line(pts, fill=color + (a,), width=2, joint="curve")
+    return overlay(img, layer)
+
+
+def vertical_text(img, text, color, alpha=18, size=150, x=0.94, y=0.07):
+    """右缘竖排章节名：逐字竖排（不旋转），右半截被页面边缘裁掉。
+
+    比「01 / 02」数字水印更像编辑设计——数字只是编号，汉字是内容本身。
+    注意：CJK 的竖排是「字往下排」，不是把横排文字整体转 90°（那样会变成横躺）。
+    """
+    w, h = img.size
+    f = font_of(BOLD, size)
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    px, py = int(w * x), int(h * y)
+    for i, ch in enumerate(text):
+        d.text((px, py + i * size * 1.06), ch, font=f, fill=color + (alpha,))
+    return overlay(img, layer)
+
+
+def reg_marks(img, color, alpha=34, inset=34, arm=26):
+    """制图角标：四角的十字与上下标尺刻度，像图纸的定位标记。"""
+    w, h = img.size
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for (x, y) in [(inset, inset), (w - inset, inset), (inset, h - inset), (w - inset, h - inset)]:
+        d.line([(x - arm, y), (x + arm, y)], fill=color + (alpha,), width=2)
+        d.line([(x, y - arm), (x, y + arm)], fill=color + (alpha,), width=2)
+    # 上下标尺：每 40px 一个短刻度，每 5 个一根长刻度
+    for i, x in enumerate(range(inset + 90, w - inset - 90, 40)):
+        ln = 14 if i % 5 else 24
+        d.line([(x, inset - 6), (x, inset - 6 + ln)], fill=color + (max(10, alpha - 12),), width=1)
+        d.line([(x, h - inset + 6), (x, h - inset + 6 - ln)], fill=color + (max(10, alpha - 12),), width=1)
+    return overlay(img, layer)
+
+
 def vignette(img, alpha=26):
     w, h = img.size
     mask = Image.radial_gradient("L").resize((w, h), Image.BILINEAR)
@@ -228,16 +287,23 @@ SECTIONS = [
     ("团队", (58, 124, 101), (214, 236, 228), "06", "people"),
 ]
 
+SEED_BASE = 11
 for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
     bg = gradient((W, H), [(0.0, (247, 250, 254)), (0.50, (241, 246, 252)), (1.0, (233, 241, 250))])
     bg = soft_blob(bg, W * 0.98, H * 0.04, W * 0.36, wash, 130)
     bg = soft_blob(bg, W * 0.02, H * 1.02, W * 0.28, wash, 80)
     # 参考稿的背景是有存在感的纹理；纯白会显得像没设计过的文档。
     # 点阵加密到 28px、透明度 30→40；弧线同步提一档，但仍低于正文对比度。
-    bg = dot_grid(bg, tone, alpha=40, pitch=28, radius=2.6)
-    bg = arcs(bg, W * 1.02, H * -0.02, [W * 0.30, W * 0.38, W * 0.46], tone, alpha=42, width=4)
-    # 数字放在右缘中部并露出大半：只露一条边时会被误读成无意义的色块
-    bg = big_numeral(bg, num, tone, alpha=15, size=700, cx=0.975, cy=0.46)
+    # —— 背景的四层结构 ——
+    # 1) 等高线场：给画面一个「地形」，方向和疏密都能看出来，不是平铺纹理
+    bg = contour_field(bg, tone, alpha=26, cx=0.88, cy=0.04, rings=30, seed=SEED_BASE + idx, step=42)
+    # 2) 弧线：压到辅助层，负责把视线从左下带到右上
+    bg = arcs(bg, W * 1.02, H * -0.02, [W * 0.30, W * 0.38, W * 0.46], tone, alpha=26, width=3)
+    # 3) 点阵：密度降一档，避免和等高线抢纹理
+    bg = dot_grid(bg, tone, alpha=26, pitch=34, radius=2.4)
+    # 4) 右缘竖排章节名：替代原来的 01-06 数字水印
+    bg = vertical_text(bg, name, tone, alpha=20, size=150, x=0.945, y=0.07)
+    bg = reg_marks(bg, tone, alpha=40)
 
     if motif == "wire":
         bg = pedestal_wire(bg, tone, alpha=15, scale=1.05, offset=(W * 0.02, H * 0.02))
@@ -262,7 +328,9 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
 plain = gradient((W, H), [(0.0, (247, 250, 254)), (0.50, (241, 246, 252)), (1.0, (233, 241, 250))])
 plain = soft_blob(plain, W * 0.99, H * 0.03, W * 0.34, (203, 224, 243), 120)
 plain = soft_blob(plain, W * 0.01, H * 1.0, W * 0.26, (206, 228, 246), 80)
-plain = dot_grid(plain, (26, 111, 181), alpha=36, pitch=28, radius=2.6)
+plain = contour_field(plain, (26, 111, 181), alpha=22, cx=0.12, cy=0.92, rings=18, seed=97, step=62)
+plain = dot_grid(plain, (26, 111, 181), alpha=24, pitch=34, radius=2.4)
+plain = reg_marks(plain, (26, 111, 181), alpha=30)
 plain = arcs(plain, W * 1.02, H * -0.02, [W * 0.30, W * 0.40, W * 0.50], (26, 111, 181), alpha=26, width=3)
 plain = pedestal_wire(plain, (26, 111, 181), alpha=14, scale=1.05, offset=(W * 0.02, H * 0.04))
 plain = grain(plain, amount=4.0)
