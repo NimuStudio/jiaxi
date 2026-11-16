@@ -1345,15 +1345,16 @@ prims = [
     ("score", "在有序档位上打分", '{"score": 2.3, "probabilities": [0.1, 0.5, 0.4]}'),
     ("noul", "判断一个命题真假", '{"noul": 0.87}'),
 ]
+# 三原语不再各占一张卡：改成三行，名字用等宽加粗，行间发丝线
 for i, (name, what, sample) in enumerate(prims):
-    y = 1.98 + i * 1.06
-    rect(s, M, y, 5.75, 0.96, fill=SURFACE, line=LINE2, card=True)
-    tf = text_box(s, M + 0.22, y + 0.10, 2.4, 0.3)
-    para(tf, name, size=12, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, M + 1.55, y + 0.14, 4.0, 0.28)
+    y = 1.98 + i * 1.02
+    tf = text_box(s, M + 0.02, y + 0.06, 1.9, 0.32)
+    para(tf, name, size=13, bold=True, color=PRIMARY, first=True, latin="Consolas")
+    tf = text_box(s, M + 1.72, y + 0.10, 3.9, 0.30)
     para(tf, what, size=10.5, color=MUTED, first=True)
-    tf = text_box(s, M + 0.22, y + 0.50, 5.3, 0.36)
+    tf = text_box(s, M + 0.02, y + 0.44, 5.6, 0.34)
     para(tf, sample, size=9, color=TEXT, first=True, latin="Consolas")
+    rect(s, M, y + 0.90, 5.75, 0.008, fill=LINE, radius=False)
 
 # 这张卡片原来复述「40% vs 96%」，与下一页重复；改成真实的校验实现
 _pv = os.path.join(ART, "shots", "shot-validate.png")
@@ -1541,20 +1542,21 @@ for gi, (label, b1, b2, hit1, hit2) in enumerate(pairs):
         tf = text_box(s, M, base_y + 1.68, 6.4, 0.3)
         para(tf, "两条等长：差 0.000", size=10.5, bold=True, color=DANGER, first=True)
 
-rect(s, 8.15, 2.05, 4.4, 1.15, fill=AMBER_SOFT, line=RGBColor(0xE8, 0xC8, 0x92))
-tf = text_box(s, 8.40, 2.13, 3.9, 1.0)
+# 右栏三块不再各包一个圆角框：顶部一条短色线 + 标签，靠规则线分块
+rect(s, 8.15, 2.05, 0.62, 0.035, fill=AMBER, radius=False)
+tf = text_box(s, 8.15, 2.13, 4.4, 1.0)
 para(tf, "投入", size=11.5, bold=True, color=AMBER, first=True)
 para(tf, "1355 条合成数据 · 3 epoch · 21 分钟（RTX 5080）", size=10.5, line=1.55)
 para(tf, "额外 1.1 GB 权重 + 一套微调链路维护", size=10.5, line=1.55)
 
-rect(s, 8.15, 3.36, 4.4, 1.15, fill=SURFACE, line=LINE2, card=True)
-tf = text_box(s, 8.40, 3.44, 3.9, 1.0)
+rect(s, 8.15, 3.36, 0.62, 0.035, fill=LINE2, radius=False)
+tf = text_box(s, 8.15, 3.44, 4.4, 1.0)
 para(tf, "收益", size=11.5, bold=True, color=MUTED, first=True)
 para(tf, "F1 +0.000 · 完全匹配 27/30 不变", size=10.5, line=1.55)
 para(tf, "逐条比对：30 条输出里模型层只有 2 条不同", size=10.5, line=1.55)
 
-rect(s, 8.15, 4.67, 4.4, 0.76, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, 8.40, 4.74, 3.9, 0.64)
+rect(s, 8.15, 4.67, 0.62, 0.035, fill=PRIMARY, radius=False)
+tf = text_box(s, 8.15, 4.74, 4.4, 0.64)
 para(tf, "所以判断", size=11, bold=True, color=PRIMARY, first=True)
 para(tf, "提升空间在词表与规则，不在参数量", size=10.5, color=TEXT, line=1.4)
 
@@ -1585,10 +1587,11 @@ for i, (ic, h1, h2) in enumerate(left):
     tf = text_box(s, M + 0.58, y + 0.32, 6.2, 0.6)
     para(tf, h2, size=11.5, color=MUTED, first=True, line=1.35)
 
-rect(s, 7.6, 2.1, 4.95, 3.75, fill=SURFACE, line=LINE2, card=True)
-tf = text_box(s, 7.85, 2.22, 4.45, 0.35)
+# 右侧不做成卡片：顶部压一条红线，靠规则与留白分区（整本卡片太多）
+rect(s, 7.6, 2.10, 4.95, 0.035, fill=DANGER, radius=False)
+tf = text_box(s, 7.62, 2.24, 4.45, 0.35)
 para(tf, "我们不做的事", size=12.5, bold=True, color=DANGER, first=True)
-tf = text_box(s, 7.85, 2.65, 4.45, 3.1)
+tf = text_box(s, 7.62, 2.66, 4.45, 3.1)
 for i, line in enumerate(["不埋点统计用户病史", "不上传任何图片或文本", "不给出用药建议",
                           "不把风险说成「预测你会得病」", "不在界面上出现查不到出处的数字"]):
     para(tf, "· " + line, size=11, first=(i == 0), line=1.6)
