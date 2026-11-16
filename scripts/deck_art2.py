@@ -526,9 +526,12 @@ for di, (dname, dtone, dwash, dnum, dmotif) in enumerate(SECTIONS):
     dv = gradient((W, H), [(0.0, (252, 253, 255)), (0.6, (245, 249, 253)), (1.0, (236, 243, 250))])
     dv = soft_blob(dv, W * 0.72, H * 0.5, W * 0.62, dwash, 170)
     src = os.path.join(ART, "mat", DIV_ICONS[di] + ".png")
-    # 半调图占右半幅、超出页面：扉页要的是「一张图」，不是一枚图标
-    dv = halftone_plate(dv, src, dtone, alpha=225, size=1500, x=0.30, y=-0.10,
-                        pitch=11, rmax=12.5)
+    # 放大到 2600 只露一块局部：整枚图标放大到 1500 会读成「贴图」，露局部才像图形
+    # 点要细：rmax 一大就并成色带；alpha 压到 96，只当纹理
+    dv = halftone_plate(dv, src, dtone, alpha=96, size=2300, x=0.24, y=-0.30,
+                        pitch=9, rmax=5.6)
+    # 巨型章节名压在图上：扉页的「重量」由字承担，图标只做纹理
+    dv = giant_text(dv, dname, dtone, alpha=40, size=340, x=0.02, y=0.26)
     dv = dot_grid(dv, dtone, alpha=18, pitch=36, radius=2.3)
     dv = reg_marks(dv, dtone, alpha=34)
     dv.convert("RGB").save(os.path.join(ART, f"divider-{di}.jpg"), quality=JPEG_Q, optimize=True)
@@ -560,8 +563,9 @@ quo = duotone_texture(quo, os.path.join(ART, "tree.png"), (176, 106, 8), alpha=2
                       crop=(0.05, 0.05, 0.95, 0.85))
 # 右侧整幅：把家系图渲染做成半调装饰，占右半幅（引语页需要一张图压住空场）
 # 点要细（rmax 小、pitch 密）：家系图是细线图，点一大就糊成色块，还会压住引语
-quo = halftone_plate(quo, os.path.join(ART, "tree.png"), (150, 92, 10), alpha=215,
-                     size=900, x=0.60, y=0.575, pitch=6, rmax=4.0)
+# 用纯线稿做半调：产品图是实心节点 + 文字，做出来是一坨一坨的脏斑
+quo = halftone_plate(quo, os.path.join(ART, "decor-pedigree.png"), (150, 92, 10), alpha=205,
+                     size=1260, x=0.545, y=0.31, pitch=6, rmax=3.4)
 quo = contour_field(quo, (176, 106, 8), alpha=18, cx=0.05, cy=0.95, rings=16, seed=61, step=66)
 quo = reg_marks(quo, (176, 106, 8), alpha=30)
 quo.convert("RGB").save(os.path.join(ART, "content-bg-quote.jpg"), quality=JPEG_Q, optimize=True)
