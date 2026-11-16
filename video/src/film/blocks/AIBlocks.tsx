@@ -1,7 +1,7 @@
 import React from "react";
 import { interpolate, useCurrentFrame } from "remotion";
 import { C, HUES, MONO } from "../../theme";
-import { Stage, H, Sub, Tag, fadeIn, rise } from "../ui";
+import { Stage, H, Sub, Tag, Mono, fadeIn, rise } from "../ui";
 import { blockById, lineStart } from "../schedule";
 
 const ENUM = ["autosomal-dominant", "autosomal-recessive", "x-linked", "mitochondrial", "insufficient"];
