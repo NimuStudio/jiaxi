@@ -1544,6 +1544,34 @@ para(tf, "一句话：把一个免费、却被每次体检丢掉的信号，变�
      size=15, bold=True, color=TEXT, first=True, line=1.35)
 footer(s, 23)
 
+# ============ 证据墙：四条命令都能复现 ============
+s = new_slide(4, "每一条结论，都能在演示机上**跑给你看**", icon="terminal",
+              sub="下面四张图是实跑输出的原样截取，不是示意图；命令写在每张图的第一行",
+              tag="证据 · 可复现")
+
+SHOTS = [
+    ("shot-tests", "31 个测试文件 · 238 条用例 · 1.70 秒全绿"),
+    ("shot-tree", "决策协议、校验、结构模型与权重，都在 src/lib/decision"),
+    ("shot-gpu", "RTX 5080 走 CUDA：1.7 秒启动、0.11 秒/句、1.8 GB 显存"),
+    ("shot-api", "真实接口返回：三代连续患病 → 常染色体显性 99.8%"),
+]
+SHOT_W = (W - 0.40) / 2
+SHOT_H = SHOT_W * 300 / 1100
+for i, (name, cap) in enumerate(SHOTS):
+    col, row = i % 2, i // 2
+    x = M + col * (SHOT_W + 0.40)
+    y = 1.98 + row * (SHOT_H + 0.62)
+    p = os.path.join(ART, "shots", name + ".png")
+    if os.path.exists(p):
+        s.shapes.add_picture(p, Inches(x), Inches(y), Inches(SHOT_W), Inches(SHOT_H))
+    tf = text_box(s, x, y + SHOT_H + 0.08, SHOT_W, 0.34)
+    para(tf, cap, size=9.5, color=MUTED, first=True)
+
+tf = text_box(s, M, 6.42, W, 0.32)
+para(tf, "对外只承诺一件事：给同样的输入，任何人都能复现同样的数字。", size=11, bold=True,
+     color=TEXT, first=True)
+footer(s, 23)
+
 # ============ P15 团队 ============
 s = new_slide(5, "团队：谁在负责哪一块", icon="team",
               sub="【待填】请补充成员姓名、学校 / 单位、分工与代表成果", tag="团队 · 分工")
@@ -1801,6 +1829,7 @@ NOTES = [
     "差异化：四类现有做法各缺一环，最后一列是我们补的那一环。",
     "落地：体积与耗时都是本机实测（1.7 秒启动 / 0.11 秒抽取 / 1.8 GB 显存）。",
     "创新总结：三栏对应三组证据——数据结构（P12 三引擎）、分工（P17 对照实验）、本机（P22 落地）。讲这页时手指依次点三栏，不要重讲细节。",
+    "证据墙：四张图都是实跑输出（测试/目录/GPU/接口）。评委若质疑数字，直接翻这页；讲的时候点一下第一行命令。",
     "团队：待填成员信息。",
     "结尾：留时间提问，主动提出可现场演示。",
 ]
