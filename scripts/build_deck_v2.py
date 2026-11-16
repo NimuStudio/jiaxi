@@ -516,12 +516,13 @@ for ic, num, h1, h2 in items:
     para(tf, h2, size=11, color=MUTED, first=True, line=1.35)
     y += 1.38
 
-# 右侧：临床家系示意图（把「用户嘴上的三句话」画成医生本子里的那张图）
-rect(s, 6.95, 1.95, 5.6, 3.45, fill=SURFACE, line=LINE)
-picture_fit(s, os.path.join(ART, "pedigree-scene.png"), 7.05, 2.03, 5.4, 3.3)
+# 右侧：家系图（由 scripts/export_tree.py 用 /chat?demo=1 的同一份 DEMO 数据生成 SVG，
+# 再经 resvg 转 PNG —— 是产品里那张图，不是手绘示意）
+rect(s, 6.95, 1.95, 5.6, 3.42, fill=SURFACE, line=LINE)
+picture_fit(s, os.path.join(ART, "tree.png"), 7.02, 2.00, 5.46, 3.32)
 tf = text_box(s, 6.95, 5.48, 5.6, 0.3, align=PP_ALIGN.CENTER)
-para(tf, "男 = 方　女 = 圆　实心 = 患病　斜线 = 已故", size=10.5, color=FAINT, first=True,
-     align=PP_ALIGN.CENTER)
+para(tf, "男 = 方　女 = 圆　实心 = 有该病记录　·　数据来自 /chat?demo=1，与产品同源",
+     size=9.5, color=FAINT, first=True, align=PP_ALIGN.CENTER)
 tf = text_box(s, 6.95, 5.78, 5.6, 0.3, align=PP_ALIGN.CENTER)
 para(tf, "这三句话，翻译过来就是临床用了六十年的家系图", size=11.5, bold=True,
      color=PRIMARY, first=True, align=PP_ALIGN.CENTER)
