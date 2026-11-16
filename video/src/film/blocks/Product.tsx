@@ -71,18 +71,51 @@ export const Product: React.FC = () => {
           );
         })}
 
+        {/* 依据面板：第 2 句就开始占住右半边，不让右半屏空着 */}
+        <div
+          style={{
+            position: "absolute",
+            right: 0,
+            top: 0,
+            width: 430,
+            opacity: fadeIn(frame, lineStart(b, 1) - 12, 16),
+          }}
+        >
+          <div style={{ fontSize: 21, color: C.muted, letterSpacing: 1 }}>每一条病都能回到原话</div>
+          {[
+            ["爷爷 · 糖尿病", "「爷爷糖尿病」"],
+            ["父亲 · 心梗 52 岁", "「我爸 52 岁放了支架」"],
+            ["外公 · 脑溢血", "「外公是脑溢血走的」"],
+          ].map(([k, v], i) => (
+            <div
+              key={k}
+              style={{
+                marginTop: 12,
+                background: "#fff",
+                border: "1px solid " + C.line,
+                borderRadius: 12,
+                padding: "12px 16px",
+                opacity: fadeIn(frame, lineStart(b, 1) + i * 8, 14),
+              }}
+            >
+              <div style={{ fontSize: 23, fontWeight: 700, color: C.text }}>{k}</div>
+              <div style={{ fontSize: 21, color: HUES.product, marginTop: 4 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+
         {/* Agent 追问气泡 */}
         <div
           style={{
             position: "absolute",
             right: 0,
-            top: 120,
+            top: 392,
             width: 430,
             background: "#fff",
             border: "1px solid " + C.lineStrong,
             borderRadius: 16,
             padding: "20px 22px",
-            opacity: fadeIn(frame, tagAt + 40, 16),
+            opacity: fadeIn(frame, tagAt + 6, 16),
           }}
         >
           <div style={{ fontSize: 22, color: HUES.product, fontWeight: 700 }}>Agent 追问</div>

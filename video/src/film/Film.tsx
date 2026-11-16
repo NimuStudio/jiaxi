@@ -25,6 +25,8 @@ const BLOCK_COMPONENTS: Record<string, React.FC> = {
  */
 export const Film: React.FC = () => (
   <AbsoluteFill>
+    {/* 配乐：脚本合成（scripts/music.py），音量压到不抢解说 */}
+    <Audio src={staticFile("audio/bgm.mp3")} volume={0.11} />
     {BLOCKS.map((b) => {
       const Comp = BLOCK_COMPONENTS[b.id];
       if (!Comp) {

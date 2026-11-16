@@ -1,5 +1,5 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
+import { interpolate, useCurrentFrame } from "remotion";
 import { C, HUES, MONO } from "../../theme";
 import { Stage, H, Sub, Tag, fadeIn } from "../ui";
 import { blockById, lineStart } from "../schedule";
@@ -26,7 +26,23 @@ export const Evidence: React.FC = () => {
   const a2 = lineStart(b, 1);
   const a3 = lineStart(b, 2);
 
-  const shown = Math.floor(fadeIn(frame, a1, b.frames - 20) * LINES.length);
+  // 三组对应解说三句：0-4 测试、5-6 留出集、7-10 接口；组内每 12 帧吐一行
+  const GROUPS: [number, number, number][] = [
+    [0, 5, a1],
+    [5, 7, a2],
+    [7, LINES.length, a3],
+  ];
+  const shown = Math.max(
+    ...GROUPS.map(([start, end, at]) => {
+      if (frame < at) {
+        return start;           // 还没轮到这一组：保持上一组已吐出的行数
+      }
+      return Math.min(end, start + Math.floor((frame - at) / 12) + 1);
+    }),
+  );
+  const scroll = interpolate(frame, [0, b.frames], [0, -26], {
+    extrapolateRight: "clamp",
+  });
 
   return (
     <Stage eyebrow="证据" eyebrowColor={HUES.value} bg={C.ink}>
@@ -43,9 +59,11 @@ export const Evidence: React.FC = () => {
             border: "1px solid #1d3a55",
             borderRadius: 14,
             padding: "22px 26px",
-            minHeight: 420,
+            minHeight: 330,
+            overflow: "hidden",
           }}
         >
+          <div style={{ transform: "translateY(" + scroll + "px)" }}>
           {LINES.slice(0, Math.max(4, shown)).map((l, i) => (
             <div
               key={i}
@@ -60,6 +78,7 @@ export const Evidence: React.FC = () => {
               {l || " "}
             </div>
           ))}
+          </div>
         </div>
 
         <div style={{ width: 430 }}>
