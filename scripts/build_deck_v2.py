@@ -222,6 +222,8 @@ def nav_bar(slide, active):
 
 
 DIVIDER_SLIDES = set()
+DIVIDER_BY_IDX = {}        # 章节序号 → 扉页对象，目录页最后回填真实页码
+TOC_PAGE_TFS = []          # 目录六行右侧的页码占位
 
 # 六张章节扉页：整幅半调图 + 章节名，翻页节奏靠它切开
 DIVIDERS = [
@@ -248,6 +250,7 @@ def divider(idx, name, sub):
     # 一条栏目色短横：扉页在版面上只留这一处颜色
     rect(s, M, 3.72, 0.86, 0.05, fill=hue, radius=False)
     DIVIDER_SLIDES.add(id(s))
+    DIVIDER_BY_IDX[idx] = s
     return s
 
 
@@ -640,8 +643,12 @@ for i, (num, ic, name, desc) in enumerate(toc):
                          Inches(0.34), Inches(0.34))
     tf = text_box(s, M + 1.28, y + 0.02, 2.1, 0.34)
     para(tf, name, size=15.5, bold=True, first=True)
-    tf = text_box(s, M + 3.30, y + 0.08, 5.4, 0.34)
+    tf = text_box(s, M + 3.30, y + 0.08, 4.6, 0.34)
     para(tf, desc, size=11, color=MUTED, first=True)
+    # 页码占位：扉页还没生成，先留 00，最后统一回填
+    tf = text_box(s, M + 8.05, y + 0.12, 0.5, 0.3, align=PP_ALIGN.RIGHT)
+    para(tf, "00", size=12, bold=True, color=SECTION_HUES[i], first=True, align=PP_ALIGN.RIGHT)
+    TOC_PAGE_TFS.append(tf)
     if i < len(toc) - 1:
         rect(s, M, y + 0.70, 8.55, 0.008, fill=LINE, radius=False)
 footer(s, 2)
@@ -2029,6 +2036,13 @@ NOTES = [
     "团队：待填成员信息。",
     "结尾：留时间提问，主动提出可现场演示。",
 ]
+# 目录页码回填：扉页在第几页，就是那一章从第几页开始
+_page_of = {id(sl): n + 1 for n, sl in enumerate(prs.slides)}
+for i, tf in enumerate(TOC_PAGE_TFS):
+    ds = DIVIDER_BY_IDX.get(i)
+    if ds is not None and tf.paragraphs[0].runs:
+        tf.paragraphs[0].runs[0].text = f"{_page_of.get(id(ds), 0):02d}"
+
 ni = 0
 for i, slide in enumerate(prs.slides):
     tf = FOOTERS.get(id(slide))
