@@ -117,6 +117,131 @@ def grain(img, amount=4.2):
     return Image.fromarray(arr, "RGB").convert("RGBA")
 
 
+def color_panel(img, color, alpha=255, side="left", width_frac=0.30, light=0.86):
+    """一侧实色面板：把栏目色与白混合后铺成不透明的一块，正文压在它上面仍然可读。
+
+    「不透明」是为了让版面有真正的色块重量——半透明色雾做不出这种边界感。
+    """
+    w, h = img.size
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    tint = tuple(int(c + (255 - c) * light) for c in color)
+    pw = int(w * width_frac)
+    box = [0, 0, pw, h] if side == "left" else [w - pw, 0, w, h]
+    d.rectangle(box, fill=tint + (alpha,))
+    # 内缘一道更深的细线，收住边界（不加就会像没对齐的色块）
+    edge_x = pw - 2 if side == "left" else w - pw
+    d.rectangle([edge_x, 0, edge_x + 2, h], fill=color + (int(alpha * 0.22),))
+    return overlay(img, layer)
+
+
+def giant_text(img, text, color, alpha=30, size=330, x=-0.06, y=0.52):
+    """整页背景级别的巨型字：章节名放到 300px+，一半被页面裁掉。
+
+    这种「字的重量」是版面上最省成本、也最有效果的设计手段：
+    远看是一块灰，近看是章节名，尺度感立刻不一样。
+    """
+    w, h = img.size
+    f = font_of(BOLD, size)
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    for i, ch in enumerate(text):
+        d.text((w * x, h * y + i * size * 1.02), ch, font=f, fill=color + (alpha,))
+    return overlay(img, layer)
+
+
+def duotone_texture(img, src_png, color, alpha=26, blur=1.6, crop=(0, 0, 1, 1), light=210):
+    """把真实图片（家系图/截图）做成双色调底纹：去色 → 染栏目色 → 压到很淡。
+
+    和矢量线条的区别在于它带「材料的细节」：文字、圆角、像素灰阶都还在，
+    只是被压成一层纸纹。
+    """
+    if not os.path.exists(src_png):
+        return img
+    src = Image.open(src_png).convert("L")
+    w, h = src.size
+    box = (int(w * crop[0]), int(h * crop[1]), int(w * crop[2]), int(h * crop[3]))
+    src = src.crop(box).resize(img.size, Image.LANCZOS)
+    src = src.filter(ImageFilter.GaussianBlur(blur))
+    # 亮部→近白，暗部→栏目色
+    tint = Image.new("RGB", img.size, color)
+    white = Image.new("RGB", img.size, (255, 255, 255))
+    base = Image.composite(white, tint, src)          # 原图亮的地方放白
+    layer = base.convert("RGBA")
+    layer.putalpha(int(alpha))
+    return overlay(img, layer)
+
+
+def mass_circle(img, color, alpha=40, cx=0.92, cy=0.9, r=0.62, blur=3):
+    """一大块实色圆：背景需要「重量」，一层层淡线撑不起版面。
+
+    alpha 指的是最终色块强度（0-255），配合 blur 让边缘不出现锯齿带。
+    """
+    w, h = img.size
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    rr = min(w, h) * r
+    d.ellipse([w * cx - rr, h * cy - rr, w * cx + rr, h * cy + rr], fill=color + (alpha,))
+    layer = layer.filter(ImageFilter.GaussianBlur(blur))
+    return overlay(img, layer)
+
+
+def mass_band(img, color, alpha=34, flip=False, cover=0.52, blur=4):
+    """一条斜向大色带：把版面切成两块，正文压在浅的一侧。"""
+    w, h = img.size
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    if flip:
+        pts = [(0, h * (1 - cover)), (w, h * (1 - cover * 1.6)), (w, h), (0, h)]
+    else:
+        pts = [(0, 0), (w, 0), (w, h * cover * 0.9), (0, h * cover * 1.35)]
+    d.polygon(pts, fill=color + (alpha,))
+    layer = layer.filter(ImageFilter.GaussianBlur(blur))
+    return overlay(img, layer)
+
+
+def halftone(img, color, peak=90, cx=0.95, cy=0.05, pitch=15, rmax=6.4):
+    """网点渐层：靠「点的大小」做渐变，像印刷品的半调。
+
+    这是少数既有重量、又不抢字的纹理——远看是一块色，近看是一堆点。
+    """
+    import math
+    w, h = img.size
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    ox, oy = w * cx, h * cy
+    maxd = math.hypot(w, h) * 0.62
+    for y in range(0, h + pitch, pitch):
+        for x in range(0, w + pitch, pitch):
+            dist = math.hypot(x - ox, y - oy) / maxd
+            if dist >= 1:
+                continue
+            k = (1 - dist) ** 2.1            # 越靠近焦点越大
+            r = rmax * k
+            if r < 0.7:
+                continue
+            a = int(peak * k)
+            d.ellipse([x - r, y - r, x + r, y + r], fill=color + (max(4, a),))
+    return overlay(img, layer)
+
+
+def corner_wedge(img, color, alpha=30, corner="tr", size=0.42):
+    """角落扇形：从页面角上切一道弧，制造对角线方向的张力。"""
+    w, h = img.size
+    layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    r = max(w, h) * size
+    if corner == "tr":
+        box = [w - r, -r, w + r, r]
+    elif corner == "bl":
+        box = [-r, h - r, r, h + r]
+    else:
+        box = [w - r, h - r, w + r, h + r]
+    d.ellipse(box, fill=color + (alpha,))
+    layer = layer.filter(ImageFilter.GaussianBlur(2))
+    return overlay(img, layer)
+
+
 def contour_field(img, color, alpha=26, cx=0.86, cy=0.1, rings=26, seed=7, step=52):
     """等高线场：一圈圈被正弦扰动的闭合曲线。
 
@@ -294,15 +419,27 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
     bg = soft_blob(bg, W * 0.02, H * 1.02, W * 0.28, wash, 80)
     # 参考稿的背景是有存在感的纹理；纯白会显得像没设计过的文档。
     # 点阵加密到 28px、透明度 30→40；弧线同步提一档，但仍低于正文对比度。
-    # —— 背景的四层结构 ——
-    # 1) 等高线场：给画面一个「地形」，方向和疏密都能看出来，不是平铺纹理
-    bg = contour_field(bg, tone, alpha=26, cx=0.88, cy=0.04, rings=30, seed=SEED_BASE + idx, step=42)
-    # 2) 弧线：压到辅助层，负责把视线从左下带到右上
-    bg = arcs(bg, W * 1.02, H * -0.02, [W * 0.30, W * 0.38, W * 0.46], tone, alpha=26, width=3)
-    # 3) 点阵：密度降一档，避免和等高线抢纹理
-    bg = dot_grid(bg, tone, alpha=26, pitch=34, radius=2.4)
-    # 4) 右缘竖排章节名：替代原来的 01-06 数字水印
-    bg = vertical_text(bg, name, tone, alpha=20, size=150, x=0.945, y=0.07)
+    # —— 每章 = 实色面板（重量）+ 巨型章节名（尺度）+ 真实图片底纹（材料） ——
+    # 三样都只在「有边界」的前提下才成立：面板给边界，字号给尺度，图片给细节。
+    PANELS = ["left", "right", "left", "right", "left", "right"]
+    TEXTURES = [
+        (os.path.join(ART, "tree.png"), (0.02, 0.10, 0.78, 0.92)),          # 家系图
+        (os.path.join(SHOTS, "02-chat.png"), (0.10, 0.05, 0.95, 0.85)),     # 梳理页
+        (os.path.join(ART, "shots", "shot-tests.png"), (0, 0, 1, 1)),        # 终端
+        (os.path.join(ART, "shots", "shot-browser-cvd.png"), (0.05, 0.05, 0.95, 0.9)),
+        (os.path.join(SHOTS, "03-reclaim.png"), (0.0, 0.06, 0.9, 0.94)),
+        (None, None),
+    ]
+    side = PANELS[idx]
+    tex, crop = TEXTURES[idx]
+    if tex:
+        bg = duotone_texture(bg, tex, tone, alpha=16, blur=2.2, crop=crop)
+    bg = color_panel(bg, tone, side=side, width_frac=0.22, light=0.88)
+    # 巨型章节名放在面板那一侧，压在上面形成「色块 + 大字」的封面感
+    # 巨型字只露半截：全露出来会压住正文，露一半才是「版面上的字」而不是「水印」
+    gx = -0.115 if side == "left" else 0.79
+    bg = giant_text(bg, name, tone, alpha=22, size=300, x=gx, y=0.28)
+    bg = dot_grid(bg, tone, alpha=22, pitch=32, radius=2.3)
     bg = reg_marks(bg, tone, alpha=40)
 
     if motif == "wire":
