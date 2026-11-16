@@ -1170,13 +1170,14 @@ para(tf, "协议与管线是通的，只是这一题不该用它——下一页�
 
 tf = text_box(s, 6.72, 1.98, 5.85, 0.3)
 para(tf, "怎么判断对方是不是决策模型", size=11, bold=True, color=PRIMARY, first=True)
-rect(s, 6.72, 2.32, 5.85, 0.92, fill=SURFACE, line=LINE)
-tf = text_box(s, 6.92, 2.42, 5.45, 0.78)
-para(tf, "判据是「有没有决策头」，不是名字。拿文本模型去调，服务端直接回 501：",
-     size=10, color=MUTED, first=True, line=1.3)
-para(tf, "This model is not a decision model", size=10, bold=True, color=DANGER, line=1.3, latin="Consolas")
+_p = os.path.join(ART, "shots", "shot-jev-models.png")
+if os.path.exists(_p):
+    s.shapes.add_picture(_p, Inches(6.72), Inches(2.32), Inches(5.85), Inches(0.96))
+rect(s, 6.72, 2.32, 5.85, 0.96, fill=None, line=LINE)
+tf = text_box(s, 6.72, 3.32, 5.85, 0.28)
+para(tf, "判据是 output_modalities 里有没有 decisions，不是看名字。", size=9.5, color=MUTED, first=True)
 
-tf = text_box(s, 6.72, 3.40, 5.85, 0.3)
+tf = text_box(s, 6.72, 3.66, 5.85, 0.3)
 para(tf, "我们做了哪些工程上的事", size=11, bold=True, color=PRIMARY, first=True)
 eng = [
     ("typed client", "三原语各有请求/响应类型，字段不对在编译期就挡下"),
@@ -1185,7 +1186,7 @@ eng = [
     ("后端可切", "默认本机结构模型；INHERITANCE_BACKEND=model 才调决策模型"),
 ]
 for i, (h1, h2) in enumerate(eng):
-    y = 3.74 + i * 0.68
+    y = 3.98 + i * 0.66
     tf = text_box(s, 6.72, y, 5.85, 0.26)
     para(tf, h1, size=11, bold=True, color=TEXT, first=True)
     tf = text_box(s, 6.72, y + 0.26, 5.85, 0.34)
@@ -1551,12 +1552,12 @@ s = new_slide(4, "每一条结论，都能在演示机上**跑给你看**", icon
 
 SHOTS = [
     ("shot-tests", "31 个测试文件 · 238 条用例 · 1.70 秒全绿"),
-    ("shot-tree", "决策协议、校验、结构模型与权重，都在 src/lib/decision"),
+    ("shot-jev-systemone", "18.5 GB 的决策模型实跑：五个概率一次给出，output_tokens = 0"),
     ("shot-gpu", "RTX 5080 走 CUDA：1.7 秒启动、0.11 秒/句、1.8 GB 显存"),
     ("shot-api", "真实接口返回：三代连续患病 → 常染色体显性 99.8%"),
 ]
 SHOT_W = (W - 0.40) / 2
-SHOT_H = SHOT_W * 300 / 1100
+SHOT_H = SHOT_W * 240 / 800
 for i, (name, cap) in enumerate(SHOTS):
     col, row = i % 2, i // 2
     x = M + col * (SHOT_W + 0.40)

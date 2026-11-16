@@ -12,7 +12,10 @@ ART = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs", "de
 os.makedirs(ART, exist_ok=True)
 
 S = 2                     # 超采样倍数
-W, H = 1100, 300          # 单张逻辑尺寸（16:9 版面里约 5.4 x 1.47 英寸）
+# 尺寸按「最终在 PPT 里占多宽」倒推：5.7 英寸宽的位置用 800px，
+# 折算 140 DPI，14px 字 → 约 7.5pt，投影上才看得清。
+# 最初用 1100px，缩到 5.85 英寸后只剩 5pt，等于把图当装饰。
+W, H = 800, 240
 BG = (15, 22, 32)
 BAR = (24, 33, 45)
 FG = (206, 218, 232)
@@ -73,8 +76,8 @@ def colorize(line):
     return out
 
 
-def shot(lines, name, title=""):
-    w, h = W * S, H * S
+def shot(lines, name, title="", w_log=W, h_log=H):
+    w, h = w_log * S, h_log * S
     img = Image.new("RGB", (w, h), BG)
     d = ImageDraw.Draw(img)
     # 顶部标题栏 + 三个圆点
@@ -86,17 +89,17 @@ def shot(lines, name, title=""):
         f_t = mono(13 * S)
         d.text((92 * S, 11 * S), title, font=f_t, fill=DIM)
 
-    f = mono(13 * S)
-    y = 52 * S
+    f = mono(14 * S)
+    y = 44 * S
     for ln in lines:
         x = 22 * S
         for text, color, bold in colorize(ln):
             d.text((x, y), text, font=f, fill=color)
             x += d.textlength(text, font=f)
-        y += 21 * S
+        y += 20 * S
     # 细边框
     d.rounded_rectangle([0, 0, w - 1, h - 1], radius=12 * S, outline=(40, 54, 72), width=S)
-    img.resize((W, H), Image.LANCZOS).save(os.path.join(ART, name + ".png"))
+    img.resize((w_log, h_log), Image.LANCZOS).save(os.path.join(ART, name + ".png"))
     print("  ", name + ".png", len(lines), "行")
 
 
@@ -133,6 +136,22 @@ SHOTS = {
         "$ llama-server -m Qwen3-1.7B-Q4_K_M.gguf -ngl 99 -c 2048",
         "  model loaded in 1.7s   extraction 0.11s/句   VRAM 1.8 GB",
     ]),
+    "shot-jev-models": ("$ curl /v1/models", [
+        "$ curl -s localhost:8086/v1/models",
+        '{"architecture":{"output_modalities":["decisions"]}}',
+        "# 判据就这一行：decisions，不是 text",
+    ]),
+    "shot-jev-systemone": ("$ curl -X POST /v1/systemone", [
+        "$ curl -s -X POST localhost:8086/v1/systemone -d @family.json",
+        "",
+        '{"answers":{"h":{"type":"choice","choice":"autosomal-dominant",',
+        '  "probabilities":{"autosomal-dominant":0.9005,"autosomal-recessive":0.0220,',
+        '    "x-linked":0.0164,"mitochondrial":0.0055,"insufficient":0.0555},',
+        '  "confidence":0.8757}},',
+        ' "usage":{"input_tokens":101,"output_tokens":0}}',
+        "",
+        "# output_tokens = 0：一个 token 都没生成，判定是算出来的",
+    ]),
     "shot-api": ("$ curl -X POST /api/decision/hereditary", [
         "$ curl -s -X POST localhost:5173/api/decision/hereditary -d @family.json",
         "",
@@ -146,7 +165,13 @@ SHOTS = {
     ]),
 }
 
+# 扁条位置（JEV 页 5.85x0.96 英寸）需要更宽扁的画布，行数也压到 4 行
+FLAT = {"shot-jev-models"}
+
 if __name__ == "__main__":
     print("渲染终端证据图 ->", os.path.abspath(ART))
     for name, (title, lines) in SHOTS.items():
-        shot(lines, name, title)
+        if name in FLAT:
+            shot(lines, name, title, w_log=1100, h_log=180)
+        else:
+            shot(lines, name, title)
