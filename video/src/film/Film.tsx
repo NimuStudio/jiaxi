@@ -10,6 +10,7 @@ import { Evidence } from "./blocks/Evidence";
 import { Close } from "./blocks/Close";
 import { Demo1, Demo2, Demo3 } from "./blocks/Demo";
 import { WhatWeDo, Arch, Deploy, Team } from "./blocks/Extras";
+import { Subtitles } from "./Subtitles";
 
 const BLOCK_COMPONENTS: Record<string, React.FC> = {
   hook: Hook,
@@ -52,6 +53,8 @@ export const Film: React.FC = () => (
         </Sequence>
       );
     })}
+    {/* 字幕压在最上层：块之间切换时也不会被背景图盖住 */}
+    <Subtitles />
   </AbsoluteFill>
 );
 
