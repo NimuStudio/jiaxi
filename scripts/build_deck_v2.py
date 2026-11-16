@@ -1480,17 +1480,20 @@ steps = [
     ("chat", "给一句话或一个追问", "有结论就写「提示」；没结论就列出缺什么，让用户补一句"),
 ]
 cw3 = (W - 0.45) / 4
+# 四步不再用四张卡片：改成一条流程带——顶规则线 + 大号序号 + 图标，靠留白分栏
+rect(s, M, 2.02, W, 0.012, fill=LINE2, radius=False)
 for i, (ic, h1, h2) in enumerate(steps):
     x = M + i * (cw3 + 0.15)
-    rect(s, x, 2.02, cw3, 1.86, fill=RECLAIM_SOFT if i == 3 else SURFACE,
-         line=RECLAIM_LINE if i == 3 else LINE)
-    s.shapes.add_picture(icon_p(ic), Inches(x + 0.22), Inches(2.18), Inches(0.36), Inches(0.36))
-    tf = text_box(s, x + 0.68, 2.20, cw3 - 0.9, 0.32)
-    para(tf, h1, size=11, bold=True, color=TEXT, first=True)
-    tf = text_box(s, x + 0.22, 2.66, cw3 - 0.44, 1.1)
+    tf = text_box(s, x, 2.14, 0.7, 0.42)
+    para(tf, f"0{i + 1}", size=17, bold=True, color=RECLAIM if i == 3 else PRIMARY, first=True)
+    s.shapes.add_picture(icon_p(ic), Inches(x + cw3 - 0.46), Inches(2.16),
+                         Inches(0.30), Inches(0.30))
+    tf = text_box(s, x, 2.62, cw3 - 0.10, 0.34)
+    para(tf, h1, size=11.5, bold=True, color=TEXT, first=True)
+    tf = text_box(s, x, 2.98, cw3 - 0.10, 1.0)
     para(tf, h2, size=10.5, color=MUTED, first=True, line=1.35)
     if i < 3:
-        ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + cw3 + 0.01), Inches(2.86),
+        ar = s.shapes.add_shape(MSO_SHAPE.RIGHT_ARROW, Inches(x + cw3 + 0.01), Inches(2.30),
                                 Inches(0.12), Inches(0.16))
         ar.fill.solid(); ar.fill.fore_color.rgb = LINE2; ar.line.fill.background(); ar.shadow.inherit = False
 
@@ -1607,26 +1610,29 @@ ROWS = [
 TX, TW = M, 8.05
 CW2 = (TW - 1.95) / 4
 # 矩阵只放四类现有做法：「家系」那一列由右侧条形代表，避免同一信息出现两次
+# 表头做成一条浅底带（不是一行灰字），行改成斑马底（不是一根根细线）
+rect(s, TX, 2.06, TW, 0.42, fill=RGBColor(0xEC, 0xF4, 0xFB), line=None, radius=False)
+rect(s, TX, 2.06, TW, 0.03, fill=PRIMARY, radius=False)
 for j, c in enumerate(COLSX[:4]):
     cx = TX + 1.95 + j * CW2
-    tf = text_box(s, cx - 0.25, 1.98, CW2 + 0.2, 0.28, align=PP_ALIGN.CENTER)
-    para(tf, c, size=9.5, color=MUTED, first=True, align=PP_ALIGN.CENTER)
+    tf = text_box(s, cx - 0.25, 2.13, CW2 + 0.2, 0.30, align=PP_ALIGN.CENTER)
+    para(tf, c, size=9.5, bold=True, color=TEXT, first=True, align=PP_ALIGN.CENTER)
 for i, (name, marks) in enumerate(ROWS):
-    y = 2.42 + i * 0.52
-    tf = text_box(s, TX, y, 1.9, 0.3)
-    para(tf, name, size=10.5, color=TEXT, first=True)
+    y = 2.58 + i * 0.50
+    if i % 2 == 0:
+        rect(s, TX, y - 0.05, TW, 0.52, fill=RGBColor(0xF7, 0xFB, 0xFE), line=None, radius=False)
+    tf = text_box(s, TX + 0.06, y, 1.9, 0.3)
+    para(tf, name, size=10.5, bold=True, color=TEXT, first=True)
     for j, mk in enumerate(marks[:4]):
         cx = TX + 1.95 + j * CW2 + CW2 / 2 - 0.15
         mark_badge(s, cx, y + 0.15, mk)
-    if i < len(ROWS) - 1:
-        rect(s, TX, y + 0.40, TW, 0.006, fill=LINE, radius=False)
 
 # 右：按「具备几项 / 6」做成条形——把矩阵里的勾叉变成一个可比的量
 SCORE = [0, 1, 3, 0.5, 6]
-tf = text_box(s, 9.55, 1.98, 3.2, 0.3)
+tf = text_box(s, 9.55, 2.14, 3.2, 0.3)
 para(tf, "具备几项（满分 6）", size=11, bold=True, color=PRIMARY, first=True)
 for j, (c, sc) in enumerate(zip(COLSX, SCORE)):
-    y = 2.42 + j * 0.52
+    y = 2.58 + j * 0.50
     tf = text_box(s, 9.55, y - 0.02, 3.2, 0.24)
     para(tf, c, size=9, color=RED if j == 4 else MUTED, first=True)
     track_w = 2.45
@@ -1637,7 +1643,7 @@ for j, (c, sc) in enumerate(zip(COLSX, SCORE)):
     para(tf, ("6" if sc == 6 else (str(sc) if sc != int(sc) else str(int(sc)))),
          size=10.5, bold=(j == 4), color=RED if j == 4 else MUTED, first=True)
 
-tf = text_box(s, 9.55, 5.14, 3.25, 0.5)
+tf = text_box(s, 9.55, 5.28, 3.25, 0.5)
 para(tf, "四类做法平均 1.1 项，我们 6 项。", size=10.5, bold=True, color=TEXT, first=True, line=1.4)
 para(tf, "缺的不是 AI，是把家系当成数据结构。", size=10, color=MUTED, line=1.4)
 tf = text_box(s, M, 5.72, W, 0.5)

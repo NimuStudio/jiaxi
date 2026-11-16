@@ -563,9 +563,7 @@ quo = duotone_texture(quo, os.path.join(ART, "tree.png"), (176, 106, 8), alpha=2
                       crop=(0.05, 0.05, 0.95, 0.85))
 # 右侧整幅：把家系图渲染做成半调装饰，占右半幅（引语页需要一张图压住空场）
 # 点要细（rmax 小、pitch 密）：家系图是细线图，点一大就糊成色块，还会压住引语
-# 用纯线稿做半调：产品图是实心节点 + 文字，做出来是一坨一坨的脏斑
-quo = halftone_plate(quo, os.path.join(ART, "decor-pedigree.png"), (150, 92, 10), alpha=205,
-                     size=1260, x=0.545, y=0.31, pitch=6, rmax=3.4)
+# 半调家系图在这页始终像「脏斑」，按反馈整个撤掉：这页靠暖底 + 巨引号就够
 quo = contour_field(quo, (176, 106, 8), alpha=18, cx=0.05, cy=0.95, rings=16, seed=61, step=66)
 quo = reg_marks(quo, (176, 106, 8), alpha=30)
 quo.convert("RGB").save(os.path.join(ART, "content-bg-quote.jpg"), quality=JPEG_Q, optimize=True)
