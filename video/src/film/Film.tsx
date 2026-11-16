@@ -8,15 +8,25 @@ import { Risk } from "./blocks/Risk";
 import { AI } from "./blocks/AI";
 import { Evidence } from "./blocks/Evidence";
 import { Close } from "./blocks/Close";
+import { Demo1, Demo2, Demo3 } from "./blocks/Demo";
+import { WhatWeDo, Arch, Deploy, Team } from "./blocks/Extras";
 
 const BLOCK_COMPONENTS: Record<string, React.FC> = {
   hook: Hook,
   problem: Problem,
-  product: Product,
-  risk: Risk,
-  ai: AI,
+  whatwedo: WhatWeDo,
+  demo1: Demo1,
+  demo2: Demo2,
+  demo3: Demo3,
+  ai1: AI,
+  ai2: AI,
+  ai3: AI,
+  arch: Arch,
+  deploy: Deploy,
   evidence: Evidence,
+  value: Risk,
   close: Close,
+  team: Team,
 };
 
 /**
@@ -25,7 +35,6 @@ const BLOCK_COMPONENTS: Record<string, React.FC> = {
  */
 export const Film: React.FC = () => (
   <AbsoluteFill>
-    {/* 配乐：脚本合成（scripts/music.py），音量压到不抢解说 */}
     <Audio src={staticFile("audio/bgm.mp3")} volume={0.11} />
     {BLOCKS.map((b) => {
       const Comp = BLOCK_COMPONENTS[b.id];
