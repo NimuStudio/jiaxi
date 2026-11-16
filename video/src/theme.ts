@@ -1,23 +1,36 @@
 /**
  * 视频视觉常量。
  *
- * 全部取自产品 app/globals.css 的设计变量，保证视频与真实界面是同一套视觉语言——
- * 观众在动画里看到的颜色，打开网站必须是同一个颜色。
+ * 取自产品 app/globals.css 的设计令牌——观众在动画里看到的蓝色，
+ * 打开网站必须是同一个蓝色。六个栏目色与答辩稿 SECTION_HUES 一致。
  */
 export const C = {
-  bg: "#f5f7f5",
+  bg: "#f2f7fc",
   surface: "#ffffff",
-  text: "#14181a",
-  muted: "#66706e",
-  faint: "#98a09d",
-  line: "#e2e6e2",
-  lineStrong: "#cfd5d0",
-  primary: "#0f5f4c",
-  primarySoft: "#e9f2ee",
-  reclaim: "#c2610f",
-  reclaimSoft: "#fbeedf",
-  reclaimLine: "#e9a765",
-  danger: "#a3271f",
+  text: "#0f2a44",
+  muted: "#4a6b8a",
+  faint: "#8aa3bb",
+  line: "#dbe7f3",
+  lineStrong: "#c2d6e9",
+  primary: "#1a6fb5",
+  primarySoft: "#eaf3fb",
+  reclaim: "#0f7c8c",
+  reclaimSoft: "#e6f4f6",
+  reclaimLine: "#8fc4cb",
+  danger: "#c0392b",
+  dangerSoft: "#fbeee7",
+  white: "#ffffff",
+  ink: "#0b1a2b",
+} as const;
+
+/** 六个栏目的识别色，顺序与答辩稿一致。 */
+export const HUES = {
+  background: "#b06a08",
+  product: "#0d7c8a",
+  tech: "#1a6fb5",
+  accuracy: "#684eba",
+  value: "#b7445e",
+  team: "#3a7c65",
 } as const;
 
 export const FONT =
