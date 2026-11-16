@@ -5,7 +5,7 @@ import { Hook } from "./blocks/Hook";
 import { Problem } from "./blocks/Problem";
 import { Product } from "./blocks/Product";
 import { Risk } from "./blocks/Risk";
-import { AI } from "./blocks/AI";
+import { AI, AI2, AI3 } from "./blocks/AI";
 import { Evidence } from "./blocks/Evidence";
 import { Close } from "./blocks/Close";
 import { Demo1, Demo2, Demo3 } from "./blocks/Demo";
@@ -19,8 +19,8 @@ const BLOCK_COMPONENTS: Record<string, React.FC> = {
   demo2: Demo2,
   demo3: Demo3,
   ai1: AI,
-  ai2: AI,
-  ai3: AI,
+  ai2: AI2,
+  ai3: AI3,
   arch: Arch,
   deploy: Deploy,
   evidence: Evidence,

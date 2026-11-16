@@ -13,7 +13,7 @@ const ENGINES = [
 /** 风险：按四句话逐层推进——引擎 → 变量 → 尺子 → 拆成两列。 */
 export const Risk: React.FC = () => {
   const frame = useCurrentFrame();
-  const b = blockById("risk");
+  const b = blockById("value");
   const a0 = lineStart(b, 0);
   const a1 = lineStart(b, 1);
   const a2 = lineStart(b, 2);

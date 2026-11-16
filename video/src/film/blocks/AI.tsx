@@ -4,13 +4,16 @@ import { C, HUES, MONO } from "../../theme";
 import { Stage, H, Sub, Tag, fadeIn } from "../ui";
 import { blockById, lineStart } from "../schedule";
 
+export const AI2: React.FC = () => <AI blockId="ai2" />;
+export const AI3: React.FC = () => <AI blockId="ai3" />;
+
 const ENUM = ["autosomal-dominant", "autosomal-recessive", "x-linked", "mitochondrial", "insufficient"];
 const PROBS = [0.9005, 0.022, 0.0164, 0.0055, 0.0555];
 
 /** AI 边界：上半约束解码，下半结构判定 + 40% vs 96% 对照。 */
-export const AI: React.FC = () => {
+export const AI: React.FC<{ blockId?: string }> = ({ blockId = "ai1" }) => {
   const frame = useCurrentFrame();
-  const b = blockById("ai");
+  const b = blockById(blockId);
   const a1 = lineStart(b, 0);
   const a2 = lineStart(b, 1);
   const a3 = lineStart(b, 2);
