@@ -108,10 +108,13 @@ def rich(tf, parts, size=13, first=False, line=None):
     p = tf.paragraphs[0] if first else tf.add_paragraph()
     if line:
         p.line_spacing = line
-    for text, bold, color in parts:
+    for part in parts:
+        # 允许 4 元组带自己的字号：数字与单位要不同号，单位还要小一档压在基线上
+        text, bold, color = part[0], part[1], part[2]
+        rsize = part[3] if len(part) > 3 else size
         r = p.add_run()
         r.text = text
-        set_font(r, size, bold, color)
+        set_font(r, rsize, bold, color)
     return p
 
 
@@ -402,7 +405,9 @@ def new_slide(section, title, sub=None, icon=None, tag=None):
                                   Inches(0.62), Inches(tw), Inches(0.26))
         # 标签用所属栏目的色相：六个章节各有识别色，翻页时不再全是同一个蓝
         chip.fill.solid(); chip.fill.fore_color.rgb = SECTION_HUES[max(0, min(5, section))]
-        chip.line.fill.background(); chip.shadow.inherit = False
+        # 描一圈同色系的白边：胶囊压在有色背景上时不至于「糊」进底色
+        chip.line.color.rgb = WHITE; chip.line.width = Pt(0.75)
+        chip.shadow.inherit = False
         chip.adjustments[0] = 0.35
         tf = chip.text_frame
         tf.word_wrap = False
@@ -442,14 +447,57 @@ def stat_card(slide, x, y, w, h, big, unit, label, color=PRIMARY, compact=False)
     if compact:
         # 矮卡片：数字 24pt、标签紧贴下方，否则标签会掉出卡片压到下一张
         tf = text_box(slide, x + 0.20, y + 0.08, w - 0.40, 0.46)
-        rich(tf, [(big, True, color), (unit, False, color)], size=23, first=True)
+        rich(tf, [(big, True, color, 23), (unit, False, color, 14)], size=23, first=True)
         tf = text_box(slide, x + 0.20, y + 0.52, w - 0.40, 0.3)
         para(tf, label, size=10.5, color=MUTED, first=True)
         return
     tf = text_box(slide, x + 0.22, y + 0.20, w - 0.44, 0.6)
-    rich(tf, [(big, True, color), (unit, False, color)], size=30, first=True)
+    rich(tf, [(big, True, color, 30), (unit, False, color, 17)], size=30, first=True)
     tf = text_box(slide, x + 0.22, y + 0.85, w - 0.44, 0.6)
     para(tf, label, size=11.5, color=MUTED, first=True, line=1.35)
+
+
+def icon_pedestal(slide, icon_path, x, y, box=0.46, tone=PRIMARY_SOFT, line=LINE2,
+                  inset=0.10):
+    """图标托底：一个浅色圆角方块，图标嵌在里面。
+
+    裸图标压在背景上会被纹理吃掉；给个方块托底，图标的边界才立得住。
+    """
+    rect(slide, x, y, box, box, fill=tone, line=line, radius=True)
+    if os.path.exists(icon_path):
+        slide.shapes.add_picture(icon_path, Inches(x + inset), Inches(y + inset),
+                                 Inches(box - 2 * inset), Inches(box - 2 * inset))
+
+
+def pic_framed(slide, path, x, y, w, h, pad=0.05):
+    """截图加「相框」：白底卡片 + 柔和投影 + 1px 描边，图片压在上面。
+
+    参考稿里没有一张图是「直接贴上去」的——都有框、有边距、有投影。
+    """
+    rect(slide, x - pad, y - pad, w + 2 * pad, h + 2 * pad, fill=WHITE, line=LINE2,
+         radius=True, card=True)
+    slide.shapes.add_picture(path, Inches(x), Inches(y), Inches(w), Inches(h))
+
+
+def mark_badge(slide, cx, cy, mk):
+    """矩阵里的 ✓ / △ / ✕：套一个小圆底，勾叉不再是一个裸字符。"""
+    r = 0.105
+    o = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(cx - r), Inches(cy - r),
+                               Inches(2 * r), Inches(2 * r))
+    o.shadow.inherit = False
+    if mk == "✓":
+        o.fill.solid(); o.fill.fore_color.rgb = RECLAIM_SOFT; o.line.fill.background()
+        col = RECLAIM
+    elif mk == "△":
+        o.fill.solid(); o.fill.fore_color.rgb = WHITE
+        o.line.color.rgb = LINE2; o.line.width = Pt(0.75)
+        col = MUTED
+    else:
+        o.fill.solid(); o.fill.fore_color.rgb = RGBColor(0xEE, 0xF2, 0xF8)
+        o.line.fill.background()
+        col = RGBColor(0x9F, 0xB0, 0xC2)
+    tf = text_box(slide, cx - 0.16, cy - 0.12, 0.32, 0.24, align=PP_ALIGN.CENTER)
+    para(tf, mk, size=8, bold=True, color=col, first=True, align=PP_ALIGN.CENTER)
 
 
 def picture_fit(slide, path, x, y, max_w, max_h):
@@ -1041,10 +1089,10 @@ CW3 = (W - LW2) / 3
 # 表头：三列引擎名，无边框，只靠规则线分隔
 for i, (ic, name, what, *_rest) in enumerate(ENG):
     x = M + LW2 + i * CW3
-    s.shapes.add_picture(icon_p(ic), Inches(x), Inches(1.98), Inches(0.40), Inches(0.40))
-    tf = text_box(s, x + 0.52, 2.00, CW3 - 0.6, 0.34)
+    icon_pedestal(s, icon_p(ic), x, 1.95, box=0.48, inset=0.11)
+    tf = text_box(s, x + 0.60, 2.00, CW3 - 0.68, 0.34)
     para(tf, name, size=15, bold=True, color=PRIMARY, first=True)
-    tf = text_box(s, x + 0.52, 2.34, CW3 - 0.6, 0.28)
+    tf = text_box(s, x + 0.60, 2.34, CW3 - 0.68, 0.28)
     para(tf, what, size=10.5, color=MUTED, first=True)
 rect(s, M, 2.72, W, 0.012, fill=LINE2, radius=False)
 
@@ -1232,7 +1280,7 @@ for i, (name, what, sample) in enumerate(prims):
 # 这张卡片原来复述「40% vs 96%」，与下一页重复；改成真实的校验实现
 _pv = os.path.join(ART, "shots", "shot-validate.png")
 if os.path.exists(_pv):
-    s.shapes.add_picture(_pv, Inches(M), Inches(5.20), Inches(5.75), Inches(1.21))
+    pic_framed(s, _pv, M, 5.20, 5.75, 1.21, pad=0.04)
 tf = text_box(s, M, 6.48, 5.75, 0.28)
 para(tf, "概率和对不上 1、noul 越界、score 档位数不符 —— 一律 fail()，不带着错数据往下走。",
      size=9, color=MUTED, first=True)
@@ -1241,8 +1289,7 @@ tf = text_box(s, 6.72, 1.98, 5.85, 0.3)
 para(tf, "怎么判断对方是不是决策模型", size=11, bold=True, color=PRIMARY, first=True)
 _p = os.path.join(ART, "shots", "shot-jev-models.png")
 if os.path.exists(_p):
-    s.shapes.add_picture(_p, Inches(6.72), Inches(2.32), Inches(5.85), Inches(0.96))
-rect(s, 6.72, 2.32, 5.85, 0.96, fill=None, line=LINE)
+    pic_framed(s, _p, 6.72, 2.32, 5.85, 0.96, pad=0.04)
 tf = text_box(s, 6.72, 3.32, 5.85, 0.28)
 para(tf, "判据是 output_modalities 里有没有 decisions，不是看名字。", size=9.5, color=MUTED, first=True)
 
@@ -1489,10 +1536,8 @@ for i, (name, marks) in enumerate(ROWS):
     tf = text_box(s, TX, y, 1.9, 0.3)
     para(tf, name, size=10.5, color=TEXT, first=True)
     for j, mk in enumerate(marks[:4]):
-        cx = TX + 1.95 + j * CW2
-        color = RECLAIM if mk == "✓" else (FAINT if mk == "✕" else MUTED)
-        tf = text_box(s, cx - 0.25, y, CW2 + 0.2, 0.3, align=PP_ALIGN.CENTER)
-        para(tf, mk, size=11, color=color, first=True, align=PP_ALIGN.CENTER)
+        cx = TX + 1.95 + j * CW2 + CW2 / 2 - 0.15
+        mark_badge(s, cx, y + 0.15, mk)
     if i < len(ROWS) - 1:
         rect(s, TX, y + 0.40, TW, 0.006, fill=LINE, radius=False)
 
@@ -1634,7 +1679,7 @@ for i, (name, cap) in enumerate(SHOTS):
     y = 1.98 + row * (SHOT_H + 0.62)
     p = os.path.join(ART, "shots", name + ".png")
     if os.path.exists(p):
-        s.shapes.add_picture(p, Inches(x), Inches(y), Inches(SHOT_W), Inches(SHOT_H))
+        pic_framed(s, p, x, y, SHOT_W, SHOT_H)
     tf = text_box(s, x, y + SHOT_H + 0.08, SHOT_W, 0.34)
     para(tf, cap, size=9.5, color=MUTED, first=True)
 

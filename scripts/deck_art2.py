@@ -439,7 +439,8 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
     tex, crop = TEXTURES[idx]
     if tex:
         bg = duotone_texture(bg, tex, tone, alpha=26, blur=2.0, crop=crop)
-    bg = color_panel(bg, tone, side=side, width_frac=0.22, light=0.62, span=SPANS[idx])
+    # 面板收窄到 0.18、白度 0.70：22% 时左侧标签整列压在色块上，灰字对比度不够
+    bg = color_panel(bg, tone, side=side, width_frac=0.18, light=0.70, span=SPANS[idx])
     # 巨型章节名放在面板那一侧，压在上面形成「色块 + 大字」的封面感
     # 巨型字只露半截：全露出来会压住正文，露一半才是「版面上的字」而不是「水印」
     gx = -0.115 if side == "left" else 0.79
