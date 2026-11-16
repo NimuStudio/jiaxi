@@ -1162,11 +1162,13 @@ for i, (name, what, sample) in enumerate(prims):
     tf = text_box(s, M + 0.22, y + 0.50, 5.3, 0.36)
     para(tf, sample, size=9, color=TEXT, first=True, latin="Consolas")
 
-rect(s, M, 5.18, 5.75, 1.2, fill=PRIMARY_SOFT, line=LINE)
-tf = text_box(s, M + 0.24, 5.28, 5.3, 1.0)
-para(tf, "实测：18.5 GB 的 OpenJev-Q4 与 12 维结构模型，在同一批均衡样本上", size=10.5, first=True, line=1.45)
-para(tf, "40% vs 96%；单次延迟 6.3 秒 vs 不到 0.1 秒。", size=10.5, line=1.45)
-para(tf, "协议与管线是通的，只是这一题不该用它——下一页说为什么。", size=10.5, bold=True, color=RECLAIM, line=1.45)
+# 这张卡片原来复述「40% vs 96%」，与下一页重复；改成真实的校验实现
+_pv = os.path.join(ART, "shots", "shot-validate.png")
+if os.path.exists(_pv):
+    s.shapes.add_picture(_pv, Inches(M), Inches(5.20), Inches(5.75), Inches(1.21))
+tf = text_box(s, M, 6.48, 5.75, 0.28)
+para(tf, "概率和对不上 1、noul 越界、score 档位数不符 —— 一律 fail()，不带着错数据往下走。",
+     size=9, color=MUTED, first=True)
 
 tf = text_box(s, 6.72, 1.98, 5.85, 0.3)
 para(tf, "怎么判断对方是不是决策模型", size=11, bold=True, color=PRIMARY, first=True)

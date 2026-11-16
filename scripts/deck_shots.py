@@ -152,6 +152,14 @@ SHOTS = {
         "",
         "# output_tokens = 0：一个 token 都没生成，判定是算出来的",
     ]),
+    "shot-validate": ("src/lib/decision/client.ts:47", [
+        "// src/lib/decision/client.ts:47 —— 概率不合法，就当它没答",
+        "export function validateAnswers(req, res): void {",
+        '  if (!res?.answers) fail("响应缺少 answers");',
+        "  for (const [id, q] of Object.entries(req.questions)) {",
+        '    if (q.type === "choice") checkChoice(a, Object.keys(q.criteria));',
+        "    // choice / score 概率和必须为 1，容差 0.02",
+    ]),
     "shot-api": ("$ curl -X POST /api/decision/hereditary", [
         "$ curl -s -X POST localhost:5173/api/decision/hereditary -d @family.json",
         "",
@@ -166,12 +174,13 @@ SHOTS = {
 }
 
 # 扁条位置（JEV 页 5.85x0.96 英寸）需要更宽扁的画布，行数也压到 4 行
-FLAT = {"shot-jev-models"}
+FLAT = {"shot-jev-models": (1100, 180), "shot-validate": (800, 168)}
 
 if __name__ == "__main__":
     print("渲染终端证据图 ->", os.path.abspath(ART))
     for name, (title, lines) in SHOTS.items():
         if name in FLAT:
-            shot(lines, name, title, w_log=1100, h_log=180)
+            w2, h2 = FLAT[name]
+            shot(lines, name, title, w_log=w2, h_log=h2)
         else:
             shot(lines, name, title)
