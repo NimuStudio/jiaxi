@@ -14,7 +14,20 @@
 四段动画合计 **2 分 50 秒**，与约 4 分 10 秒的录屏一起剪成 7 分 15 秒。
 完整的成片结构见 `../docs/demo-script.md`。
 
-## 四段动画
+## 成片（配音驱动）
+
+```bash
+python scripts/tts.py          # 逐句合成配音 → public/audio/*.mp3 + src/timing.json
+python scripts/storyboard.py   # timing.json → script.md（分镜表）
+python scripts/music.py        # 合成 168s 配乐（无版权，纯数学生成）
+npx remotion render src/index.ts Film out/0-film.mp4 --codec=h264 --crf=19
+npx remotion still  src/index.ts Cover out/cover.png
+```
+
+时间轴全部来自真实配音时长：改一句文案 → 重跑 `tts.py` + `storyboard.py` → 时长自动重算。
+当前成片：**165.5 秒 / 1920×1080 / h264+aac**，七个章节（见 `script.md`）。
+
+## 四段动画（旧，保留备用）
 
 | Composition | 时长 | 内容 |
 |---|---|---|
