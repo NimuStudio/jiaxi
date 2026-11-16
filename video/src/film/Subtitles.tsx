@@ -44,7 +44,7 @@ export const Subtitles: React.FC = () => {
       <div
         style={{
           maxWidth: 1420,
-          background: "rgba(9,22,34,.74)",
+          background: "rgba(9,22,34,.62)",
           color: "#ffffff",
           fontFamily: '"Microsoft YaHei", system-ui, sans-serif',
           fontSize: 40,

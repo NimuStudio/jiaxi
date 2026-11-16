@@ -64,7 +64,7 @@ const Demo: React.FC<{
             ))}
             <span style={{ marginLeft: 8, fontSize: 16, color: C.muted }}>127.0.0.1:5173</span>
           </div>
-          <div style={{ height: 660, overflow: "hidden" }}>
+          <div style={{ height: 653, overflow: "hidden" }}>
             <OffthreadVideo
               src={staticFile("rec/demo.mp4")}
               startFrom={Math.round(fromSec * 30)}
