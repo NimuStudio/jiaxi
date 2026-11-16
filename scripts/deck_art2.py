@@ -117,7 +117,7 @@ def grain(img, amount=4.2):
     return Image.fromarray(arr, "RGB").convert("RGBA")
 
 
-def color_panel(img, color, alpha=255, side="left", width_frac=0.30, light=0.86):
+def color_panel(img, color, alpha=255, side="left", width_frac=0.30, light=0.86, span=(0.0, 1.0)):
     """一侧实色面板：把栏目色与白混合后铺成不透明的一块，正文压在它上面仍然可读。
 
     「不透明」是为了让版面有真正的色块重量——半透明色雾做不出这种边界感。
@@ -127,11 +127,12 @@ def color_panel(img, color, alpha=255, side="left", width_frac=0.30, light=0.86)
     d = ImageDraw.Draw(layer)
     tint = tuple(int(c + (255 - c) * light) for c in color)
     pw = int(w * width_frac)
-    box = [0, 0, pw, h] if side == "left" else [w - pw, 0, w, h]
+    y0, y1 = int(h * span[0]), int(h * span[1])
+    box = [0, y0, pw, y1] if side == "left" else [w - pw, y0, w, y1]
     d.rectangle(box, fill=tint + (alpha,))
     # 内缘一道更深的细线，收住边界（不加就会像没对齐的色块）
     edge_x = pw - 2 if side == "left" else w - pw
-    d.rectangle([edge_x, 0, edge_x + 2, h], fill=color + (int(alpha * 0.22),))
+    d.rectangle([edge_x, y0, edge_x + 2, y1], fill=color + (int(alpha * 0.22),))
     return overlay(img, layer)
 
 
@@ -431,10 +432,12 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
         (None, None),
     ]
     side = PANELS[idx]
+    # 面板高度也轮换：通高 / 下半 / 上半 / 中段，翻页时轮廓不止左右之差
+    SPANS = [(0.0, 1.0), (0.34, 1.0), (0.0, 1.0), (0.0, 0.64), (0.0, 1.0), (0.26, 0.8)]
     tex, crop = TEXTURES[idx]
     if tex:
         bg = duotone_texture(bg, tex, tone, alpha=16, blur=2.2, crop=crop)
-    bg = color_panel(bg, tone, side=side, width_frac=0.22, light=0.88)
+    bg = color_panel(bg, tone, side=side, width_frac=0.22, light=0.88, span=SPANS[idx])
     # 巨型章节名放在面板那一侧，压在上面形成「色块 + 大字」的封面感
     # 巨型字只露半截：全露出来会压住正文，露一半才是「版面上的字」而不是「水印」
     gx = -0.115 if side == "left" else 0.79

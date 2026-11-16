@@ -761,14 +761,33 @@ for cx in (col_x[1] + col_w / 2, col_x[2] + col_w / 2):
     ln = s.shapes.add_connector(1, Inches(cx), Inches(data_y - 0.28), Inches(cx), Inches(data_y))
     ln.line.color.rgb = LINE2; ln.line.width = Pt(1.25)
 
-# 本机边界（虚线框）：模型、计算、存储都在里面
-bnd = s.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(col_x[1] - 0.18), Inches(top - 0.28),
-                         Inches(col_w * 3 + gap * 2 + 0.36), Inches(data_y - top + 1.16))
-bnd.fill.background()
-bnd.line.color.rgb = RECLAIM
-bnd.line.width = Pt(1.25)
-bnd.line.dash_style = 4  # 虚线
-bnd.shadow.inherit = False
+# 本机边界（虚线框）：模型、计算、存储都在里面。
+# 四边分开画、顶边按列标题的位置留缺口——整框会让虚线从三个标题字里穿过去。
+bx0, bx1 = col_x[1] - 0.18, col_x[1] - 0.18 + col_w * 3 + gap * 2 + 0.36
+by0, by1 = top - 0.28, top - 0.28 + (data_y - top + 1.16)
+
+
+def dash_line(x1, y1, x2, y2):
+    cn = s.shapes.add_connector(1, Inches(x1), Inches(y1), Inches(x2), Inches(y2))
+    cn.line.color.rgb = RECLAIM
+    cn.line.width = Pt(1.25)
+    cn.line.dash_style = 4
+    return cn
+
+
+dash_line(bx0, by1, bx1, by1)          # 下
+dash_line(bx0, by0, bx0, by1)          # 左
+dash_line(bx1, by0, bx1, by1)          # 右
+# 顶边：在每个列标题两侧断开，标题底下不画线
+_gaps, _cur = [], bx0
+for _i in (1, 2, 3):
+    _c = col_x[_i] + col_w / 2
+    _gaps.append((_c - 0.62, _c + 0.62))
+for _a, _b in _gaps:
+    if _a > _cur:
+        dash_line(_cur, by0, _a, by0)
+    _cur = max(_cur, _b)
+dash_line(_cur, by0, bx1, by0)
 # 标签放在框内底部：放顶部会压住「抽取与理解 / 计算 / 输出」三个列标题
 rect(s, col_x[1] + 0.9, data_y + 0.56, col_w * 2 + gap - 1.8, 0.28, fill=SURFACE, line=None)
 tf = text_box(s, col_x[1], data_y + 0.58, col_w * 2 + gap, 0.24, align=PP_ALIGN.CENTER)
