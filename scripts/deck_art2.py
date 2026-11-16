@@ -173,6 +173,37 @@ def duotone_texture(img, src_png, color, alpha=26, blur=1.6, crop=(0, 0, 1, 1), 
     return overlay(img, layer)
 
 
+def halftone_plate(img, src_png, color, alpha=150, size=520, x=0.02, y=0.62,
+                   pitch=10, rmax=4.6):
+    """把一张真图（图标 / 家系图渲染）做成半调网点装饰，压在色块上。
+
+    整本都是矢量形状和细线时，页面缺「图像」。半调是最好的折中：
+    远看像一张印刷插图，近看是一堆点，既有图像的体量又不抢正文。
+    """
+    if not os.path.exists(src_png):
+        return img
+    src = Image.open(src_png).convert("RGBA")
+    canvas = Image.new("RGBA", src.size, (255, 255, 255, 255))
+    canvas.alpha_composite(src)
+    g = canvas.convert("L").resize((size, size), Image.LANCZOS)
+
+    layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    px = g.load()
+    for yy in range(0, size, pitch):
+        for xx in range(0, size, pitch):
+            v = px[min(xx, size - 1), min(yy, size - 1)]
+            k = (255 - v) / 255.0                      # 越黑点越大
+            if k <= 0.06:
+                continue
+            r = rmax * (k ** 0.85)
+            d.ellipse([xx - r, yy - r, xx + r, yy + r], fill=color + (int(alpha * min(1, k * 1.5)),))
+    w, h = img.size
+    base = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    base.alpha_composite(layer, (int(w * x), int(h * y)))
+    return overlay(img, base)
+
+
 def mass_circle(img, color, alpha=40, cx=0.92, cy=0.9, r=0.62, blur=3):
     """一大块实色圆：背景需要「重量」，一层层淡线撑不起版面。
 
@@ -434,6 +465,15 @@ for idx, (name, tone, wash, num, motif) in enumerate(SECTIONS):
         (None, None),
     ]
     side = PANELS[idx]
+    # 每章配一张半调装饰图：整本都是形状与细线时，页面缺「图像」的体量
+    DECOR = ["heart", "family", "dna", "shield", "chart", "team"]
+    _dp = os.path.join(ART, "mat", DECOR[idx] + ".png")
+    if os.path.exists(_dp):
+        # 一半被页面边缘裁掉：装饰图是「版面的一部分」，不是贴上去的图标
+        _dx = -0.035 if side == "left" else 0.895
+        _dy = 0.635 if side == "left" else 0.02
+        bg = halftone_plate(bg, _dp, tone, alpha=200, size=470, x=_dx, y=_dy,
+                            pitch=8, rmax=5.6)
     # 面板高度也轮换：通高 / 下半 / 上半 / 中段，翻页时轮廓不止左右之差
     SPANS = [(0.0, 1.0), (0.34, 1.0), (0.0, 1.0), (0.0, 0.64), (0.0, 1.0), (0.26, 0.8)]
     tex, crop = TEXTURES[idx]

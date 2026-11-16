@@ -185,8 +185,40 @@ def nav_bar(slide, active):
         # 背景现在带栏目色，未选中项用 FAINT 会看不清，统一提到 MUTED
         para(tf, name, size=11 if on else 9.5, bold=on, color=PRIMARY if on else MUTED,
              first=True, align=PP_ALIGN.RIGHT)
+        # 当前栏目在名字上方点一个小圆点：比加粗更明确，也不占宽度
+        if on:
+            dot = slide.shapes.add_shape(MSO_SHAPE.OVAL, Inches(x + sizes[i] / 2 - 0.032),
+                                         Inches(0.235), Inches(0.064), Inches(0.064))
+            dot.fill.solid(); dot.fill.fore_color.rgb = SECTION_HUES[max(0, min(5, active))]
+            dot.line.fill.background(); dot.shadow.inherit = False
         x += sizes[i] + 0.10
-    rect(slide, M, 0.78, W, 0.012, fill=LINE, radius=False)
+
+    # 页眉底：一条极浅的白色带 + 下沿细线，让导航从背景里「浮」出来一层
+    band = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0.10),
+                                  Inches(13.333), Inches(0.72))
+    band.fill.solid(); band.fill.fore_color.rgb = WHITE
+    band.line.fill.background(); band.shadow.inherit = False
+    # 白带要压在背景图之上、其它内容之下：背景图是第 1 个形状，插到它后面
+    band.element.getparent().remove(band.element)
+    slide.shapes._spTree.insert(3, band.element)
+
+    # 章节进度条：六段刻度，走过的实心、当前的用栏目色、未到的浅灰
+    seg_w, seg_gap = 0.30, 0.055
+    px = M + W - (seg_w * len(NAV) + seg_gap * (len(NAV) - 1))
+    for i in range(len(NAV)):
+        if i < active:
+            c = LINE2
+        elif i == active:
+            c = SECTION_HUES[max(0, min(5, active))]
+        else:
+            c = RGBColor(0xE6, 0xEE, 0xF7)
+        seg = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Inches(px), Inches(0.700),
+                                     Inches(seg_w), Inches(0.052))
+        seg.adjustments[0] = 0.5
+        seg.fill.solid(); seg.fill.fore_color.rgb = c
+        seg.line.fill.background(); seg.shadow.inherit = False
+        px += seg_w + seg_gap
+    rect(slide, M, 0.782, W, 0.008, fill=LINE, radius=False)
 
 
 from pptx.enum.shapes import MSO_CONNECTOR
