@@ -98,7 +98,7 @@ python scripts/build_deck_v2.py # 生成 PPT（数据页的表格在构建时从
 - 代码仓库（在线浏览）：https://github.com/NimuStudio/jiaxi
 - 在线演示：https://clear.ysti.com.cn （账号 `demo` / `demo123`）
 - **演示视频（B 站）**：[B 站：BV1ctsk6HEDH](https://www.bilibili.com/video/BV1ctsk6HEDH/) （5 分 35 秒，1080p）
-- **完整作品（网盘）**：[夸克网盘（提取码 3BBg）](https://pan.quark.cn/s/40af78cce5c4?pwd=3BBg) 　提取码 `3BBg`（约 187 MB，本项目压缩包即为该文件）
+- **完整作品（网盘）**：[夸克网盘（提取码 fhwv）](https://pan.quark.cn/s/06c96f8f2d14?pwd=fhwv) 　提取码 `fhwv`（约 193 MB，本项目压缩包即为该文件）
 
 ## 一句话说清它解决什么
 
@@ -623,7 +623,7 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl   # 口语�
 | 评审账号 | `demo` / `demo123`（可登录；线上库为新建，账号内暂无数据） |
 | 想直接看完整形态 | 用 `/chat?demo=1`（预置 4 人家系与体检数字，不登录、不需要模型） |
 | 演示视频（B 站） | [B 站：BV1ctsk6HEDH](https://www.bilibili.com/video/BV1ctsk6HEDH/) |
-| 完整作品（网盘） | [夸克网盘（提取码 3BBg）](https://pan.quark.cn/s/40af78cce5c4?pwd=3BBg) 　提取码 `3BBg` |
+| 完整作品（网盘） | [夸克网盘（提取码 fhwv）](https://pan.quark.cn/s/06c96f8f2d14?pwd=fhwv) 　提取码 `fhwv` |
 
 > 体验账号是**共用**的：多人同时试用时，家系与体检数字会互相覆盖。
 > 只想看形态不想动数据的话，用 `/chat?demo=1`（本地预置数据，不读云端）；
