@@ -1,6 +1,7 @@
 import React from "react";
 import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { C, FONT, MONO } from "../theme";
+import { Backdrop } from "./Backdrop";
 
 const clamp = { extrapolateLeft: "clamp", extrapolateRight: "clamp" } as const;
 
@@ -23,10 +24,12 @@ const usePop = (delay: number, dist: number) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = spring({ frame: frame - delay, fps, config: { damping: 190, mass: 0.6 }, durationInFrames: 20 });
+  // 只保留透明度 + 整数像素位移：之前每帧做 blur(4px→0)，
+  // 细笔画每帧重新栅格化，观感就是「文字在抖」。
+  const y = Math.round(interpolate(s, [0, 1], [dist, 0], clamp));
   return {
     opacity: interpolate(s, [0, 1], [0, 1], clamp),
-    transform: "translateY(" + interpolate(s, [0, 1], [dist, 0], clamp) + "px)",
-    filter: "blur(" + interpolate(s, [0, 0.6], [4, 0], clamp) + "px)",
+    transform: "translate3d(0," + y + "px,0)",
   } as React.CSSProperties;
 };
 
@@ -36,20 +39,29 @@ export const Stage: React.FC<{
   eyebrow?: string;
   eyebrowColor?: string;
   padTop?: number;
-}> = ({ children, bg = C.bg, eyebrow, eyebrowColor = C.primary, padTop = 96 }) => (
+  variant?: "light" | "dark" | "warm";
+  seed?: number;
+}> = ({ children, bg, eyebrow, eyebrowColor = C.primary, padTop = 96, variant = "light", seed = 0 }) => (
   <div
     style={{
       width: "100%",
       height: "100%",
-      background: bg,
+      // bg 仍可用于极少数需要纯色的地方；默认交给 Backdrop
+      background: bg ?? "transparent",
       fontFamily: FONT,
-      color: C.text,
+      color: variant === "dark" ? "#eaf2fa" : C.text,
       padding: padTop + "px 120px",
       boxSizing: "border-box",
       position: "relative",
       overflow: "hidden",
     }}
   >
+    {/* 旧代码用 bg 传纯色；这里把它当「意图」推断变体，背景一律交给 Backdrop */}
+    <Backdrop
+      accent={eyebrowColor}
+      variant={bg === C.ink ? "dark" : bg === "#fbf7f1" ? "warm" : variant}
+      seed={seed}
+    />
     {eyebrow ? (
       <div
         style={{

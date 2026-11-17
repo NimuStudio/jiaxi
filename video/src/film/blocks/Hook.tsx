@@ -14,7 +14,9 @@ const SENTENCES = [
 export const Hook: React.FC = () => {
   const frame = useCurrentFrame();
   const b = blockById("hook");
-  const step = Math.floor(b.frames / SENTENCES.length);
+  // 三句话必须在第一句解说（5.6s）里说完 —— 之前按块时长三等分，
+  // 结果解说已经说到外公，画面还停在「我爸放了支架」。
+  const step = Math.floor(b.lines[0].frames / SENTENCES.length);
 
   return (
     <Stage bg={C.ink} padTop={0} eyebrow="">
@@ -45,7 +47,7 @@ export const Hook: React.FC = () => {
 
         {/* 报告卡片：最后 1 秒浮出来，红章「未见异常」 */}
         {(() => {
-          const at = b.frames - 40;
+          const at = b.lines[1].frames > 0 ? b.lines[0].frames + 8 : b.frames - 40;
           const p = fadeIn(frame, at, 20);
           return (
             <div

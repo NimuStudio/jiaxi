@@ -50,10 +50,11 @@ export const BlockTransition: React.FC<{
   const a = interpolate(frame, [0, inFrames], [0, 1], clamp);
   const b = interpolate(frame, [durationInFrames - outFrames, durationInFrames], [1, 0], clamp);
   const opacity = Math.min(a, b);
-  const scale = interpolate(a, [0, 1], [0.955, 1], clamp);
+  // 只做透明度与整数位移：缩放会让文字逐帧重新栅格化（抖动的第二个来源）
+  const y = Math.round(interpolate(a, [0, 1], [18, 0], clamp));
 
   return (
-    <AbsoluteFill style={{ opacity, transform: "scale(" + scale + ")" }}>
+    <AbsoluteFill style={{ opacity, transform: "translate3d(0," + y + "px,0)" }}>
       {children}
     </AbsoluteFill>
   );

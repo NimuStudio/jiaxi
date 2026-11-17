@@ -38,8 +38,11 @@ def load(name):
 def main():
     bed = None
     fade = int(XFADE * SR)
-    for name in TRACKS:
+    for idx, name in enumerate(TRACKS):
         a = load(name)
+        if idx == 0:
+            # 掐掉第一首 2 秒前奏：原版开头 7 秒没有律动，听感上像「没音乐」
+            a = a[int(2.0 * SR) :]
         if bed is None:
             bed = a
             continue

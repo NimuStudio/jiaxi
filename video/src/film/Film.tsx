@@ -1,6 +1,7 @@
 import React from "react";
 import { AbsoluteFill, Audio, Sequence, staticFile } from "remotion";
 import { BLOCKS, lineStart, TOTAL_FRAMES } from "./schedule";
+import { C } from "../theme";
 import { Hook } from "./blocks/Hook";
 import { Problem } from "./blocks/Problem";
 import { Product } from "./blocks/Product";
@@ -12,7 +13,8 @@ import { Close } from "./blocks/Close";
 import { Demo1, Demo2, Demo3 } from "./blocks/Demo";
 import { WhatWeDo, Arch, Deploy, Team } from "./blocks/Extras";
 import { Subtitles } from "./Subtitles";
-import { BlockTransition, Camera, Grain, Sweep } from "./motion";
+import { BlockTransition, Grain, Sweep } from "./motion";
+import { BlockIntro, INTRO_ACCENT } from "./BlockIntro";
 
 const BLOCK_COMPONENTS: Record<string, React.FC> = {
   hook: Hook,
@@ -66,12 +68,13 @@ export const Film: React.FC = () => (
       const cam = CAMERA[b.id] ?? { push: 0.045, pan: 0, zoomFrom: 1 };
       return (
         <Sequence key={b.id} from={b.start} durationInFrames={b.frames} name={b.title}>
-          <Camera push={cam.push} pan={cam.pan} zoomFrom={cam.zoomFrom}>
-            <BlockTransition>
-              <Comp />
-            </BlockTransition>
-          </Camera>
+          {/* 块级缩放已取消：文字被逐帧缩放会抖。视差交给 Backdrop 的漂移 */}
+          <BlockTransition>
+            <Comp />
+          </BlockTransition>
           <Sweep at={2} dur={24} color={b.id === "hook" || b.id === "close" || b.id === "evidence" ? "#7fc3cb" : "#9fd8ff"} />
+          {/* 章节重音：0.4 秒全屏大字，给片子做节奏 */}
+          <BlockIntro text={b.title} accent={INTRO_ACCENT[b.id] ?? C.primary} />
           {b.lines.map((l, i) => (
             <Sequence key={l.file} from={lineStart(b, i)} durationInFrames={l.frames} name={l.file}>
               <Audio src={staticFile("audio/" + l.file)} />
