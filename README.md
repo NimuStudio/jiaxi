@@ -57,7 +57,8 @@
 | 账户与云端同步 | 完成（含「删空也同步」这个易错点） |
 | 单元测试 / 类型检查 | **238 个用例 / 31 个文件**通过，`tsc --noEmit` 0 错误 |
 | 技术文档 / 答辩材料 | 已定稿：`docs/准确性说明.md`、`deliverables/家系-答辩-v2.pptx`（20 页） |
-| 演示视频、队伍信息 | **待补** |
+| 演示视频 | 已提交：https://www.bilibili.com/video/BV1ctsk6HEDH/（5 分 35 秒，1080p，B 站） |
+| 队伍信息 | 无限进步 · 45537 · 常州信息职业技术大学 · C 组 · 3 人 |
 
 ---
 
@@ -85,14 +86,15 @@ python scripts/build_deck_v2.py # 生成 PPT（数据页的表格在构建时从
 | 目录 | 内容 | 说明 |
 | --- | --- | --- |
 | `00-评审说明.txt` | 部署方式与限制、复现步骤、已知边界 | 先读这个 |
-| `01-演示视频/` | `家系-演示视频-1080p.mp4`（6 分 16 秒）+ SRT 字幕 | 说明片 + 真实操作录屏 + 技术亮点 |
+| `01-演示视频/` | `家系-演示视频-1080p.mp4`（5 分 35 秒）+ SRT 字幕 | 说明片 + 真实操作录屏 + 技术亮点；在线观看：https://www.bilibili.com/video/BV1ctsk6HEDH/ |
 | `02-答辩材料/` | 答辩 PPT v2、封面图、分镜脚本 | 与下方「答辩材料」一节同源 |
 | `03-源码/` | 完整可运行源码（本仓库快照） | 含录屏素材，可重渲演示视频 |
 | `04-文档/` | 技术设计、评测记录、引用台账、审计记录 | `docs/` 全量 |
 
 - 代码仓库（在线浏览）：https://github.com/NimuStudio/jiaxi
 - 在线演示：https://clear.ysti.com.cn （账号 `demo` / `demo123`）
-- 网盘链接：见报名表第 5 项填写内容
+- **演示视频（B 站）**：https://www.bilibili.com/video/BV1ctsk6HEDH/
+- 网盘链接：见报名表第 5 项填写内容（上传后回填）
 
 ## 一句话说清它解决什么
 
@@ -606,6 +608,7 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl   # 口语�
 | 在线演示 | https://clear.ysti.com.cn |
 | 评审账号 | `demo` / `demo123`（可登录；线上库为新建，账号内暂无数据） |
 | 想直接看完整形态 | 用 `/chat?demo=1`（预置 4 人家系与体检数字，不登录、不需要模型） |
+| 演示视频（B 站） | https://www.bilibili.com/video/BV1ctsk6HEDH/ |
 
 > 体验账号是**共用**的：多人同时试用时，家系与体检数字会互相覆盖。
 > 只想看形态不想动数据的话，用 `/chat?demo=1`（本地预置数据，不读云端）；
