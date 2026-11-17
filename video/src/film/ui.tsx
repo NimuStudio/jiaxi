@@ -62,6 +62,8 @@ export const Stage: React.FC<{
       variant={bg === C.ink ? "dark" : bg === "#fbf7f1" ? "warm" : variant}
       seed={seed}
     />
+    {/* 内容必须显式浮在 Backdrop 之上：Backdrop 是 absolute 兄弟，会盖住静态流内容 */}
+    <div style={{ position: "relative", zIndex: 1, height: "100%" }}>
     {eyebrow ? (
       <div
         style={{
@@ -79,7 +81,8 @@ export const Stage: React.FC<{
         {eyebrow}
       </div>
     ) : null}
-    {children}
+      {children}
+    </div>
   </div>
 );
 
