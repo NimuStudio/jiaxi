@@ -374,83 +374,92 @@ MYSQL_*                                  # 账户数据库（见上节）
 
 | 检查项 | 结果 |
 |---|---|
-| `GET https://clear.ysti.com.cn/` | 200 |
-| `GET https://clear.ysti.com.cn/chat?demo=1` | 200 |
-| `GET 127.0.0.1:8080/health` | `{"status":"ok"}` |
-| `POST https://clear.ysti.com.cn/api/extract` | 返回 `persons` JSON（例：`我妈高血压，我舅舅糖尿病` → 母亲/高血压 + 舅舅/糖尿病） |
+| `GET https://clear.ysti.com.cn/` | 200（风险量化页） |
+| `GET https://clear.ysti.com.cn/chat?demo=1` | 200（预置家系，完整可交互） |
+| `GET https://clear.ysti.com.cn/cvd` | 200（China-PAR 心血管风险） |
+| `POST /api/extract`（无模型时） | **503** + 明确提示（见下节「降级行为」） |
+| `GET /api/extract` | `{"ready":false}` |
 
-也就是说：**站点、模型、数据库三件都在线，AI 抽取走的是真实模型**，不是演示桩。
+也就是说：**站点与全部界面功能常驻服务器，不依赖任何本地机器**；
+只有「口述 → 抽取」这一步需要模型，模型缺位时按设计降级，不会白屏、不会 502。
 
-### 架构：VPS 只做入口，模型与数据在演示机
+### 架构：站点常驻服务器，模型可选
 
 ```
 浏览器
   → nginx（云服务器 1.6G 内存，Let's Encrypt TLS）
-  → SSH 反向隧道 127.0.0.1:18001（断线自动重连）
-  → 演示机 5173  Next.js 站点
-        ├→ 127.0.0.1:8080  llama-server（Qwen3-1.7B Q4_K_M，GPU 推理）
-        └→ 127.0.0.1:3306  MySQL 8（账户与同步数据）
+  → systemd: pedigree.service
+  → Next.js 16（127.0.0.1:5173，服务器本地常驻）
+        ├→ LLAMA_SERVER_URL（可选，指向本地/隧道上的 llama-server）
+        └→ MySQL（可选，仅账户与同步）
 ```
 
-| 角色 | 跑什么 | 不跑什么 |
+| 组件 | 跑在哪 | 必需性 |
 |---|---|---|
-| 云服务器（VPS） | nginx 反向代理 + TLS + 隧道端点 | 不驻留任何应用代码与用户数据 |
-| 演示机（本机 GPU） | Next.js 5173 · llama-server 8080 · MySQL 3306 | —— |
+| nginx + TLS | 云服务器 | 必需 |
+| Next.js 站点 | 云服务器 `/opt/pedigree`（systemd 常驻） | 必需 |
+| llama-server（Qwen3-1.7B） | 演示机 GPU，或任何能跑 1.2G 模型的机器 | **可选** |
+| MySQL 8 | 任意可连实例 | 可选（仅登录/同步） |
 
-**为什么不做成「全部部署在服务器上」**：
+**这么部署的原因**：评审期这台开发机不能一直开机，所以站点必须独立跑在服务器上。
+模型和数据库依赖重资源，服务器（1.6G 内存）放不下，于是按「放不下就只跑界面」的取舍处理——
+**站点与全部界面功能常驻服务器，模型缺位时只有「口述 → 抽取」降级。**
 
-1. **数据不出机器**——家族病史是最敏感的个人信息之一，推理与数据都在演示机，
-   VPS 上没有任何用户数据；这是产品主张，也是架构选择；
-2. **服务器资源不够**——VPS 只有 1.6G 内存，装不下 1.2GB 的模型和 MySQL；
-   按「服务器跑不下就只跑界面」的取舍，VPS 只承担公网入口；
-3. **入口比后端稳定**——演示机离线时域名与证书仍有效，开机后隧道自动重连即恢复。
+### 降级行为（实测）
 
-**代价（如实说明）**：演示期间演示机必须保持开机；它离线时线上返回 502。
-此时 `/chat?demo=1`、风险量化（`/`、`/cvd`、`/lung`）、依据检索、反事实滑块仍然可用，
-只有「口述 → 抽取」依赖模型。
+模型未连接时：
 
-### 组件如何启动（Windows · 计划任务）
-
-**不要用 `Start-Process`**：那样起的进程会随登录会话被回收，几分钟后就没了。
-本项目用**计划任务**托管，任务在用户会话里运行，会话保持即长期在线：
-
-| 计划任务 | 作用 | 备注 |
-|---|---|---|
-| `JiaxiSite` | `next start -p 5173`（站点） | 日志 `pedigree/logs/site.log` |
-| `JiaxiModel` | `llama-server -m <模型> -ngl 99 -c 4096 --port 8080` | GPU 推理 |
-| `ClearMind-Tunnel` | `infra/tunnel/tunnel-loop.cmd 18001 5173` | SSH 反向隧道，断线重连 |
-| `MySQL80` | 数据库（Windows 服务，开机自启） | 账户与同步 |
-
-常用命令（PowerShell）：
-
-```powershell
-# 启动 / 停止
-Start-ScheduledTask -TaskName JiaxiSite, JiaxiModel, ClearMind-Tunnel
-Stop-ScheduledTask  -TaskName JiaxiSite, JiaxiModel
-
-# 自检：三个端口都应 listening
-foreach ($p in 5173,8080,3306) {
-  if (Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue) { "$p OK" } else { "$p DOWN" }
-}
-
-# 一键拉起全部（等价于上面三个任务 + MySQL）
-scripts\start-demo.cmd
-```
-
-> `infra/` 目录（隧道脚本、备用部署脚本 `deploy.sh`）**不在本仓库内**，
-> 它属于部署机本地文件；仓库只包含应用本身，评审 clone 后按「快速开始」即可本地跑起来。
-
-### 云服务器上的内容
-
-| 项 | 位置 |
+| 接口 / 页面 | 行为 |
 |---|---|
-| nginx 站点 | `/etc/nginx/sites-enabled/zz-clear`（反代 → 隧道 18001） |
-| 隧道端点 | VPS 的 `127.0.0.1:18001`（sshd 监听） |
+| `POST /api/extract` | 返回 **503**，body 为 `{"error":"AI 抽取服务当前未连接（模型运行在演示机上，仅在评审时段在线）…"}` |
+| `GET /api/extract` | `{"ready":false}`，前端据此显示「模型未启动」提示 |
+| `/`、`/cvd`、`/lung` | 200，风险量化、反事实滑块、依据检索全部可用（纯本地计算） |
+| `/chat?demo=1` | 200，预置家系完整可交互（不读云端、不依赖模型） |
 
-VPS 上不驻留应用代码与用户数据（早期 `/opt/pedigree` 常驻部署已停用，
-`infra/deploy.sh` 仅作为备用路径保留）。
+2026-11-17 实测（服务器上，本地演示机全部关停）：
 
----
+```
+/           -> 200
+/chat       -> 200
+/chat?demo=1-> 200
+/cvd        -> 200
+POST /api/extract -> 503（上面那段提示）
+```
+
+### 服务器上怎么跑
+
+| 项 | 值 |
+|---|---|
+| 代码目录 | `/opt/pedigree`（只放运行时产物：`.next/` + `package.json` + `next.config.ts`） |
+| 服务 | `systemctl status pedigree`（`Restart=always`，开机自启） |
+| 监听 | `127.0.0.1:5173`（`next start`），只对 nginx 暴露 |
+| nginx | `/etc/nginx/sites-enabled/zz-clear` → `proxy_pass http://127.0.0.1:5173` |
+| 日志 | `journalctl -u pedigree -n 50 --no-pager` |
+
+更新部署（在开发机上，脚本会自动构建 + 上传 + 重启 + 健康检查）：
+
+```bash
+bash infra/deploy.sh
+```
+
+> 为什么在本地构建：服务器 1.6G 内存，`next build` 会 OOM。所以本地产出 `.next/` 运行时产物，
+> 只上传约 7MB（不含 `.next/cache` 与 `.next/dev`），服务器只做 `pnpm install --prod`。
+> `infra/` 目录（部署脚本、nginx 配置、隧道脚本）不在本仓库内，属于部署机本地文件。
+
+### 评审期间启用模型（可选）
+
+若希望线上「口述 → 抽取」也可用，在任意 GPU 机器上起模型并让服务器可达即可：
+
+```bash
+# 模型侧（演示机）
+llama-server -m qwen3-base-Q4_K_M.gguf -ngl 99 -c 4096 --port 8080 --host 127.0.0.1
+
+# 服务器侧：把 LLAMA_SERVER_URL 指过去（本地反代或隧道均可）
+systemctl edit pedigree   # Environment=LLAMA_SERVER_URL=http://127.0.0.1:8080
+systemctl restart pedigree
+```
+
+不启用时，界面、风险计算、依据检索、示例家系全部正常——这是刻意设计的降级路径。
 
 ## 目录结构
 
