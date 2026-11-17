@@ -452,6 +452,19 @@ bash infra/deploy.sh
 > 只上传约 7MB（不含 `.next/cache` 与 `.next/dev`），服务器只做 `pnpm install --prod`。
 > `infra/` 目录（部署脚本、nginx 配置、隧道脚本）不在本仓库内，属于部署机本地文件。
 
+#### 1.6 GB 小机器的资源处理
+
+| 项 | 做法 | 实测 |
+|---|---|---|
+| 内存 | Next.js + MySQL 两个进程常驻 | 约 125 MB + 145 MB，可用约 900 MB |
+| Swap | 两个 swapfile 共 6 GB | 占用约 100 MB |
+| MySQL 收紧 | `innodb_buffer_pool_size` 128M → 64M、`performance_schema=OFF`、`max_connections` 151 → 30 | mysqld 常驻 **403 MB → 145 MB** |
+| Node 堆上限 | `NODE_OPTIONS=--max-old-space-size=384` | 防止单进程无限增长 |
+| 自愈 | `pedigree`、`mysql` 都 `systemctl enable` + `Restart=always`（MySQL 默认只有 `on-failure`） | 异常退出 3 秒后自动拉起 |
+
+调优配置：`infra/mysql-small.cnf`（部署机本地文件，不入仓库）。
+即使 MySQL 意外退出，页面与全部计算功能仍可用，只有「登录 / 同步」受影响——这是刻意的降级设计。
+
 ### 评审期间启用模型（可选）
 
 若希望线上「口述 → 抽取」也可用，在任意 GPU 机器上起模型并让服务器可达即可：
