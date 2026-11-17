@@ -1,6 +1,7 @@
 import { Composition } from "remotion";
 import { Film, FILM_FRAMES } from "./film/Film";
 import { Cover } from "./film/Cover";
+import { Credits } from "./film/Credits";
 import { Opening } from "./scenes/Opening";
 import { Pipeline } from "./scenes/Pipeline";
 import { RiskDrop } from "./scenes/RiskDrop";
@@ -11,6 +12,9 @@ export const RemotionRoot = () => (
   <>
     {/* 成片：时长由配音决定（见 src/timing.json） */}
     <Composition id="Film" component={Film} durationInFrames={FILM_FRAMES} fps={FPS} width={WIDTH} height={HEIGHT} />
+
+    {/* 片尾署名卡：3 秒，渲染后与成片拼接 */}
+    <Composition id="Credits" component={Credits} durationInFrames={90} fps={FPS} width={WIDTH} height={HEIGHT} />
 
     {/* 封面：单帧，用于提交页 */}
     <Composition id="Cover" component={Cover} durationInFrames={1} fps={FPS} width={WIDTH} height={HEIGHT} />

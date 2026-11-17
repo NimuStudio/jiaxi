@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 VIDEO = os.path.dirname(HERE)
 FPS = 30
 SR = 44100
-BGM_GAIN = 0.18      # 目标：配乐比旁白低约 9 dB（104BPM funk groove，实测干声 RMS 校准）
+BGM_GAIN = 0.08      # 目标：配乐比旁白低约 9 dB（CC BY 音乐床，实测干声 RMS 校准）
 NARR_PEAK = 0.85     # 旁白峰值压到 -1.4 dBFS，留 headroom
 
 
@@ -78,8 +78,10 @@ def main():
             narr[off:end] += a[: end - off]
             cursor += ln["frames"]
 
-    bgm = read_wav(to_wav(os.path.join(VIDEO, "public", "audio", "bgm.mp3"),
-                          os.path.join(tmp, "bgm_full.wav")))
+    # 优先用 CC BY 音乐床（build_bed.py 产物）；没有就退回自制电子乐
+    bed = os.path.join(VIDEO, "public", "audio", "bed.wav")
+    src = bed if os.path.exists(bed) else os.path.join(VIDEO, "public", "audio", "bgm.mp3")
+    bgm = read_wav(to_wav(src, os.path.join(tmp, "bed_full.wav")))
     bgm = tile_with_crossfade(bgm, n, fade_s=1.5)
     bgm = bgm[:n] * BGM_GAIN
 

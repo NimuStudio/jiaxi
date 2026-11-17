@@ -29,6 +29,8 @@ docs/djac176_supplementary_data.pdf
 # Remotion 缓存与渲染产物（成片不进仓库，作为提交材料单独上传）
 video/.remotion/
 video/out/
+video/ref/
+video/out/ma/
 
 # 第三方论文 PDF / 补充材料：版权归出版方，只在本地参考，不进仓库
 docs/llp-*.pdf

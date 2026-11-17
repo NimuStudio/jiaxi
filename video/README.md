@@ -14,6 +14,26 @@
 四段动画合计 **2 分 50 秒**，与约 4 分 10 秒的录屏一起剪成 7 分 15 秒。
 完整的成片结构见 `../docs/demo-script.md`。
 
+## 配乐（CC BY 4.0）
+
+用 4 首曲库短曲拼成音乐床（`scripts/build_bed.py`），比单曲循环更耐听：
+
+| 曲目 | 来源 |
+|---|---|
+| Funkorama / Funk Game Loop / Disco Medusae / Wallpaper | Kevin MacLeod (incompetech.com)，CC BY 4.0 |
+
+**署名是许可条件**：成片末尾有 3 秒署名卡（`src/film/Credits.tsx`）。
+把这四首换掉时，记得同步改署名卡，否则违反 CC BY。
+
+下载（素材不入 git，需要时重下）：
+
+```bash
+mkdir -p ref && cd ref
+for n in Funkorama "Funk Game Loop" "Disco Medusae" "Wallpaper"; do
+  curl -L -o "${n// /_}.mp3" "https://incompetech.com/music/royalty-free/mp3-royaltyfree/${n// /%20}.mp3"
+done
+```
+
 ## 成片（配音驱动）
 
 ```bash
