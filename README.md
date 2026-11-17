@@ -90,8 +90,8 @@ python scripts/build_deck_v2.py # 生成 PPT（数据页的表格在构建时从
 | `03-源码/` | 完整可运行源码（本仓库快照） | 含录屏素材，可重渲演示视频 |
 | `04-文档/` | 技术设计、评测记录、引用台账、审计记录 | `docs/` 全量 |
 
-- 代码仓库（在线浏览）：**https://github.com/NimuStudio/jiaxi**
-- 在线演示：**https://clear.ysti.com.cn**（账号 `demo` / `demo123`）
+- 代码仓库（在线浏览）：https://github.com/NimuStudio/jiaxi
+- 在线演示：https://clear.ysti.com.cn （账号 `demo` / `demo123`）
 - 网盘链接：见报名表第 5 项填写内容
 
 ## 一句话说清它解决什么
@@ -367,7 +367,7 @@ MYSQL_*                                  # 账户数据库（见上节）
 
 ## 在线部署
 
-**演示地址：https://clear.ysti.com.cn**
+演示地址：https://clear.ysti.com.cn
 体验账号 `demo` / `demo123`；不想动数据可用 `/chat?demo=1`（预置家系，不读云端、不依赖模型）。
 
 ### 部署现状（2026-11-17 实测）
