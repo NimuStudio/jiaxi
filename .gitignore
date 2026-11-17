@@ -40,3 +40,9 @@ docs/家系-*.pdf
 
 # 预览图（本地导出，不入库）
 deliverables/preview/
+
+# 生成物 / 临时文件
+video/public/audio/bed.wav
+_*.json
+_fmt.py
+nul
