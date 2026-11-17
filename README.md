@@ -78,6 +78,22 @@ python scripts/deck_icons.py    # 重新生成双色图标集
 python scripts/build_deck_v2.py # 生成 PPT（数据页的表格在构建时从 jsonl 现算）
 ```
 
+## 提交物（完整作品包）
+
+报名表第 5 项要求上传**完整作品文件**到网盘。作品包结构与内容：
+
+| 目录 | 内容 | 说明 |
+| --- | --- | --- |
+| `00-评审说明.txt` | 部署方式与限制、复现步骤、已知边界 | 先读这个 |
+| `01-演示视频/` | `家系-演示视频-1080p.mp4`（6 分 16 秒）+ SRT 字幕 | 说明片 + 真实操作录屏 + 技术亮点 |
+| `02-答辩材料/` | 答辩 PPT v2、封面图、分镜脚本 | 与下方「答辩材料」一节同源 |
+| `03-源码/` | 完整可运行源码（本仓库快照） | 含录屏素材，可重渲演示视频 |
+| `04-文档/` | 技术设计、评测记录、引用台账、审计记录 | `docs/` 全量 |
+
+- 代码仓库（在线浏览）：**https://github.com/NimuStudio/jiaxi**
+- 在线演示：**https://clear.ysti.com.cn**（账号 `demo` / `demo123`）
+- 网盘链接：见报名表第 5 项填写内容
+
 ## 一句话说清它解决什么
 
 体检报告说「未见异常」，但很多人心里清楚：我爸 52 岁放的支架，我爷爷糖尿病，我外婆是脑溢血走的。
@@ -351,46 +367,88 @@ MYSQL_*                                  # 账户数据库（见上节）
 
 ## 在线部署
 
-演示地址 **https://clear.ysti.com.cn** 。
+**演示地址：https://clear.ysti.com.cn**
+体验账号 `demo` / `demo123`；不想动数据可用 `/chat?demo=1`（预置家系，不读云端、不依赖模型）。
 
-### 架构
+### 部署现状（2026-11-17 实测）
+
+| 检查项 | 结果 |
+|---|---|
+| `GET https://clear.ysti.com.cn/` | 200 |
+| `GET https://clear.ysti.com.cn/chat?demo=1` | 200 |
+| `GET 127.0.0.1:8080/health` | `{"status":"ok"}` |
+| `POST https://clear.ysti.com.cn/api/extract` | 返回 `persons` JSON（例：`我妈高血压，我舅舅糖尿病` → 母亲/高血压 + 舅舅/糖尿病） |
+
+也就是说：**站点、模型、数据库三件都在线，AI 抽取走的是真实模型**，不是演示桩。
+
+### 架构：VPS 只做入口，模型与数据在演示机
 
 ```
 浏览器
-  → nginx（云服务器，Let's Encrypt TLS）
-  → ssh 反向隧道 127.0.0.1:18001 ——断线自动重连
-  → 演示机 5173 Next.js（站点）
-        ├→ 127.0.0.1:8080  llama-server（Qwen3-1.7B，GPU 推理）
-        └→ 127.0.0.1:3306  MySQL 8（账户数据）
+  → nginx（云服务器 1.6G 内存，Let's Encrypt TLS）
+  → SSH 反向隧道 127.0.0.1:18001（断线自动重连）
+  → 演示机 5173  Next.js 站点
+        ├→ 127.0.0.1:8080  llama-server（Qwen3-1.7B Q4_K_M，GPU 推理）
+        └→ 127.0.0.1:3306  MySQL 8（账户与同步数据）
 ```
 
-**站点、模型、数据库全部跑在演示机上，VPS 只做公网入口**（nginx 反代 + 隧道端点）。
-这是刻意设计的：
+| 角色 | 跑什么 | 不跑什么 |
+|---|---|---|
+| 云服务器（VPS） | nginx 反向代理 + TLS + 隧道端点 | 不驻留任何应用代码与用户数据 |
+| 演示机（本机 GPU） | Next.js 5173 · llama-server 8080 · MySQL 3306 | —— |
 
-1. **家族病史不出机器**——数据库和推理都在本机，VPS 上没有任何用户数据；
-2. VPS 只有 1.6G 内存，跑不动模型和数据库，跑一个 nginx 绰绰有余；
-3. 演示机离线时公网入口保留（域名、证书不受影响），开机后隧道自动重连即恢复。
+**为什么不做成「全部部署在服务器上」**：
 
-**代价**：演示期间演示机需要保持开机。`scripts/start-demo.cmd` 一键拉起全部组件。
+1. **数据不出机器**——家族病史是最敏感的个人信息之一，推理与数据都在演示机，
+   VPS 上没有任何用户数据；这是产品主张，也是架构选择；
+2. **服务器资源不够**——VPS 只有 1.6G 内存，装不下 1.2GB 的模型和 MySQL；
+   按「服务器跑不下就只跑界面」的取舍，VPS 只承担公网入口；
+3. **入口比后端稳定**——演示机离线时域名与证书仍有效，开机后隧道自动重连即恢复。
 
-### 服务器上有什么
+**代价（如实说明）**：演示期间演示机必须保持开机；它离线时线上返回 502。
+此时 `/chat?demo=1`、风险量化（`/`、`/cvd`、`/lung`）、依据检索、反事实滑块仍然可用，
+只有「口述 → 抽取」依赖模型。
+
+### 组件如何启动（Windows · 计划任务）
+
+**不要用 `Start-Process`**：那样起的进程会随登录会话被回收，几分钟后就没了。
+本项目用**计划任务**托管，任务在用户会话里运行，会话保持即长期在线：
+
+| 计划任务 | 作用 | 备注 |
+|---|---|---|
+| `JiaxiSite` | `next start -p 5173`（站点） | 日志 `pedigree/logs/site.log` |
+| `JiaxiModel` | `llama-server -m <模型> -ngl 99 -c 4096 --port 8080` | GPU 推理 |
+| `ClearMind-Tunnel` | `infra/tunnel/tunnel-loop.cmd 18001 5173` | SSH 反向隧道，断线重连 |
+| `MySQL80` | 数据库（Windows 服务，开机自启） | 账户与同步 |
+
+常用命令（PowerShell）：
+
+```powershell
+# 启动 / 停止
+Start-ScheduledTask -TaskName JiaxiSite, JiaxiModel, ClearMind-Tunnel
+Stop-ScheduledTask  -TaskName JiaxiSite, JiaxiModel
+
+# 自检：三个端口都应 listening
+foreach ($p in 5173,8080,3306) {
+  if (Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue) { "$p OK" } else { "$p DOWN" }
+}
+
+# 一键拉起全部（等价于上面三个任务 + MySQL）
+scripts\start-demo.cmd
+```
+
+> `infra/` 目录（隧道脚本、备用部署脚本 `deploy.sh`）**不在本仓库内**，
+> 它属于部署机本地文件；仓库只包含应用本身，评审 clone 后按「快速开始」即可本地跑起来。
+
+### 云服务器上的内容
 
 | 项 | 位置 |
 |---|---|
 | nginx 站点 | `/etc/nginx/sites-enabled/zz-clear`（反代 → 隧道 18001） |
-| 隧道端点 | VPS 的 127.0.0.1:18001（sshd 监听） |
+| 隧道端点 | VPS 的 `127.0.0.1:18001`（sshd 监听） |
 
-VPS 上不驻留任何应用代码与用户数据（早期版本的 `/opt/pedigree` 常驻部署已停用，
-`infra/deploy.sh` 保留作为备用部署路径）。
-
-### 演示机需要跑什么
-
-双击 `scripts/start-demo.cmd`（或手动）：
-
-1. MySQL80 服务（Windows 服务，开机自启）
-2. llama-server（8080，GPU）
-3. `pnpm start`（5173）
-4. `infra/tunnel/tunnel-loop.cmd 18001 5173`（隧道，断线自动重连）
+VPS 上不驻留应用代码与用户数据（早期 `/opt/pedigree` 常驻部署已停用，
+`infra/deploy.sh` 仅作为备用路径保留）。
 
 ---
 
