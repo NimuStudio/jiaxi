@@ -1,26 +1,27 @@
 import React from "react";
-import { OffthreadVideo, staticFile, useCurrentFrame } from "remotion";
+import { OffthreadVideo, Sequence, staticFile, useCurrentFrame } from "remotion";
 import { C, HUES } from "../../theme";
 import { Stage, H, fadeIn, rise } from "../ui";
-import { blockById } from "../schedule";
+import { blockById, lineStart } from "../schedule";
 
-type Callout = { at: number; text: string };
+type Win = [number, number];
 
 /**
- * 真实录屏段：左边设备框里放录屏（1600×910 按 1160×660 等比），右边竖排解说要点。
- * 要点放右侧而不是压在画面上——录屏本身就是证据，不能被挡。
+ * 真实录屏段：**逐句对位**。
+ *
+ * 关键：每一句解说对应一段真实录屏窗口，片段与该句等长。
+ * 第一版是「整段录屏按块时长等比拉慢」（demo1 rate=0.55），讲到「按回车之后」时
+ * 画面还在打字——这就是画面与配音不符的原因。
  */
 const Demo: React.FC<{
   block: string;
-  fromSec: number;
-  toSec: number;
+  steps: Win[];
   title: React.ReactNode;
-  callouts: Callout[];
+  callouts: string[];
   accent?: string;
-}> = ({ block, fromSec, toSec, title, callouts, accent = HUES.product }) => {
+}> = ({ block, steps, title, callouts, accent = HUES.product }) => {
   const frame = useCurrentFrame();
   const b = blockById(block);
-  const rate = ((toSec - fromSec) * 30) / Math.max(1, b.frames);
   const p = fadeIn(frame, 0, 12);
 
   return (
@@ -46,7 +47,6 @@ const Demo: React.FC<{
       </div>
 
       <div style={{ display: "flex", gap: 40, marginTop: 20 }}>
-        {/* 设备框：1160 宽 → 内容高 660，刚好与 1600×910 等比 */}
         <div
           style={{
             width: 1160,
@@ -64,24 +64,32 @@ const Demo: React.FC<{
             ))}
             <span style={{ marginLeft: 8, fontSize: 16, color: C.muted }}>127.0.0.1:5173</span>
           </div>
-          <div style={{ height: 653, overflow: "hidden" }}>
-            <OffthreadVideo
-              src={staticFile("rec/demo.mp4")}
-              startFrom={Math.round(fromSec * 30)}
-              playbackRate={rate}
-              style={{ width: 1160, display: "block" }}
-              muted
-            />
+          <div style={{ height: 653, overflow: "hidden", position: "relative" }}>
+            {b.lines.map((l, i) => {
+              const win = steps[Math.min(i, steps.length - 1)];
+              const sourceFrames = Math.round((win[1] - win[0]) * 30);
+              const rate = sourceFrames / Math.max(1, l.frames);
+              return (
+                <Sequence key={l.file} from={lineStart(b, i)} durationInFrames={l.frames} name={"seg-" + i}>
+                  <OffthreadVideo
+                    src={staticFile("rec/demo.mp4")}
+                    startFrom={Math.round(win[0] * 30)}
+                    playbackRate={rate}
+                    style={{ width: 1160, display: "block" }}
+                    muted
+                  />
+                </Sequence>
+              );
+            })}
           </div>
         </div>
 
-        {/* 右侧要点 */}
         <div style={{ width: 520, paddingTop: 8 }}>
-          {callouts.map((c, i) => {
-            const q = fadeIn(frame, c.at, 14);
+          {callouts.map((text, i) => {
+            const q = fadeIn(frame, lineStart(b, i), 12);
             return (
               <div
-                key={c.text}
+                key={text}
                 style={{
                   ...rise(q, 12),
                   opacity: q,
@@ -94,7 +102,7 @@ const Demo: React.FC<{
                 }}
               >
                 <div style={{ fontSize: 18, color: accent, fontWeight: 800 }}>0{i + 1}</div>
-                <div style={{ fontSize: 25, color: C.text, marginTop: 4, lineHeight: 1.4 }}>{c.text}</div>
+                <div style={{ fontSize: 25, color: C.text, marginTop: 4, lineHeight: 1.4 }}>{text}</div>
               </div>
             );
           })}
@@ -107,43 +115,28 @@ const Demo: React.FC<{
 export const Demo1: React.FC = () => (
   <Demo
     block="demo1"
-    fromSec={2}
-    toSec={20}
+    steps={[[6, 9], [9, 10.5], [10.5, 19.5], [19.5, 21.5]]}
     title={<>说一句话，<span style={{ color: HUES.product }}>家系图实时长出</span></>}
-    callouts={[
-      { at: 20, text: "口述，不填表：想到谁说谁，顺序无所谓" },
-      { at: 150, text: "本地模型抽取，家系图同步长出节点" },
-      { at: 330, text: "每条病都能回到原话核对，抽错可删" },
-    ]}
+    callouts={["口述，不填表：想到谁说谁", "不用按格式，顺序无所谓", "按回车 → 本地抽取，图同步长出", "每条病都能回查原话"]}
   />
 );
 
 export const Demo2: React.FC = () => (
   <Demo
     block="demo2"
-    fromSec={20}
-    toSec={30}
+    steps={[[21.5, 24.5], [24.5, 27], [27, 29.5], [29.5, 31.5]]}
     title={<>家族史<span style={{ color: HUES.value }}>直接进国家指南方程</span></>}
     accent={HUES.value}
-    callouts={[
-      { at: 20, text: "China-PAR：未来 10 年 ASCVD 风险" },
-      { at: 150, text: "家系图里有一级亲属心梗，家族史自动勾选" },
-      { at: 330, text: "改任一项，风险实时重算，纯本地" },
-    ]}
+    callouts={["切到心血管风险", "China-PAR：未来 10 年 ASCVD", "家族史已自动勾选", "改任一项，实时重算"]}
   />
 );
 
 export const Demo3: React.FC = () => (
   <Demo
     block="demo3"
-    fromSec={30}
-    toSec={46}
+    steps={[[32, 35.5], [35.5, 39], [39, 42.5], [42.5, 46]]}
     title={<>风险拆开算：<span style={{ color: HUES.value }}>7 分能改，9 分改不了</span></>}
     accent={HUES.value}
-    callouts={[
-      { at: 20, text: "33% 里，7 分来自 BMI、腰围、运动、蔬果" },
-      { at: 190, text: "四项全达标 → 4%，可回收的部分被算出来" },
-      { at: 360, text: "剩下 9 分来自年龄、家族史、用药，不该自责" },
-    ]}
+    callouts={["糖尿病风险这一页", "不给你笼统的「高风险」", "四项全达标 → 4%", "改不了的部分不该自责"]}
   />
 );
