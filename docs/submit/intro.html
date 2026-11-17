@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>家系 · 作品介绍文档</title>
+<style>
+  @page { size: A4; margin: 17mm 16mm; }
+  body { font-family: "Microsoft YaHei", system-ui, sans-serif; color: #16324f; font-size: 10.5pt; line-height: 1.75; margin: 0; }
+  h1 { font-size: 24pt; margin: 0 0 4mm; letter-spacing: -0.5px; }
+  h2 { font-size: 14pt; margin: 8mm 0 3mm; padding-left: 8px; border-left: 5px solid #1a6fb5; page-break-after: avoid; }
+  h3 { font-size: 11.5pt; margin: 5mm 0 2mm; }
+  p { margin: 0 0 3mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin-bottom: 1.2mm; }
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0 4mm; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #d5e2ee; padding: 2.2mm 2.6mm; text-align: left; vertical-align: top; }
+  th { background: #eef5fb; font-weight: 700; }
+  code { font-family: Consolas, monospace; background: #f2f6fa; padding: 0 3px; border-radius: 3px; font-size: 9pt; }
+  .cover { height: 240mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+  .kicker { font-size: 10pt; letter-spacing: 3px; color: #1a6fb5; font-weight: 700; margin-bottom: 6mm; }
+  .sub { font-size: 13pt; color: #46688b; margin-bottom: 12mm; }
+  .meta { display: grid; grid-template-columns: 30mm 1fr; row-gap: 2.2mm; font-size: 10.5pt; }
+  .meta dt { color: #7a93ab; } .meta dd { margin: 0; }
+  figure { margin: 3mm 0 5mm; page-break-inside: avoid; }
+  figure img { width: 100%; border: 1px solid #dbe6f0; border-radius: 6px; }
+  figcaption { font-size: 8.8pt; color: #6c8399; margin-top: 1.5mm; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .two img { width: 100%; border: 1px solid #dbe6f0; border-radius: 5px; }
+  .note { background: #f7fbfe; border-left: 4px solid #1a6fb5; padding: 3mm 4mm; margin: 3mm 0 4mm; font-size: 9.6pt; }
+  .pb { page-break-before: always; }
+</style></head>
+<body>
+
+<div class="cover">
+  <div class="kicker">作品介绍文档</div>
+  <h1>家系<br><span style="font-size:14pt;font-weight:600;color:#46688b;">把家族口述的病史，变成一张能算的结构化家系</span></h1>
+  <div class="sub">一个 1.7B 本地模型 + 三套公开风险方程的垂直应用</div>
+  <dl class="meta">
+    <dt>队伍名称</dt><dd>无限进步（团队编号 45537）</dd>
+    <dt>所属院校</dt><dd>常州信息职业技术大学 · C 组</dd>
+    <dt>在线演示</dt><dd>https://clear.ysti.com.cn</dd>
+    <dt>演示账号</dt><dd>demo / demo123（免登录体验：/chat?demo=1）</dd>
+    <dt>代码仓库</dt><dd>https://github.com/NimuStudio/jiaxi</dd>
+    <dt>提交日期</dt><dd>2026-11-17</dd>
+  </dl>
+</div>
+
+<h2>一、项目详情与使用方式</h2>
+<h3>1. 它是做什么的</h3>
+<p>用户说一句「<b>我妈高血压，我舅舅糖尿病，我外公脑溢血</b>」，系统把它整理成一张结构化家系图，标出每个亲属的病与发病年龄，并算出他的风险里<b>有多少是能拿回来的</b>，最后给出这周就能做的一步。</p>
+<p>它解决的是一个具体的落差：体检报告说「未见异常」，但报告只解读当次指标；问卷把家族史压成「有 / 无」；建议说「多运动」，却不告诉你「能拿回什么」。家族史在临床上用了六十年，也是三套公开风险方程里的变量，却几乎没有被结构化地记录过。</p>
+
+<h3>2. 怎么用（三个动作）</h3>
+<table>
+  <tr><th style="width:22%">动作</th><th>操作</th></tr>
+  <tr><td><b>说</b></td><td>进入「梳理家系」，像聊天一样说家里人的病：「我妈高血压，我舅舅糖尿病，我外公脑溢血」。不需要按格式、不需要顺序、也不用说得清楚。</td></tr>
+  <tr><td><b>看</b></td><td>家系图实时长出节点；点任意节点能看到「依据：你第 N 轮说的原话」，说错了直接删掉重说。</td></tr>
+  <tr><td><b>算</b></td><td>切到「糖尿病风险」或「心血管风险」：家族史已自动进入方程；拖动「可改变因素」的滑块，右侧数字实时重算。</td></tr>
+</table>
+<p>演示入口：<b>https://clear.ysti.com.cn/chat?demo=1</b>（不登录、不依赖模型，直接看完整形态）。</p>
+
+<figure><img src="../screenshots/02-chat.png"><figcaption>口述一句话，家系图实时长出节点；左侧保留原话作为依据</figcaption></figure>
+
+<h2 class="pb">二、项目亮点</h2>
+<table>
+  <tr><th style="width:26%">亮点</th><th>为什么值得说</th></tr>
+  <tr><td><b>不填表，用嘴说</b></td><td>口述 → 结构化，顺序无所谓、格式无所谓；这是「家里人说过的病史」最自然的录入方式</td></tr>
+  <tr><td><b>每个数字都能追溯</b></td><td>家系节点可回查原话；风险分数可检索依据；连引用错误都留档（<code>docs/audit.md</code>）</td></tr>
+  <tr><td><b>「可回收风险」这个概念</b></td><td>33% 的风险里，7 分来自能改的因素，四项达标可降到 4%；不是又一个评分，而是行动边界</td></tr>
+  <tr><td><b>家族史真的进方程</b></td><td>不是展示用的一行字：家系图里的父母患病情况直接进入 FINDRISC / China-PAR / PLCOm2012</td></tr>
+  <tr><td><b>能在断网的电脑上跑</b></td><td>推理全在本机，数据不出机器；模型缺位时界面与计算仍完整可用</td></tr>
+</table>
+
+<div class="two">
+  <div><img src="../screenshots/03-risk.png"><figcaption>糖尿病风险：33% 现在 / 7 分可回收 / 4% 达标</figcaption></div>
+  <div><img src="../screenshots/04-cvd-new.png"><figcaption>China-PAR：家族史自动带入</figcaption></div>
+</div>
+
+<h2>三、AI 技术落地使用情况概述</h2>
+<table>
+  <tr><th style="width:30%">环节</th><th>用了什么</th><th>实测</th></tr>
+  <tr><td>口述抽取</td><td>Qwen3-1.7B Q4_K_M + llama.cpp + GBNF 约束解码 + 三层校验</td><td>留出集 180 句，F1 <b>0.877 → 1.000</b></td></tr>
+  <tr><td>性能</td><td>GPU 推理</td><td>启动 1.7s · <b>0.11s/句</b> · 显存 1.8GB</td></tr>
+  <tr><td>问答 Agent</td><td>工具调用 + GBNF 枚举决策 + 事实卡直渲数字</td><td>决策输出 <code>output_tokens: 0</code>；数字不经模型复述</td></tr>
+  <tr><td>遗传模式判定</td><td><b>不用 LLM</b>，12 维结构信号 + 确定性计算</td><td>40% → <b>96%</b> · 6.3s → <b>&lt;0.1s</b> · ECE 0.401</td></tr>
+  <tr><td>依据检索</td><td>BM25 + 已核实语料</td><td>窄用：只回原文片段，不参与打分</td></tr>
+</table>
+<div class="note"><b>如实说明：</b>我们做过微调对照实验，A/B 实测无增益，因此<b>没有采用</b>微调产物，线上仍是基座量化版。这条结论与失败分析都写在 <code>docs/准确性说明.md</code> 里。</div>
+
+<h2 class="pb">四、涉及的关键技术</h2>
+<ol>
+  <li><b>约束解码（GBNF）</b>：把输出空间限制成家系节点数组，保证结构合法——这是小模型可用的前提。</li>
+  <li><b>三层校验</b>：分句抽取（长句不漏）→ 词表校正（「老爹」不变成伯叔）→ 证据校验（病名必须在原句出现）。</li>
+  <li><b>数字与措辞分离</b>：界面数字由工具返回的结构化事实直渲，避免 1.7B 复述时把「7 分」说成「4%」。</li>
+  <li><b>三套公开风险方程</b>：FINDRISC（16 分制）、China-PAR（10 年 ASCVD）、PLCOm2012（肺癌），系数与出处逐条登记。</li>
+  <li><b>可回收风险拆解</b>：把每个因子标注为可改 / 不可改，反事实推演只作用于可改部分。</li>
+  <li><b>血缘查询与图布局</b>：父系 / 母系两侧独立成链，决定「舅舅」与「叔叔」的风险传播不等价。</li>
+  <li><b>MCP 协议</b>：三个核心工具（家系摘要 / 风险计算 / 依据检索）以标准 MCP 对外暴露，站外客户端也能接入。</li>
+  <li><b>工程与部署</b>：Next.js 16 + TypeScript；238 个用例；站点 systemd 常驻服务器，模型可选、缺位即降级。</li>
+</ol>
+
+<h2>五、项目相关图片</h2>
+<div class="two">
+  <div><img src="../screenshots/01-login.png"><figcaption>登录 / 入口</figcaption></div>
+  <div><img src="../screenshots/03-reclaim.png"><figcaption>可回收风险拆解</figcaption></div>
+</div>
+<div class="two">
+  <div><img src="../screenshots/02-chat.png"><figcaption>口述 + 家系图</figcaption></div>
+  <div><img src="../screenshots/04-cvd-new.png"><figcaption>心血管风险（China-PAR）</figcaption></div>
+</div>
+
+<h2 class="pb">六、是否基于其他项目优化</h2>
+<p>本项目为<b>原创</b>，未基于其他完整项目二次开发。所使用的开源组件如下：</p>
+<table>
+  <tr><th style="width:26%">组件</th><th>用途</th><th>许可</th></tr>
+  <tr><td>Next.js 16 / React 19</td><td>前端与路由</td><td>MIT</td></tr>
+  <tr><td>llama.cpp</td><td>本地推理运行时</td><td>MIT</td></tr>
+  <tr><td>Qwen3-1.7B</td><td>抽取与问答的基座模型</td><td>Apache-2.0</td></tr>
+  <tr><td>配乐（Kevin MacLeod）</td><td>演示视频背景音乐</td><td>CC BY 4.0（片尾署名）</td></tr>
+</table>
+<p>相对早期版本，本项目做过的优化包括：把遗传模式判定从 LLM 改为确定性计算（40%→96%、6.3s→&lt;0.1s）；
+用事实卡把数字与措辞分离；把抽取从单次调用改为分句 + 三层校验（F1 0.877→1.000）。</p>
+
+<h2>附：可访问入口</h2>
+<table>
+  <tr><th style="width:26%">项</th><th>地址</th></tr>
+  <tr><td>在线演示</td><td>https://clear.ysti.com.cn</td></tr>
+  <tr><td>免登录体验</td><td>https://clear.ysti.com.cn/chat?demo=1</td></tr>
+  <tr><td>演示账号</td><td>demo / demo123</td></tr>
+  <tr><td>代码仓库</td><td>https://github.com/NimuStudio/jiaxi</td></tr>
+  <tr><td>演示视频（B 站）</td><td style="word-break:break-all">https://www.bilibili.com/video/BV1ctsk6HEDH/</td></tr>
+</table>
+
+</body></html>
