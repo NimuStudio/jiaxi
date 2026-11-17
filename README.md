@@ -627,3 +627,13 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl   # 口语�
 | 所属院校 | 常州信息职业技术大学 |
 | 参赛组别 | C 组 |
 | 团队人数 | 3 人 |
+
+---
+
+## License
+
+本项目以 **MIT License** 开源，见 [LICENSE](LICENSE)。
+
+允许商用、修改、分发，保留版权声明即可。第三方素材另有许可：
+配乐为 Kevin MacLeod（incompetech.com）CC BY 4.0（片尾已署名）；
+引用的论文与指南 PDF 见 `docs/references.md`，版权归原作者/出版方。
