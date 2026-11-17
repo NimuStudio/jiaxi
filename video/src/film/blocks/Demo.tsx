@@ -66,7 +66,7 @@ const Demo: React.FC<{
         </Reveal>
       </div>
 
-      <div style={{ display: "flex", gap: 40, marginTop: 20 }}>
+      <div style={{ display: "flex", gap: 40, marginTop: 46 }}>
         {/* 镜头作用在整个设备框上：窗口边框、阴影一起被「拍」，缩放才不会把框裁掉 */}
         <div style={{ width: 1160, flexShrink: 0, borderRadius: 14 }}>
           <div
@@ -76,7 +76,7 @@ const Demo: React.FC<{
               border: "1px solid " + C.lineStrong,
               boxShadow: "0 26px 60px rgba(15,42,68,.16)",
               background: "#fff",
-              transform: "translate(" + fx * 0.45 + "px," + fy * 0.45 + "px) scale(" + (1 + (fs - 1) * 0.62) + ")",
+              transform: "translate(" + fx * 0.30 + "px," + fy * 0.30 + "px) scale(" + (1 + (fs - 1) * 0.32) + ")",
               transformOrigin: "50% 50%",
               willChange: "transform",
             }}

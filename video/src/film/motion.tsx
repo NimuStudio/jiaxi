@@ -26,7 +26,8 @@ export const Camera: React.FC<{
     <AbsoluteFill
       style={{
         transform: "scale(" + scale + ") translateX(" + x + "px)",
-        transformOrigin: "50% 50%",
+        // 从顶部展开：中心的缩放会让内容往上长，压住标题
+        transformOrigin: "50% 0%",
         willChange: "transform",
       }}
     >
