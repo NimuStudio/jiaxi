@@ -39,24 +39,8 @@ export const Subtitles: React.FC = () => {
     return null;
   }
 
-  const ink = "6,18,30";
-  const outline = onDark
-    ? [
-        "0 0 2px rgba(" + ink + ",.95)",
-        "1px 0 0 rgba(" + ink + ",.9)",
-        "-1px 0 0 rgba(" + ink + ",.9)",
-        "0 1px 0 rgba(" + ink + ",.9)",
-        "0 -1px 0 rgba(" + ink + ",.9)",
-        "0 6px 18px rgba(" + ink + ",.55)",
-      ].join(",")
-    : [
-        "0 0 3px rgba(255,255,255,.95)",
-        "1px 0 0 rgba(255,255,255,.9)",
-        "-1px 0 0 rgba(255,255,255,.9)",
-        "0 1px 0 rgba(255,255,255,.9)",
-        "0 -1px 0 rgba(255,255,255,.9)",
-        "0 4px 14px rgba(10,32,54,.35)",
-      ].join(",");
+  // 按用户要求：白字、不描边、只加一点点阴影
+  const outline = "0 0 14px rgba(6,18,30,.62), 0 3px 8px rgba(6,18,30,.72), 0 1px 3px rgba(6,18,30,.8)";
 
   return (
     <div
@@ -73,7 +57,7 @@ export const Subtitles: React.FC = () => {
       <div
         style={{
           maxWidth: 1480,
-          color: onDark ? "#ffffff" : "#0f2a44",
+          color: "#ffffff",
           fontFamily: '"Microsoft YaHei", system-ui, sans-serif',
           fontSize: 42,
           fontWeight: 800,

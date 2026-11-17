@@ -14,7 +14,8 @@ import { Demo1, Demo2, Demo3 } from "./blocks/Demo";
 import { WhatWeDo, Arch, Deploy, Team } from "./blocks/Extras";
 import { Subtitles } from "./Subtitles";
 import { BlockTransition, Grain, Sweep } from "./motion";
-import { BlockIntro, INTRO_ACCENT } from "./BlockIntro";
+import { INTRO_ACCENT } from "./BlockIntro";
+import { LineBeat } from "./LineBeats";
 
 const BLOCK_COMPONENTS: Record<string, React.FC> = {
   hook: Hook,
@@ -73,8 +74,12 @@ export const Film: React.FC = () => (
             <Comp />
           </BlockTransition>
           <Sweep at={2} dur={24} color={b.id === "hook" || b.id === "close" || b.id === "evidence" ? "#7fc3cb" : "#9fd8ff"} />
-          {/* 章节重音：0.4 秒全屏大字，给片子做节奏 */}
-          <BlockIntro text={b.title} accent={INTRO_ACCENT[b.id] ?? C.primary} />
+          {/* 每句解说一个画面动作：色环扩散 + 轻微提亮（替代原来的章节卡） */}
+          {b.lines.map((l, i) => (
+            <Sequence key={"beat-" + l.file} from={lineStart(b, i)} durationInFrames={22} name={"beat-" + i}>
+              <LineBeat accent={INTRO_ACCENT[b.id] ?? C.primary} />
+            </Sequence>
+          ))}
           {b.lines.map((l, i) => (
             <Sequence key={l.file} from={lineStart(b, i)} durationInFrames={l.frames} name={l.file}>
               <Audio src={staticFile("audio/" + l.file)} />

@@ -131,9 +131,10 @@ export const Tag: React.FC<{ text: string; color: string; opacity?: number }> = 
   return (
     <div
       style={{
+        // 内容盒已被 padding 内缩，这里抵消掉，保持与画布边距一致
         position: "absolute",
-        top: 62,
-        right: 120,
+        top: -22,
+        right: 0,
         padding: "10px 22px",
         borderRadius: 999,
         background: color,
