@@ -5,8 +5,8 @@ import timing from "../timing.json";
 
 type Sub = { start: number; end: number; text: string };
 
-// 这两段画面上本来就是大字文案，再叠字幕是重复
-const SKIP = ["hook", "close"];
+// 用户要求：开头也要有字幕（此前 hook/close 被跳过）
+const SKIP: string[] = [];
 
 /**
  * 硬字幕：按配音真实起止帧显示当前这一句。
@@ -46,6 +46,7 @@ export const Subtitles: React.FC = () => {
     <div
       style={{
         position: "absolute",
+        zIndex: 6,
         left: 0,
         right: 0,
         bottom: 58,

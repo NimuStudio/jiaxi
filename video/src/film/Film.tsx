@@ -13,7 +13,9 @@ import { Close } from "./blocks/Close";
 import { Demo1, Demo2, Demo3 } from "./blocks/Demo";
 import { WhatWeDo, Arch, Deploy, Team } from "./blocks/Extras";
 import { Subtitles } from "./Subtitles";
-import { BlockTransition, Grain, Sweep } from "./motion";
+import { BlockTransition, Grain } from "./motion";
+import { Ambient } from "./Ambient";
+import { Hud } from "./Hud";
 import { INTRO_ACCENT } from "./BlockIntro";
 import { LineBeat } from "./LineBeats";
 
@@ -73,11 +75,10 @@ export const Film: React.FC = () => (
           <BlockTransition>
             <Comp />
           </BlockTransition>
-          <Sweep at={2} dur={24} color={b.id === "hook" || b.id === "close" || b.id === "evidence" ? "#7fc3cb" : "#9fd8ff"} />
-          {/* 每句解说一个画面动作：色环扩散 + 轻微提亮（替代原来的章节卡） */}
+          {/* 每句解说一个画面动作：圆环脉冲 + 编号牌（不用光带横穿画面） */}
           {b.lines.map((l, i) => (
             <Sequence key={"beat-" + l.file} from={lineStart(b, i)} durationInFrames={22} name={"beat-" + i}>
-              <LineBeat accent={INTRO_ACCENT[b.id] ?? C.primary} />
+              <LineBeat accent={INTRO_ACCENT[b.id] ?? C.primary} index={i} />
             </Sequence>
           ))}
           {b.lines.map((l, i) => (
@@ -88,8 +89,12 @@ export const Film: React.FC = () => (
         </Sequence>
       );
     })}
+    {/* 常驻环境层：全片每一帧都有位移，兜住「画面不动」的观感 */}
+    <Ambient accent="#2f7fb8" />
     {/* 字幕压在最上层：块之间切换时也不会被背景图盖住 */}
     <Subtitles />
+    {/* HUD：章节号、时间码、句点、分段进度条（每秒都在走） */}
+    <Hud accent="#1a6fb5" />
     <Grain strength={0.05} />
   </AbsoluteFill>
 );
