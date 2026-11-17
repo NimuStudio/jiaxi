@@ -604,7 +604,8 @@ node scripts/eval-extract.ts --file=data/eval/colloquial-eval.jsonl   # 口语�
 | 项 | 值 |
 | --- | --- |
 | 在线演示 | https://clear.ysti.com.cn |
-| 评审账号 | `demo` / `demo123`（已预置一份 4 人家系与体检数字，登录即可看到全貌） |
+| 评审账号 | `demo` / `demo123`（可登录；线上库为新建，账号内暂无数据） |
+| 想直接看完整形态 | 用 `/chat?demo=1`（预置 4 人家系与体检数字，不登录、不需要模型） |
 
 > 体验账号是**共用**的：多人同时试用时，家系与体检数字会互相覆盖。
 > 只想看形态不想动数据的话，用 `/chat?demo=1`（本地预置数据，不读云端）；
