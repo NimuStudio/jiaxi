@@ -19,7 +19,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 VIDEO = os.path.dirname(HERE)
 FPS = 30
 SR = 44100
-BGM_GAIN = 0.18      # 目标：配乐比旁白低约 9 dB（实测干声 RMS 校准；音乐过响会盖住解说）
+BGM_GAIN = 0.18      # 目标：配乐比旁白低约 9 dB（128BPM NCS 风格，实测干声 RMS 校准）
 NARR_PEAK = 0.85     # 旁白峰值压到 -1.4 dBFS，留 headroom
 
 
