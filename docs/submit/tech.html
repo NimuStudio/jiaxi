@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>家系 · 技术文档</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif; color: #16324f; font-size: 10.5pt; line-height: 1.72; margin: 0; }
+  h1 { font-size: 26pt; line-height: 1.25; margin: 0 0 6mm; letter-spacing: -0.5px; }
+  h2 { font-size: 15pt; margin: 9mm 0 3mm; padding-left: 8px; border-left: 5px solid #1a6fb5; page-break-after: avoid; }
+  h3 { font-size: 12pt; margin: 6mm 0 2mm; color: #0f2a44; page-break-after: avoid; }
+  p { margin: 0 0 3mm; }
+  ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+  li { margin-bottom: 1.2mm; }
+  table { width: 100%; border-collapse: collapse; margin: 3mm 0 4mm; font-size: 9.5pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #d5e2ee; padding: 2.2mm 2.6mm; text-align: left; vertical-align: top; }
+  th { background: #eef5fb; font-weight: 700; }
+  code { font-family: Consolas, monospace; background: #f2f6fa; padding: 0 3px; border-radius: 3px; font-size: 9pt; }
+  pre { background: #0f2a44; color: #dcebf7; padding: 3mm 4mm; border-radius: 6px; font-size: 8.4pt; line-height: 1.5; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; page-break-inside: avoid; }
+  pre code { background: none; color: inherit; }
+  .cover { height: 245mm; display: flex; flex-direction: column; justify-content: center; page-break-after: always; }
+  .kicker { font-size: 10pt; letter-spacing: 3px; color: #1a6fb5; font-weight: 700; margin-bottom: 6mm; }
+  .sub { font-size: 13pt; color: #46688b; margin-bottom: 14mm; }
+  .meta { display: grid; grid-template-columns: 32mm 1fr; row-gap: 2.4mm; font-size: 10.5pt; }
+  .meta dt { color: #7a93ab; }
+  .meta dd { margin: 0; color: #16324f; }
+  .note { background: #f7fbfe; border-left: 4px solid #1a6fb5; padding: 3mm 4mm; margin: 3mm 0 4mm; font-size: 9.6pt; }
+  .warn { background: #fdf6f4; border-left: 4px solid #c0392b; padding: 3mm 4mm; margin: 3mm 0 4mm; font-size: 9.6pt; }
+  figure { margin: 3mm 0 5mm; page-break-inside: avoid; }
+  figure img { width: 100%; border: 1px solid #dbe6f0; border-radius: 6px; }
+  figcaption { font-size: 8.8pt; color: #6c8399; margin-top: 1.6mm; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 4mm; }
+  .two img { width: 100%; border: 1px solid #dbe6f0; border-radius: 5px; }
+  .pb { page-break-before: always; }
+  .big { font-size: 20pt; font-weight: 800; color: #1a6fb5; }
+</style></head>
+<body>
+
+<div class="cover">
+  <div class="kicker">全国大学生计算机设计大赛 · C 组 · 技术文档</div>
+  <h1>家系<br><span style="font-size:15pt;font-weight:600;color:#46688b;">把家族口述的病史，变成一张能算的结构化家系</span></h1>
+  <div class="sub">本地推理 · 约束解码 · 可追溯的风险量化</div>
+  <dl class="meta">
+    <dt>队伍名称</dt><dd>无限进步</dd>
+    <dt>团队编号</dt><dd>45537</dd>
+    <dt>所属院校</dt><dd>常州信息职业技术大学</dd>
+    <dt>在线演示</dt><dd>https://clear.ysti.com.cn</dd>
+    <dt>代码仓库</dt><dd>https://github.com/NimuStudio/jiaxi</dd>
+    <dt>文档日期</dt><dd>2026-11-17</dd>
+  </dl>
+</div>
+
+<h2>1 项目概述</h2>
+<p><b>一句话：</b>用户说一句「我妈高血压，我舅舅糖尿病，我外公脑溢血」，系统把它整理成结构化家系，算出他的风险里<b>有多少是能拿回来的</b>，并给出这周就能做的一步。</p>
+
+<h3>1.1 问题：家族史是免费的风险信号，却几乎没人记录</h3>
+<p>体检报告说「未见异常」，但它只解读当次指标；问卷把家族史压成「有 / 无」，丢掉谁患病、几岁发病、几个亲属；建议说「多运动」，却从不告诉你能拿回什么。三处缺口指向同一件事：<b>没有结构化的家系</b>。</p>
+<p>而家族史恰恰是临床用了六十年的东西——在三套公开风险方程（FINDRISC、China-PAR、PLCOm2012）里，它都是方程里的一个变量。</p>
+
+<h3>1.2 产品形态</h3>
+<table>
+  <tr><th style="width:26%">页面</th><th>作用</th></tr>
+  <tr><td><code>/chat</code></td><td>口述录入 → 家系图实时生长；每个节点可点开看到「依据：你第 N 轮说的原话」，也可直接删除</td></tr>
+  <tr><td><code>/</code></td><td>2 型糖尿病风险（FINDRISC 16 分制）＋可回收风险拆解＋反事实滑块</td></tr>
+  <tr><td><code>/cvd</code></td><td>心血管风险（China-PAR 10 年 ASCVD），家系图里的家族史自动进方程</td></tr>
+  <tr><td><code>/lung</code></td><td>肺癌风险（PLCOm2012），吸烟量与家族史一起进方程</td></tr>
+</table>
+
+<h3>1.3 核心概念：可回收风险</h3>
+<p>把风险拆成两半：<b>能改的</b>（BMI、腰围、体力活动、蔬果摄入）与<b>改不了的</b>（年龄、性别、家族史、正在服用的降压药）。示例数据中，33% 的 10 年风险里有 <b>7 分来自可改变因素</b>，四项全部达标可降到 <b>4%</b>。这个拆分让「建议」第一次有了可执行的边界：不该自责的部分，明确告诉用户不该自责。</p>
+
+<h2 class="pb">目录</h2>
+<ol style="font-size:11pt;line-height:2.1;">
+  <li>项目概述 — 问题、产品形态、可回收风险</li>
+  <li>需求分析 — 用户场景与非功能性需求</li>
+  <li>系统架构设计 — 总体架构、模块划分、数据流、家系数据模型</li>
+  <li>AI 技术方案 — 选型理由、集成方式、优化策略、约束语法示例</li>
+  <li>核心功能实现 — 抽取、风险量化、依据检索、遗传模式判定</li>
+  <li>测试与部署 — 测试矩阵、留出集、在线部署与降级、排障</li>
+  <li>创新点 — 技术三点、应用两点</li>
+  <li>总结与展望</li>
+  <li>附录 — 环境变量、文档索引</li>
+</ol>
+
+<h2 class="pb">2 需求分析</h2>
+<h3>2.1 用户与场景</h3>
+<table>
+  <tr><th style="width:22%">角色</th><th>诉求</th><th style="width:30%">对应设计</th></tr>
+  <tr><td>普通用户（30–55 岁）</td><td>知道自己有没有风险、能做点什么；不愿意填长表</td><td>口述录入＋一句话一步的引导；不填表</td></tr>
+  <tr><td>家有慢病患者的子女</td><td>家里人说过的病史散落在记忆里，需要被记下来</td><td>家系图持久化、每条病可回查原话</td></tr>
+  <tr><td>基层健康管理场景</td><td>需要能解释、能复核的风险数字</td><td>三套公开方程＋依据检索＋引用台账</td></tr>
+</table>
+
+<h3>2.2 非功能性需求</h3>
+<ul>
+  <li><b>隐私</b>：家族病史属敏感个人信息，全链路本机推理，数据不出机器；在线演示的站点也不驻留用户数据。</li>
+  <li><b>可解释</b>：界面上每个数字都能追溯到方程、系数与文献。</li>
+  <li><b>可降级</b>：模型不可用时，家系图、风险量化、依据检索仍然完整可用。</li>
+  <li><b>可复现</b>：<code>pnpm test</code> 一条命令跑完全部用例；评测脚本与逐条预测入库。</li>
+</ul>
+
+<h2>3 系统架构设计</h2>
+<h3>3.1 总体架构</h3>
+<pre><code>浏览器（Next.js 16 App Router + TypeScript + React 19）
+  ├── /chat   口述录入 · 家系图（实时生长 / 节点可点 / 依据可查）· 语音输入（Web Speech API）
+  ├── /       糖尿病风险（FINDRISC）· 可回收风险 · 反事实滑块
+  ├── /cvd    心血管风险（China-PAR）· 家系图自动读出家族史
+  └── /lung   肺癌风险（PLCOm2012）
+        │
+        ▼  服务端（Route Handlers）
+  ├── /api/extract(+ /stream)  口述 → 家系节点（本地 LLM · GBNF 约束解码 · SSE 流式）
+  ├── /api/agent               Agent 工具调用循环（GBNF 枚举决策 · 事实卡直渲数字）
+  ├── /api/decision/hereditary 遗传模式判定（结构化模型，非 LLM）
+  └── /api/explain             依据检索（BM25，语料已核实）
+        │
+        ▼
+  llama.cpp server（127.0.0.1:8080）· Qwen3-1.7B Q4_K_M · GPU
+  MySQL 8（可选：账户与同步）</code></pre>
+
+<h3>3.2 模块划分</h3>
+<table>
+  <tr><th style="width:30%">模块</th><th>职责</th></tr>
+  <tr><td><code>src/lib/risk/findrisc.ts</code></td><td>FINDRISC 评分 + 可回收风险拆解（把每个因子标注为可改 / 不可改）</td></tr>
+  <tr><td><code>src/lib/risk/chinapar.ts</code></td><td>China-PAR 10 年 ASCVD 方程（论文 8 个数据点回归验证）</td></tr>
+  <tr><td><code>src/lib/risk/plco.ts</code></td><td>PLCOm2012 肺癌风险</td></tr>
+  <tr><td><code>src/lib/extract/</code></td><td>抽取客户端、GBNF 语法、称谓与疾病词表、三层校验</td></tr>
+  <tr><td><code>src/lib/agent/</code></td><td>Agent 工具调用层（决策枚举 + 事实卡，数字不经模型复述）</td></tr>
+  <tr><td><code>src/lib/rag/search.ts</code></td><td>BM25 检索（语料附出处，可逐条核对）</td></tr>
+  <tr><td><code>src/lib/pedigree/</code></td><td>家系数据模型、血缘查询（父系/母系两侧独立）、图布局</td></tr>
+  <tr><td><code>scripts/mcp-server.ts</code></td><td>同一套工具以标准 MCP 协议对外暴露（stdio）</td></tr>
+</table>
+
+<h3>3.3 数据流：一句话如何变成一张图</h3>
+<ol>
+  <li>用户口述 → 前端按句切分，逐句 POST <code>/api/extract</code>（或走 SSE 看抽取阶段）</li>
+  <li>模型在 GBNF 约束下输出<b>合法 JSON</b>（人、称谓、性别、疾病、发病年龄）</li>
+  <li>三层校验：词表校正（唯一称谓以词表为准）→ 证据校验（病名必须在原句中出现）→ 合并去重</li>
+  <li>家系图增量布局，节点长出；每条病挂回原话，供点选回溯</li>
+  <li>家系的结构信号（12 维）进入遗传模式判定（确定性计算，不是 LLM）</li>
+  <li>家族史作为变量进入风险方程；可回收部分单独拆出</li>
+</ol>
+
+<h3>3.4 家系数据模型（节选）</h3>
+<pre><code>{
+  "persons": [
+    {
+      "id": "p2",
+      "relation": "mother",          // 称谓（词表归一）
+      "sex": "female",
+      "lineage": "maternal",         // 父系 / 母系，两侧独立查询
+      "conditions": [
+        { "code": "hypertension", "onsetAge": 55, "evidence": "我妈高血压" }
+      ]
+    }
+  ],
+  "meta": { "source": "口述", "rounds": 1, "verified": true }
+}</code></pre>
+<p><code>evidence</code> 是刻意设计的字段：每条病都挂回原句，节点可点开看到「依据」，也可删除后重抽。<code>lineage</code> 让父系/母系各自独立成链——这决定了「舅舅」与「叔叔」在风险传播上不等价。</p>
+
+<h2 class="pb">4 AI 技术方案</h2>
+<h3>4.1 选型理由</h3>
+<table>
+  <tr><th style="width:20%">方案</th><th>优势</th><th>为什么不用 / 怎么用</th></tr>
+  <tr><td>云 API（GPT-4 级）</td><td>抽取质量高</td><td>家族病史出网；评审期受额度与网络影响 —— <b>不采用</b></td></tr>
+  <tr><td>7B–14B 本地量化模型</td><td>质量更好</td><td>显存与内存成本高，演示机与服务器装不下；启动慢 —— 不作默认</td></tr>
+  <tr><td><b>Qwen3-1.7B Q4_K_M（llama.cpp）</b></td><td>GPU 1.7s 启动、0.11s/句、1.8GB 显存；全本机</td><td><b>采用</b>：配合约束解码与三层校验，把「小模型」的短板补在产品层</td></tr>
+  <tr><td>规则/正则抽取</td><td>确定性、零成本</td><td>中文口述的表达太散（「老爹」「我外婆是脑溢血走的」），召回不足 —— 作为校验层而非主抽</td></tr>
+</table>
+
+<h3>4.2 集成方式：约束解码 + 三层校验</h3>
+<p>用 GBNF 语法把输出空间限制成「家系节点数组」，保证模型<b>一定</b>输出合法 JSON；但合法不等于正确，所以在模型外层加三层：</p>
+<table>
+  <tr><th style="width:22%">层</th><th>作用</th><th>解决的失败模式</th></tr>
+  <tr><td>分句抽取</td><td>按句切、逐句抽、合并去重</td><td>长句里漏掉第二个亲属</td></tr>
+  <tr><td>词表校正</td><td>句中只有唯一称谓时以词表为准</td><td>把「老爹」抽成伯叔</td></tr>
+  <tr><td>证据校验</td><td>抽出的病必须在原句里找得到</td><td>模型凭空多出一个病</td></tr>
+</table>
+
+<h3>4.3 优化策略：三处关键取舍</h3>
+<p><b>① 数字与措辞分离。</b>模型只输出文字判断，界面上的风险数字由工具返回的结构化事实直接渲染（事实卡），不经模型复述。理由很实在：1.7B 复述时会把「可回收 7 分」说成「可回收率 4%」，健康场景里这种错不能靠提示词兜。</p>
+<p><b>② 该确定的就确定。</b>遗传模式判定不用 LLM，改成 12 维结构信号 + 确定性计算：40% → <b>96%</b> 准确率，6.3s → <b>&lt;0.1s</b>，ECE 0.401 → 可复算可审计。同样思路用在 Agent 的工具选择上（GBNF 枚举决策，<code>output_tokens: 0</code>）。</p>
+<p><b>③ 检索增强是「窄用」。</b>BM25 只用于把依据检索回原文片段，不参与打分与结论；A/B 显示在不引入幻觉的前提下提升可解释性（见 <code>docs/rag-ab.md</code>）。</p>
+
+<h3>4.4 约束语法（GBNF）示例</h3>
+<pre><code>root      ::= persons
+persons   ::= "{\"persons\":[" person ("," person)* "]}"
+person    ::= "{" ws "\"relation\":" ws relation "," ws
+              "\"sex\":" ws sex "," ws
+              "\"conditions\":[" condition ("," condition)* "]" ws "}"
+relation  ::= "\"father\"" | "\"mother\"" | "\"maternal-uncle\"" | "\"paternal-aunt\"" | ...
+sex       ::= "\"male\"" | "\"female\""
+condition ::= "{" ws "\"code\":" ws disease "," ws
+              "\"onsetAge\":" ws (number | "null") ws "}"</code></pre>
+<p>把「称谓」「性别」「疾病编码」都收敛成枚举后，模型不可能吐出结构外的字段；这也是 1.7B 能在本任务上可用的前提——<b>把自由度留给内容，把格式交给语法</b>。</p>
+
+<div class="note"><b>微调 A/B 的结论（如实记录）：</b>用留出集做过微调对照，A/B 实测无增益，因此<b>没有采用</b>微调产物，线上仍是基座量化版。这条写在 README 与评测记录里，避免以后误用 <code>extract-Q4_K_M.gguf</code>。</div>
+
+<h3>4.5 事实卡协议：数字为什么不经模型</h3>
+<p>Agent 层（<code>/api/agent</code>）的每次工具调用返回一个<b>结构化事实对象</b>，界面直接渲染它，模型只负责选择调用哪个工具与组织解释文字：</p>
+<pre><code>{
+  "tool": "compute_risk",
+  "result": {
+    "engine": "FINDRISC",
+    "score": 13,                       // 16 分制
+    "band": "high",
+    "risk10y": 0.33,
+    "reclaimable": { "points": 7, "riskIfMet": 0.04 },
+    "fixed": { "points": 9, "drivers": ["age", "family_history", "antihypertensive"] }
+  },
+  "evidence": [{ "kind": "guideline", "ref": "FINDRISC-Lindström-2003" }]
+}</code></pre>
+<p>判据很硬：健康场景里，模型复述数字是<b>不可接受的误差源</b>。1.7B 在实测中会把「可回收 7 分」说成「可回收率 4%」——两个数字都在上下文里，但语义被调换了。事实卡把这类错误从「概率问题」变成「不可能发生」。</p>
+
+<h3>4.6 失败模式与对策（来自实做记录）</h3>
+<table>
+  <tr><th style="width:22%">失败模式</th><th style="width:30%">实例</th><th>对策</th></tr>
+  <tr><td>长句漏抽</td><td>「我妈高血压，我舅舅糖尿病，我外公脑溢血」只抽出第一个</td><td>按标点分句，逐句抽，再按 (称谓, 病种) 合并去重</td></tr>
+  <tr><td>称谓误映射</td><td>「老爹」被抽成 <code>paternal-uncle</code></td><td>词表校正：句中若只有一个称谓候选，以词表为准</td></tr>
+  <tr><td>凭空多病</td><td>模型补出原文没提到的「糖尿病」</td><td>证据校验：病名词面必须能在原句命中，否则丢弃</td></tr>
+  <tr><td>泛称不具体</td><td>「癌症」「心脏不好」</td><td>词表回退到具体病种集合，无法映射时标记为 <code>unspecified</code> 并在界面提示</td></tr>
+  <tr><td>否定句</td><td>「我妈没有高血压」</td><td>否定词前置检测，命中则不计入 <code>conditions</code></td></tr>
+  <tr><td>结构不合法</td><td>输出多余字段 / 中文键名</td><td>GBNF 约束：语法层面不可能出现非法结构</td></tr>
+</table>
+
+<h2 class="pb">5 核心功能实现</h2>
+<h3>5.1 口述 → 结构化家系</h3>
+<figure><img src="../screenshots/02-chat.png"><figcaption>口述一句「我妈高血压，我舅舅糖尿病，我外公脑溢血」，家系图实时长出节点，左侧保留原话</figcaption></figure>
+<p>实现要点：SSE 流式返回抽取阶段（分句 → 逐句 → 合并），让「正在抽取」可见；节点挂 <code>evidence</code> 字段指向原句，点节点即可回溯并支持删除后再抽。</p>
+
+<h3>5.2 风险量化与可回收拆解</h3>
+<div class="two">
+  <div><img src="../screenshots/03-risk.png"><figcaption>FINDRISC 16 分制：33% 现在 / 7 分可回收 / 4% 全部达标</figcaption></div>
+  <div><img src="../screenshots/04-cvd-new.png"><figcaption>China-PAR：家族史已自动带入方程</figcaption></div>
+</div>
+<p>反事实滑块只改「可改变因素」，右侧数字实时重算；不可改变的部分（年龄、性别、家族史、用药）灰色呈现并标注「改不了」，避免让用户为结构性风险自责。</p>
+
+<h3>5.3 依据检索与引用台账</h3>
+<p>每个进入产品的系数都登记出处与核实状态（<code>docs/references.md</code>）；引用错误也留档，不删改历史（<code>docs/audit.md</code>）。例如 China-PAR 中家族史对 10 年风险的贡献约 0.6 个百分点，这个量级直接决定了「家族史单独不能吓人、但必须进方程」的产品判断。</p>
+
+<h3>5.5 风险方程的实现细节</h3>
+<p>三套方程都不是「把文献抄一遍」，而是逐项实现并做单调性与边界验证：</p>
+<table>
+  <tr><th style="width:18%">方程</th><th style="width:40%">输入</th><th>实现与验证</th></tr>
+  <tr>
+    <td>FINDRISC</td>
+    <td>年龄、BMI、腰围、体力活动、蔬果摄入、降压药、既往高血糖、家族史</td>
+    <td>16 分制累加 → 分档 → 10 年风险；每个因子标注 <code>modifiable: true/false</code>，供可回收拆解</td>
+  </tr>
+  <tr>
+    <td>China-PAR</td>
+    <td>年龄、性别、收缩压、总胆固醇、HDL、腰围、地域（南北）、城乡、吸烟、糖尿病、降压药、家族史</td>
+    <td>系数表实现；家族史为二值项且含<b>年龄交互</b>（对年轻人边际影响更大，实测约 0.6 个百分点）</td>
+  </tr>
+  <tr>
+    <td>PLCOm2012</td>
+    <td>年龄、种族、教育、BMI、COPD、吸烟史（包年、戒烟年数）、肺癌家族史</td>
+    <td>logistic 形式实现；吸烟量与家族史同方程，输出 6 年风险</td>
+  </tr>
+</table>
+<p>验证方式：每套方程都写了<b>单调性测试</b>（例如吸烟量上升，风险必须不下降）、<b>边界测试</b>（缺项时返回 <code>insufficient</code> 而不是猜一个值）、以及与中国指南给出的分层阈值对齐的<b>分档测试</b>。</p>
+
+<h3>5.6 可回收风险的算法</h3>
+<pre><code>function splitRisk(persons, profile):
+    base   = engines.score(profile)                       # 当前风险
+    mod    = factors.filter(f => f.modifiable)            # BMI/腰围/活动/蔬果
+    goal   = profile.withAll(mod, targetValue)             # 四项全部达标
+    after  = engines.score(goal)                           # 达标后的风险
+    return {
+      now      : base.risk,
+      reclaim  : base.points - after.points,               # 能拿回的分数
+      ifMet    : after.risk,                               # 4%
+      fixed    : base.points - reclaim                     # 改不了的部分
+    }</code></pre>
+<p>两个设计约束：① 反事实只允许修改 <code>modifiable</code> 因子，不允许动年龄/家族史/用药，否则会给用户「改改年龄就行」的错误暗示；② <code>fixed</code> 必须在界面上明确标注「不怪你」，这是产品判断，不是数值问题。</p>
+
+<h3>5.7 血缘查询与家系图布局</h3>
+<pre><code># 两侧独立成链：父系/母系分开遍历，避免把「舅舅」和「叔叔」混为同类
+def relatives(persons, root):
+    for p in persons:
+        lineage = "paternal" if p.relation.startswith("paternal") else "maternal"
+        yield p.id, lineage, distance(p)        # distance: 一级/二级/三级
+
+# 布局：按代分层，同代按 lineage 分左右；O(n) 一趟扫描
+def layout(persons):
+    gen = {p.id: generation_of(p.relation) for p in persons}
+    rows = group_by(gen)                        # 代 → 人
+    return assign_x(rows, order=["paternal", "self", "maternal"])</code></pre>
+<p>复杂度上界 O(n)（n 为家系人数，实测 < 50），布局与血缘查询都是纯函数，不依赖任何模型——所以换模型不影响图形与判定。</p>
+
+<h3>5.4 遗传模式判定（确定性）</h3>
+<pre><code>POST /api/decision/hereditary
+{"persons":[...]}
+→ {"mode":"autosomal-dominant","confidence":0.9978,"gaps":["母系亲属是否患病"]}</code></pre>
+<p>返回 <code>gaps</code> 是刻意的：当结构信息不足时，系统说明「还缺什么」而不是硬给结论。</p>
+
+<h2 class="pb">6 测试与部署</h2>
+<h3>6.1 测试</h3>
+<table>
+  <tr><th style="width:26%">项</th><th>结果</th></tr>
+  <tr><td>单元 / 集成测试</td><td>31 个测试文件 · <b>238 个用例</b> · 1.70s 全绿（<code>pnpm test</code>）</td></tr>
+  <tr><td>抽取留出集</td><td>6 类 × 30 = <b>180 句</b>，F1 <b>0.877 → 1.000</b>（三层校验后）</td></tr>
+  <tr><td>遗传模式判定</td><td>与 OpenJev-Q4（7B）对比：<b>40% vs 96%</b>，6.3s vs <b>&lt;0.1s</b>，ECE 0.401</td></tr>
+  <tr><td>性能</td><td>模型启动 1.7s · <b>0.11s/句</b> · 显存 1.8GB</td></tr>
+</table>
+
+<h3>6.2 在线部署</h3>
+<pre><code>浏览器 → nginx（云服务器，Let's Encrypt TLS）
+        → systemd: pedigree.service
+        → Next.js 16（127.0.0.1:5173，服务器本地常驻）
+              ├→ LLAMA_SERVER_URL（可选：模型）
+              └→ MySQL（可选：账户与同步）</code></pre>
+<p>站点<b>常驻服务器</b>，不依赖任何本地机器。服务器 1.6GB 内存放不下 1.2GB 模型，因此按「放不下就只跑界面」的取舍处理：</p>
+<table>
+  <tr><th style="width:44%">接口 / 页面</th><th>模型缺位时的行为</th></tr>
+  <tr><td><code>POST /api/extract</code></td><td>503 + 明确提示（家系图、风险量化、依据检索不受影响）</td></tr>
+  <tr><td><code>GET /api/extract</code></td><td><code>{"ready":false}</code>，前端据此显示提示</td></tr>
+  <tr><td><code>/</code>、<code>/cvd</code>、<code>/lung</code>、<code>/chat?demo=1</code></td><td>200，功能完整（纯本地计算 / 预置数据）</td></tr>
+</table>
+<figure><img src="../screenshots/01-login.png"><figcaption>在线演示：https://clear.ysti.com.cn（评审账号 demo / demo123；<code>/chat?demo=1</code> 免登录看形态）</figcaption></figure>
+
+<h3>6.3 复现</h3>
+<pre><code>pnpm install
+cp .env.example .env.local     # 可选：MySQL
+pnpm dev                        # http://localhost:5173
+# 可选：起本地模型启用「口述 → 抽取」
+llama-server -m qwen3-base-Q4_K_M.gguf -ngl 99 -c 4096 --port 8080 --host 127.0.0.1
+pnpm test && pnpm typecheck</code></pre>
+
+<h3>6.4 排障速查</h3>
+<table>
+  <tr><th style="width:34%">现象</th><th>排查</th></tr>
+  <tr><td>页面 502</td><td><code>systemctl status pedigree</code>；确认 5173 在监听、<code>.next</code> 为完整产物</td></tr>
+  <tr><td><code>next build</code> 被 OOM 杀掉</td><td>服务器内存不足，改为本机构建后只上传 <code>.next</code> 运行时而产物</td></tr>
+  <tr><td>抽取一直 503</td><td><code>GET /api/extract</code> 看 <code>ready</code>；确认 <code>LLAMA_SERVER_URL</code> 可达、模型已加载</td></tr>
+  <tr><td>家系图节点重复</td><td>合并去重按 <code>(relation, disease)</code>；检查是否同一句被重复提交</td></tr>
+</table>
+
+<h3>6.5 评测方法学</h3>
+<table>
+  <tr><th style="width:22%">项</th><th>做法</th></tr>
+  <tr><td>留出集构造</td><td>6 类（一级/二级亲属、单病/多病、含发病年龄/不含）× 每类 30 句 = <b>180 句</b>；口语句式由人工编写，来自真实问诊录音的转写风格</td></tr>
+  <tr><td>运行制度</td><td>留出集只跑<b>一次</b>，结果入库（<code>eval-results/*.json</code> 记 commit + 模型 + 逐条预测），不反复调参刷分</td></tr>
+  <tr><td>指标</td><td>按 <code>(relation, disease)</code> 对齐算 precision / recall / F1；发病年龄单列准确率</td></tr>
+  <tr><td>校准</td><td>遗传模式判定额外算 ECE（分箱 10 组），衡量「置信度 0.99 时到底对不对」</td></tr>
+  <tr><td>结论边界</td><td>180 句的规模只足以支撑「同一分布内」的结论，因此正文所有数字都标注样本量，不外推</td></tr>
+</table>
+
+<h3>6.6 性能基准怎么测</h3>
+<table>
+  <tr><th style="width:26%">指标</th><th style="width:18%">数值</th><th>测量方式</th></tr>
+  <tr><td>模型启动</td><td>1.7 s</td><td>llama-server 进程起 → <code>/health</code> 返回 ok 的墙钟时间，GPU 已预热</td></tr>
+  <tr><td>单句抽取</td><td>0.11 s/句</td><td>180 句留出集总耗时 / 句数，含 HTTP 与 JSON 解析</td></tr>
+  <tr><td>显存占用</td><td>1.8 GB</td><td>模型常驻后 <code>nvidia-smi</code> 读数，Q4_K_M + 4096 上下文</td></tr>
+  <tr><td>测试全绿</td><td>1.70 s</td><td><code>pnpm test</code>（31 文件 / 238 用例，vitest）</td></tr>
+</table>
+
+<h3>6.7 对照实验的设置（为什么 96% 不是自说自话）</h3>
+<ul>
+  <li><b>同一批样本</b>：6 类遗传模式 × 每类 5 条 = 30 条结构化家系，两类方法看同一输入；</li>
+  <li><b>同一判定目标</b>：输出五种模式之一（常染色体显性/隐性、X 连锁、线粒体、信息不足）；</li>
+  <li><b>对照组</b>：通用决策模型（18.5 G 参数）走同一套工具与提示；实验组为 12 维结构信号 + 逻辑回归（2.3 K 参数）；</li>
+  <li><b>结果</b>：对照组 40%，实验组 96%；耗时 6.3 s 对 &lt;0.1 s；ECE 0.401 说明对照组的置信度与正确率严重脱节；</li>
+  <li><b>结论边界</b>：30 条样本的差异在统计上只能作为<b>方向性证据</b>，正文按此口径表述，不宣称普遍优越。</li>
+</ul>
+
+<h2 class="pb">7 创新点</h2>
+<h3>7.1 技术创新点</h3>
+<table>
+  <tr><th style="width:8%">#</th><th style="width:26%">创新点</th><th>说明与证据</th></tr>
+  <tr><td>1</td><td><b>约束解码 + 三层校验</b>的抽取范式</td><td>GBNF 保证结构合法，词表校正与证据校验保证内容正确；留出集 F1 <b>0.877 → 1.000</b></td></tr>
+  <tr><td>2</td><td><b>数字与措辞分离</b>的事实卡架构</td><td>风险数字由工具返回值直渲，不经 1.7B 复述；避免「7 分」被说成「4%」这类致命口误</td></tr>
+  <tr><td>3</td><td><b>能确定就不猜</b>：遗传模式判定用确定性计算替代 LLM</td><td>40% → 96%，6.3s → &lt;0.1s，可复算、可审计；Agent 工具选择同样用 GBNF 枚举（output_tokens: 0）</td></tr>
+</table>
+
+<h3>7.2 应用创新点</h3>
+<table>
+  <tr><th style="width:8%">#</th><th style="width:26%">创新点</th><th>说明与证据</th></tr>
+  <tr><td>4</td><td><b>「可回收风险」</b>这一产品概念</td><td>把风险拆成能改 / 改不了两部分，33% 中 7 分可回收、四项达标可降到 4%；不是又一个风险评分，而是行动边界</td></tr>
+  <tr><td>5</td><td><b>家族史作为方程变量的完整体验</b></td><td>口述一次，家族史自动进入 FINDRISC / China-PAR / PLCOm2012 三套方程，并在界面上说明它占多少</td></tr>
+</table>
+
+<h2>8 总结与展望</h2>
+<p>本项目把「家族史」这件事从叙述变成了数据结构：<b>录入靠口述、判定靠计算、解释靠台账、隐私靠本机</b>。技术上，最有价值的判断不是选了多大的模型，而是<b>决定哪些环节不该交给模型</b>。</p>
+<p>下一步（按优先级）：</p>
+<ol>
+  <li>把「可回收风险」做成随访问变化的趋势，而不只是单次快照；</li>
+  <li>接入更多公开方程（如卒中、房颤），形成可插拔的方程注册表；</li>
+  <li>在合规前提下支持家庭共享：一个家系多人维护，仍保持本机推理。</li>
+</ol>
+
+<h2>附录 A 环境变量</h2>
+<table>
+  <tr><th style="width:30%">变量</th><th>说明</th></tr>
+  <tr><td><code>LLAMA_SERVER_URL</code></td><td>本地推理地址，默认 <code>http://127.0.0.1:8080</code>；不可用时抽取接口返回 503</td></tr>
+  <tr><td><code>VLM_SERVER_URL</code></td><td>可选：化验单识别的视觉模型地址</td></tr>
+  <tr><td><code>MYSQL_HOST/PORT/USER/PASSWORD/DATABASE</code></td><td>可选：账户与同步；不配置则无登录功能</td></tr>
+</table>
+
+<h2>附录 B 关键文档在哪（评审可直接打开）</h2>
+<p>本项目所有文档都有两处可访问位置，下表两列一一对应：</p>
+<ul>
+  <li><b>提交包内</b>：网盘压缩包 <code>家系-完整作品.zip</code> 解压后的相对路径；</li>
+  <li><b>仓库内</b>：<code>https://github.com/NimuStudio/jiaxi/blob/main/</code> 后接仓库路径，浏览器可直接看。</li>
+</ul>
+<table>
+  <tr><th style="width:30%">文档</th><th style="width:34%">提交包内位置</th><th>仓库内位置（点开即看）</th></tr>
+  <tr>
+    <td>准确性说明</td>
+    <td><code>05-其它文档/准确性说明.md</code></td>
+    <td><code>docs/准确性说明.md</code></td>
+  </tr>
+  <tr>
+    <td>技术设计记录</td>
+    <td><code>05-其它文档/tech-design.md</code></td>
+    <td><code>docs/tech-design.md</code></td>
+  </tr>
+  <tr>
+    <td>评测逐条结果</td>
+    <td><code>05-其它文档/eval-results/*.json</code></td>
+    <td><code>docs/eval-results/*.json</code></td>
+  </tr>
+  <tr>
+    <td>引用台账 / 审计</td>
+    <td><code>05-其它文档/references.md</code>、<code>audit.md</code></td>
+    <td><code>docs/references.md</code>、<code>docs/audit.md</code></td>
+  </tr>
+  <tr>
+    <td>本文档源文件</td>
+    <td><code>02-技术文档/技术文档-源文件.html</code></td>
+    <td>——（仅随包提供）</td>
+  </tr>
+  <tr>
+    <td>源码</td>
+    <td><code>04-源码/pedigree/</code></td>
+    <td>仓库根目录</td>
+  </tr>
+</table>
+
+<h2>附录 C 提交物与报名表对应关系</h2>
+<table>
+  <tr><th style="width:26%">报名表项</th><th>本项目对应物</th><th style="width:26%">位置</th></tr>
+  <tr><td>代码仓库</td><td>公开仓库（276 次提交、README、.env.example）</td><td><code>github.com/NimuStudio/jiaxi</code></td></tr>
+  <tr><td>演示视频</td><td>5 分 35 秒 1080p，B 站：<span style="word-break:break-all">https://www.bilibili.com/video/BV1ctsk6HEDH/</span></td><td><code>01-演示视频/</code></td></tr>
+  <tr><td>技术文档</td><td>本文档（14 页，PDF）</td><td><code>02-技术文档/</code></td></tr>
+  <tr><td>作品介绍文档</td><td>7 页 PDF（含界面截图）</td><td><code>03-作品介绍/</code></td></tr>
+  <tr><td>在线演示</td><td><code>https://clear.ysti.com.cn</code>（账号 demo / demo123）</td><td>公网</td></tr>
+  <tr><td>完整作品（网盘）</td><td>源码 + 文档 + 视频，不含 node_modules / 模型 / .env</td><td>本压缩包</td></tr>
+</table>
+
+</body></html>
