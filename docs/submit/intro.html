@@ -274,6 +274,7 @@ sex      ::= '"male"' | '"female"'</pre>
 <p>Agent 层每次工具调用返回的是<b>结构化事实对象</b>，界面直接渲染它，模型只负责选择调用哪个工具、组织解释文字。判据很硬：1.7B 在复述时会把「可回收 7 分」说成「可回收率 4%」——两个数字都在上下文里，但语义被调换了。健康场景里这种错不能靠提示词兜，只能从架构上让它不可能发生。</p>
 
 <h3>5.5 JEV 协议：判定不做生成</h3>
+<p>先说清归属：<b>JEV 不是我们自造的私有接口</b>，它是 llama.cpp server 提供的 <code>POST /v1/systemone</code>（TypeSafe API）——一次前向、按 question 返回概率，不生成 token。我们做的是按协议接入、并用客户端硬校验兜住它的错误。对照实验里，用 JEV 协议对外服务的是开源决策模型 OpenJev-Q4（7B）。</p>
 <p>遗传模式判定走的是 typed decision 协议（一次前向、不生成 token）：请求里写清候选（五种模式），回答只有两样东西——选中的选项与每个选项的概率分布，<code>output_tokens</code> 为 <b>0</b>，置信度是模型当场给的概率。客户端还做硬校验：选项必须在候选内、概率之和必须为 1（容差 0.02），不满足整条丢弃、不进入判断。</p>
 
 <h3>5.6 但最终判定不交给模型</h3>
@@ -365,6 +366,8 @@ sex      ::= '"male"' | '"female"'</pre>
   <tr><td>Next.js 16 / React 19</td><td>前端与路由</td><td>MIT</td></tr>
   <tr><td>llama.cpp</td><td>本地推理运行时（含 GBNF 与 /v1/systemone）</td><td>MIT</td></tr>
   <tr><td>Qwen3-1.7B</td><td>抽取与问答的基座模型（Q4_K_M 量化）</td><td>Apache-2.0</td></tr>
+  <tr><td><b>JEV</b>（llama.cpp <code>/v1/systemone</code>，TypeSafe API）</td><td>一次前向直接返回「判定 + 概率分布」的 typed decision 接口；本项目遗传模式判定的对照后端</td><td>MIT（随 llama.cpp 发布，非私有 API）</td></tr>
+  <tr><td>OpenJev-Q4（7B）</td><td><b>仅对照实验用</b>的开源决策模型（验证「判定不该交给通用模型」）；线上未启用</td><td>开源模型，评测记录见 <code>docs/accuracy.md</code></td></tr>
   <tr><td>MySQL 8</td><td>账户与会话（可选）</td><td>GPL-2.0</td></tr>
   <tr><td>Kevin MacLeod 配乐</td><td>演示视频背景音乐</td><td>CC BY 4.0（片尾署名）</td></tr>
 </table>
