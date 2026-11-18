@@ -271,7 +271,7 @@ scripts/mcp-server.ts
 
 | 桌面脚本 | 实际文件 | 作用 |
 | --- | --- | --- |
-| 启动家系演示 | `scripts/start-demo.cmd` | 自动拉起 MySQL、llama-server、站点、反向隧道，最后打开 https://clear.ysti.com.cn。已在运行的组件全部跳过 |
+| 启动家系演示 | `scripts/start-demo.cmd` | 自动拉起 MySQL、llama-server、站点、反向隧道，最后打开 [clear.ysti.com.cn](https://clear.ysti.com.cn)（已在运行的组件全部跳过） |
 | 停止家系演示 | `scripts/stop-demo.cmd` | 停掉站点、llama-server、隧道（含守护循环）；MySQL 服务保留不动 |
 
 两个脚本都是 **GBK + CRLF** 编码（cmd 的要求）。改脚本时注意别存成 UTF-8/LF，
