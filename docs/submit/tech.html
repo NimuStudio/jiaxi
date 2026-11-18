@@ -221,6 +221,18 @@ condition ::= "{" ws "\"code\":" ws disease "," ws
   <tr><td>结构不合法</td><td>输出多余字段 / 中文键名</td><td>GBNF 约束：语法层面不可能出现非法结构</td></tr>
 </table>
 
+<h3>4.7 JEV：一次前向的 typed decision（可选后端）</h3>
+<p><b>先说归属：</b>JEV 不是自造的私有接口，而是 llama.cpp server 的 <code>POST /v1/systemone</code>（TypeSafe API）——一次前向、按 question 返回概率，<b>不生成 token</b>。我们接入它，并把它的错误用客户端硬校验兜住。</p>
+<table>
+  <tr><th style="width:24%">项</th><th>说明</th></tr>
+  <tr><td>请求</td><td>候选集（五种遗传模式）写在 <code>criteria</code> 里，<code>output_modalities:["decisions"]</code></td></tr>
+  <tr><td>响应</td><td><code>answers</code> 含 <code>choice</code> 与完整 <code>probabilities</code>；<code>output_tokens</code> 为 <b>0</b></td></tr>
+  <tr><td>实测样例</td><td><code>choice = autosomal-dominant</code>，置信度 <b>0.8757</b>，五个概率和为 1</td></tr>
+  <tr><td>客户端硬校验</td><td>① <code>choice</code> 必须在候选内；② Σprob = 1（容差 0.02）；③ 概率均为 [0,1] 的有限数。<b>任一不满足整条丢弃</b>，不进入医疗判断</td></tr>
+  <tr><td>默认是否启用</td><td><b>否</b>。默认走确定性结构模型（12 维信号 + 逻辑回归）；<code>INHERITANCE_BACKEND=model</code> 可切到 JEV 后端做对照</td></tr>
+</table>
+<p>对照结论（30 条均衡样本）：用 JEV 对外服务的开源决策模型 OpenJev-Q4（7B / 18.5 GB）判对 <b>40%</b>，单次 6.3 s，ECE 0.401；12 维结构信号 + 逻辑回归判对 <b>96%</b>，<b>&lt;0.1 s</b>。隐性 / X 连锁 / 线粒体三类上 OpenJev 全错——这正是「判定权不交给模型」这条设计决定的来源。</p>
+
 <h2 class="pb">5 核心功能实现</h2>
 <h3>5.1 口述 → 结构化家系</h3>
 <figure><img src="../screenshots/02-chat.png"><figcaption>口述一句「我妈高血压，我舅舅糖尿病，我外公脑溢血」，家系图实时长出节点，左侧保留原话</figcaption></figure>
